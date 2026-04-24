@@ -264,6 +264,13 @@ def list_funds():
     )
 
 
+@app.route("/api/debug/cache/<code>", methods=["GET"])
+def debug_cache_raw(code: str):
+    """临时调试端点：直接读原始cache，不走_fmt"""
+    f = get_fetcher()
+    fund = f.get_one(code)
+    return ok({"raw": fund, "cache_count": len(f.get_all())})
+
 # ─────────────────────────────────────────────────────────────────
 # 接口2: GET /api/funds/<code>
 # 获取单只 LOF 基金详情
