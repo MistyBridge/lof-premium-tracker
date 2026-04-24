@@ -11,7 +11,7 @@ const CONFIG = {
     REFRESH_INTERVAL: 90 * 1000,
 
     // 分页配置
-    DEFAULT_PAGE_SIZE: 50,      // 默认每页条数
+    DEFAULT_PAGE_SIZE: 600,     // 默认每页条数（一次拉全量）
     RANKING_LIMIT: 20,          // 排行榜条数
 
     // 溢价率异常值过滤阈值
