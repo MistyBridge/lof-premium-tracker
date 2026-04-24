@@ -3,7 +3,7 @@ const ENV = 'dev'; // dev | prod
 
 const CONFIG = {
   dev: {
-    baseUrl: 'http://127.0.0.1:5000',  // 本地调试
+    baseUrl: 'http://66.183.217.91:5000',  // 本机IP调试
     refreshInterval: 300000  // 5分钟
   },
   prod: {

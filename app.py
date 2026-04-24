@@ -15,7 +15,7 @@ except Exception:
 
 import logging
 from datetime import datetime
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -100,6 +100,28 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         })
 
     return result
+
+
+# ══════════════════════════════════════════════════════════════════
+# Web 前端静态文件服务
+# ══════════════════════════════════════════════════════════════════
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route("/")
+def index():
+    """返回 Web 前端首页"""
+    return send_from_directory(BASE_DIR, "index.html")
+
+@app.route("/css/<path:filename>")
+def css_files(filename):
+    return send_from_directory(os.path.join(BASE_DIR, "css"), filename)
+
+@app.route("/js/<path:filename>")
+def js_files(filename):
+    return send_from_directory(os.path.join(BASE_DIR, "js"), filename)
 
 
 # ══════════════════════════════════════════════════════════════════
