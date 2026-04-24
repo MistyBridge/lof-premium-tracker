@@ -399,7 +399,8 @@ class LOFDataFetcher:
 
             try:
                 resp = self._sess().get(url, headers=_TT_HEADERS, timeout=Config.REQUEST_TIMEOUT)
-                resp.encoding = "utf-8"
+                # 腾讯 qt.gtimg.cn 返回 GBK 编码，必须用 apparent_encoding 或直接 gbk
+                resp.encoding = resp.apparent_encoding or "gbk"
                 parsed = _parse_tencent_qt(resp.text)
                 result.update(parsed)
             except Exception as ex:

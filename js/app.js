@@ -242,12 +242,38 @@ class LofFundMonitor {
     }
 
     updatePaginationInfo() {
+        const totalPages = Math.max(1, Math.ceil(this.filteredFunds.length / this.pageSize));
         if (document.getElementById('totalRecords')) document.getElementById('totalRecords').textContent = this.filteredFunds.length;
         if (document.getElementById('shownRecords')) {
             const start = (this.currentPage - 1) * this.pageSize + 1;
             const end = Math.min(this.currentPage * this.pageSize, this.filteredFunds.length);
             document.getElementById('shownRecords').textContent = `${start}-${end}`;
         }
+        if (document.getElementById('pageInfo')) {
+            document.getElementById('pageInfo').textContent = `第 ${this.currentPage} 页 / 共 ${totalPages} 页`;
+        }
+        const prevBtn = document.getElementById('prevPageBtn');
+        const nextBtn = document.getElementById('nextPageBtn');
+        if (prevBtn) prevBtn.disabled = this.currentPage <= 1;
+        if (nextBtn) nextBtn.disabled = this.currentPage >= totalPages;
+    }
+
+    changePage(delta) {
+        const totalPages = Math.max(1, Math.ceil(this.filteredFunds.length / this.pageSize));
+        const newPage = this.currentPage + delta;
+        if (newPage < 1 || newPage > totalPages) return;
+        this.currentPage = newPage;
+        this.renderTable();
+        this.updatePaginationInfo();
+        // 滚动到表格顶部
+        document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    changePageSize(size) {
+        this.pageSize = parseInt(size);
+        this.currentPage = 1;
+        this.renderTable();
+        this.updatePaginationInfo();
     }
 
     showLoading(show) {
