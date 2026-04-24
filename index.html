@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOF基金折溢价监控</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📈 LOF基金折溢价监控系统</h1>
+            <div class="header-info">
+                <span id="statusText" class="status-text">加载中...</span>
+                <button id="refreshBtn" class="btn-refresh">🔄 刷新</button>
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item"><span class="status-label">基金总数</span><span id="totalFunds" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">缓存数据</span><span id="cacheCount" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
+        </div>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="panel ranking-panel">
+                    <h3 class="panel-title">🔥 溢价排行榜 TOP5</h3>
+                    <div id="rankingsContainer" class="rankings-list"><div class="loading-mini">加载中...</div></div>
+                </div>
+                <div class="panel legend-panel">
+                    <h3 class="panel-title">📖 图例说明</h3>
+                    <div class="legend-items">
+                        <div class="legend-item"><span class="legend-color premium-positive"></span><span>溢价（价格 &gt; 净值）</span></div>
+                        <div class="legend-item"><span class="legend-color premium-negative"></span><span>折价（价格 &lt; 净值）</span></div>
+                        <div class="legend-item"><span class="legend-color premium-zero"></span><span>平价（价格 ≈ 净值）</span></div>
+                        <div class="legend-item"><span class="nav-badge">正式</span><span>= 收盘后净值</span></div>
+                        <div class="legend-item"><span class="nav-badge">估算</span><span>= 盘中估算净值</span></div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="content">
+                <div class="toolbar">
+                    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 搜索基金代码或名称..."></div>
+                    <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
+                </div>
+                <div class="table-container">
+                    <table class="fund-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-field="code">代码 ↕</th>
+                                <th class="sortable" data-field="name">名称 ↕</th>
+                                <th class="sortable" data-field="price">现价 ↕</th>
+                                <th class="sortable" data-field="nav">净值 ↕</th>
+                                <th class="sortable" data-field="change_pct">涨跌幅 ↕</th>
+                                <th class="sortable active" data-field="premium_rate">溢价率 ↕</th>
+                                <th class="sortable" data-field="amount_w">成交额 ↕</th>
+                                <th>状态</th>
+                                <th>净值时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fundTableBody">
+                            <tr><td colspan="9" class="empty-state"><i class="icon">⏳</i><p>正在加载数据...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+
+        <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在加载...</p></div></div>
+        <div id="errorContainer" class="error-container" style="display: none;">
+            <div class="error-content"><div class="error-icon">⚠️</div><p id="errorMessage">加载失败</p><button id="retryBtn" class="btn-retry">重试</button></div>
+        </div>
+
+        <footer class="footer">
+            <p>数据来源：东方财富 | 刷新频率：每5分钟自动更新</p>
+            <p class="tip">💡 提示：溢价率超过50%或低于-30%的数据已自动过滤（停牌基金价格异常）</p>
+        </footer>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
