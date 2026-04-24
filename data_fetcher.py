@@ -156,12 +156,26 @@ def _parse_tencent_qt(text: str) -> Dict[str, Dict[str, Any]]:
         # change_pct
         change_pct = round((price_f - prev_f) / prev_f * 100, 3) if prev_f else 0.0
 
+        # Tencent qt.gtimg.cn fields:
+        #   36 = volume (成交量，单位：手 / lots)
+        #   57 = turnover (成交额，单位：万元 / 万元)
+        volume_raw = parts[36] if len(parts) > 36 else ""
+        turn_raw   = parts[57] if len(parts) > 57 else ""
+        volume = int(_safe_float(volume_raw)) if volume_raw not in ("", "-") else 0
+        # 成交额字段57是万元，需转为元
+        amount = round(_safe_float(turn_raw, 0.0) * 10000, 2) if turn_raw not in ("", "-") else 0.0
+        # 若成交额字段为空（停牌/极低成交），用 price * volume * 100 估算
+        if amount == 0.0 and price_f > 0 and volume > 0:
+            amount = round(price_f * volume * 100, 2)
+
         result[code] = {
             "code":        code,
             "name":        name,
             "price":       price_f,
             "prev_close":  prev_f,
-            "change_pct": change_pct,
+            "change_pct":  change_pct,
+            "volume":      volume,
+            "amount":      amount,
         }
 
     return result
