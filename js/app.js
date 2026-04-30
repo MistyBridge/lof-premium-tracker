@@ -71,6 +71,7 @@ class LofFundMonitor {
             });
             this.applyFilters();
             this.renderTable();
+            this.renderDiscountRankings();
             this.updatePaginationInfo();
             // 用 API 返回的原始总数更新基金总数
             if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
@@ -157,7 +158,7 @@ class LofFundMonitor {
                 </div>
             `).join('');
         }
-        // 移动端排行条
+        // 移动端溢价排行条
         const mobileScroll = document.getElementById('mobileRankingScroll');
         if (mobileScroll) {
             mobileScroll.innerHTML = funds.slice(0, 10).map(fund => `
@@ -167,10 +168,14 @@ class LofFundMonitor {
                 </div>
             `).join('');
         }
+    }
+
+    renderDiscountRankings() {
+        if (!this.funds.length) return;
+        const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
         // PC端折价排行榜
         const discountContainer = document.getElementById('discountContainer');
         if (discountContainer) {
-            const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
             discountContainer.innerHTML = sorted.slice(0, 5).map((fund, index) => `
                 <div class="ranking-item">
                     <span class="rank-num rank-${index + 1}">${index + 1}</span>
@@ -185,7 +190,6 @@ class LofFundMonitor {
         // 移动端折价排行条
         const mobileDiscountScroll = document.getElementById('mobileDiscountScroll');
         if (mobileDiscountScroll) {
-            const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
             mobileDiscountScroll.innerHTML = sorted.slice(0, 10).map(fund => `
                 <div class="strip-item">
                     <span class="si-code">${fund.code}</span>

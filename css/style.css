@@ -57,12 +57,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .sidebar { display: flex; flex-direction: column; gap: 20px; }
 .panel { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
 .panel-title { font-size: 1rem; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
-.ranking-panel .panel-title { color: var(--pos); }
+.ranking-panel .panel-title { color: var(--pos); font-size: 0.9rem; margin-bottom: 8px; }
 .ranking-panel .panel-title-neg { color: var(--neg); }
-.ranking-dual { display: flex; gap: 16px; }
+.ranking-dual { display: flex; gap: 12px; }
 .ranking-col { flex: 1; min-width: 0; }
-.ranking-col .panel-title { font-size: 0.9rem; margin-bottom: 8px; }
-.ranking-col .rankings-list { border-top: none; }
+.ranking-col .rankings-list { border-top: none; padding-top: 0; }
+.ranking-col .ranking-item { padding: 6px 0; }
+.ranking-col .rank-num { width: 20px; height: 20px; font-size: 0.7rem; }
+.ranking-col .rank-code { font-size: 0.8rem; }
+.ranking-col .rank-name { font-size: 0.7rem; }
+.ranking-col .rank-premium { font-size: 0.85rem; }
 
 /* Rankings */
 .rankings-list { display: flex; flex-direction: column; gap: 10px; }
