@@ -1,29 +1,62 @@
 /**
  * LOF基金监控系统 - 配置文件
- * 根据后端 API 文档（lof-fund-service/API文档-前端对接.md）配置
+ * 支持多种部署方式的环境配置
  */
 
-const CONFIG = {
-    // 后端API基础地址 - 部署后替换为实际服务器地址
-    API_BASE_URL: 'http://localhost:5000',
+(function() {
+    // 自动检测当前部署环境
+    const hostname = window.location.hostname;
+    
+    // 本地开发环境
+    const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+    
+    // 默认配置 - 使用已部署的Cloudflare后端
+    // 如需更换后端地址，可通过URL参数：index.html?api=https://your-api.com
+    const DEFAULT_CONFIG = {
+        // 后端API地址 - Cloudflare免费部署
+        API_BASE_URL: isLocalDev 
+            ? 'http://localhost:5000' 
+            : 'https://fastest-hardware-differently-honors.trycloudflare.com',
+        
+        // 数据刷新间隔（毫秒）- 前端1.5分钟轮询
+        REFRESH_INTERVAL: 90 * 1000,
 
-    // 数据刷新间隔（毫秒）- 后端每5分钟自动刷新，前端1.5分钟轮询排行榜
-    REFRESH_INTERVAL: 90 * 1000,
+        // 分页配置
+        DEFAULT_PAGE_SIZE: 600,     // 一次拉全量
+        RANKING_LIMIT: 20,
 
-    // 分页配置
-    DEFAULT_PAGE_SIZE: 50,      // 默认每页条数
-    RANKING_LIMIT: 20,          // 排行榜条数
+        // 溢价率异常值过滤阈值
+        PREMIUM_THRESHOLD: 50,      // 溢价率>50%视为异常
+        DISCOUNT_THRESHOLD: -30,       // 折价率<-30%视为异常
 
-    // 溢价率异常值过滤阈值
-    PREMIUM_THRESHOLD: 50,      // 溢价率超过50%视为异常
-    DISCOUNT_THRESHOLD: -30,    // 折价率低于-30%视为异常
+        // 数字格式化
+        PRICE_DECIMALS: 3,
+        PREMIUM_DECIMALS: 2,
 
-    // 数字格式化
-    PRICE_DECIMALS: 3,          // 价格保留3位小数
-    PREMIUM_DECIMALS: 2,        // 溢价率保留2位小数
+        // 请求配置
+        REQUEST_TIMEOUT: 15000,
+        RETRY_COUNT: 2,
+        RETRY_INTERVAL: 2000,
+    };
 
-    // 请求配置
-    REQUEST_TIMEOUT: 15000,     // 请求超时（毫秒）
-    RETRY_COUNT: 2,             // 失败重试次数
-    RETRY_INTERVAL: 2000,       // 重试间隔（毫秒）
-};
+    // 从URL参数读取自定义配置（优先级最高）
+    function getUrlParams() {
+        const params = {};
+        const urlParams = new URLSearchParams(window.location.search);
+        const apiUrl = urlParams.get('api');
+        if (apiUrl) {
+            params.API_BASE_URL = apiUrl;
+        }
+        return params;
+    }
+
+    // 合并配置
+    const urlParams = getUrlParams();
+    const CONFIG = { ...DEFAULT_CONFIG, ...urlParams };
+
+    // 导出全局配置
+    window.LOF_CONFIG = CONFIG;
+    
+    // 调试信息
+    console.log('[LOF配置] API地址:', CONFIG.API_BASE_URL, '| 环境:', isLocalDev ? '本地开发' : '生产部署');
+})();

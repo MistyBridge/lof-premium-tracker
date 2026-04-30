@@ -1,11 +1,25 @@
 /**
  * LOF基金监控系统 - API服务封装
- * 严格对接后端 API 文档（lof-fund-service/API文档-前端对接.md）
+ * 严格对接后端 API
  */
 
 class LofApiService {
     constructor() {
-        this.baseUrl = CONFIG.API_BASE_URL;
+        // 使用全局配置
+        this.config = window.LOF_CONFIG || { 
+            API_BASE_URL: 'http://localhost:5000',
+            REQUEST_TIMEOUT: 15000,
+            RETRY_COUNT: 2,
+            RETRY_INTERVAL: 2000,
+            DEFAULT_PAGE_SIZE: 50,
+            RANKING_LIMIT: 20,
+            PREMIUM_THRESHOLD: 50,
+            DISCOUNT_THRESHOLD: -30
+        };
+    }
+
+    get baseUrl() {
+        return this.config.API_BASE_URL;
     }
 
     /**
@@ -14,7 +28,7 @@ class LofApiService {
     async request(path, options = {}) {
         const url = `${this.baseUrl}${path}`;
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), CONFIG.REQUEST_TIMEOUT);
+        const timeout = setTimeout(() => controller.abort(), this.config.REQUEST_TIMEOUT);
 
         try {
             const response = await fetch(url, {
@@ -52,73 +66,59 @@ class LofApiService {
     /**
      * 带重试的请求
      */
-    async requestWithRetry(path, options = {}, retries = CONFIG.RETRY_COUNT) {
+    async requestWithRetry(path, options = {}, retries) {
+        retries = retries || this.config.RETRY_COUNT;
         try {
             return await this.request(path, options);
         } catch (error) {
             if (retries > 0) {
-                await new Promise(resolve => setTimeout(resolve, CONFIG.RETRY_INTERVAL));
+                await new Promise(resolve => setTimeout(resolve, this.config.RETRY_INTERVAL));
                 return this.requestWithRetry(path, options, retries - 1);
             }
             throw error;
         }
     }
 
-    /**
-     * 1. 健康检查
-     * GET /health
-     * 返回服务状态和缓存数据量
-     */
+    // 1. 健康检查
     async getHealth() {
         return this.requestWithRetry('/health');
     }
 
-    /**
-     * 2. 获取基金列表（分页）
-     * GET /api/funds?page=1&page_size=50
-     */
-    async getFunds(page = 1, pageSize = CONFIG.DEFAULT_PAGE_SIZE) {
+    // 2. 基金列表
+    async getFunds(page, pageSize) {
+        page = page || 1;
+        pageSize = pageSize || this.config.DEFAULT_PAGE_SIZE;
         return this.requestWithRetry(`/api/funds?page=${page}&page_size=${pageSize}`);
     }
 
-    /**
-     * 3. 获取单只基金详情
-     * GET /api/funds/{code}
-     */
+    // 3. 基金详情
     async getFundDetail(code) {
         return this.requestWithRetry(`/api/funds/${code}`);
     }
 
-    /**
-     * 4. 获取溢价率排行榜
-     * GET /api/rankings?type=premium&limit=20
-     * type: 'premium'=溢价排行, 'discount'=折价排行
-     */
-    async getRankings(type = 'premium', limit = CONFIG.RANKING_LIMIT) {
+    // 4. 排行榜
+    async getRankings(type, limit) {
+        type = type || 'premium';
+        limit = limit || this.config.RANKING_LIMIT;
         return this.requestWithRetry(`/api/rankings?type=${type}&limit=${limit}`);
     }
 
-    /**
-     * 5. 强制刷新数据（慎用）
-     * POST /refresh
-     * 首次加载约需30-40秒
-     */
+    // 5. 刷新数据
     async refreshData() {
         return this.requestWithRetry('/refresh', { method: 'POST' });
     }
 
-    /**
-     * 过滤异常基金数据
-     * 溢价率 > 50% 或 < -30% 视为异常（停牌基金价格固定1.0等）
-     */
+    // 过滤异常数据
     filterSafeFunds(funds) {
+        const cfg = this.config;
         return funds.filter(fund => {
             if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
-            return fund.premium_rate < CONFIG.PREMIUM_THRESHOLD 
-                && fund.premium_rate > CONFIG.DISCOUNT_THRESHOLD;
+            return fund.premium_rate < cfg.PREMIUM_THRESHOLD 
+                && fund.premium_rate > cfg.DISCOUNT_THRESHOLD;
         });
     }
 }
 
 // 全局API实例
-const api = new LofApiService();
+window.api = new LofApiService();
+console.log('[LOF API] 初始化完成，API地址:', window.api.baseUrl);

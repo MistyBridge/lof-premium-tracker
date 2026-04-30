@@ -205,7 +205,7 @@ class LofFundMonitor {
                     console.warn('自动刷新失败:', error.message);
                 }
             }
-        }, CONFIG.REFRESH_INTERVAL);
+        }, window.LOF_CONFIG?.REFRESH_INTERVAL || 90000);
     }
 
     stopAutoRefresh() {
