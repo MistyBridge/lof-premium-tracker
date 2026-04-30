@@ -19,9 +19,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header h1 { font-size: 1.8rem; font-weight: 600; }
 .header-info { display: flex; align-items: center; gap: 15px; }
 .status-text { font-size: 0.9rem; opacity: 0.9; }
-.btn-refresh { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; }
-.btn-refresh:hover { background: rgba(255,255,255,0.3); }
-.btn-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
 
 /* Status Bar */
 .status-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }

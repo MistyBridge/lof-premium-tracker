@@ -164,8 +164,6 @@ class LofFundMonitor {
         });
         const searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.addEventListener('input', e => this.handleSearch(e.target.value));
-        const refreshBtn = document.getElementById('refreshBtn');
-        if (refreshBtn) refreshBtn.addEventListener('click', () => this.handleRefresh());
         const retryBtn = document.getElementById('retryBtn');
         if (retryBtn) retryBtn.addEventListener('click', () => this.init());
     }
@@ -196,23 +194,6 @@ class LofFundMonitor {
         }, 300);
     }
 
-    async handleRefresh() {
-        const btn = document.getElementById('refreshBtn');
-        if (btn) { btn.disabled = true; btn.textContent = '刷新中...'; }
-        try {
-            this.updateStatus('正在刷新数据...');
-            await api.refreshData();
-            setTimeout(async () => {
-                await this.loadFunds();
-                await this.loadRankings();
-                this.updateStatus('刷新成功');
-            }, 5000);
-        } catch (error) {
-            this.showToast('刷新失败: ' + error.message);
-        } finally {
-            if (btn) { btn.disabled = false; btn.textContent = '🔄 刷新'; }
-        }
-    }
 
     startAutoRefresh() {
         this.stopAutoRefresh();
