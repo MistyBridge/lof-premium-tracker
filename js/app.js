@@ -58,6 +58,8 @@ class LofFundMonitor {
         this.isLoading = true;
         try {
             const result = await api.getFunds(1, 600);
+            // 保存原始数据总数（过滤前）
+            const totalFromApi = result.data.length;
             // 过滤停牌和无溢价率数据的基金
             this.funds = result.data.filter(fund => {
                 if (fund.is_suspended) return false;
@@ -68,6 +70,8 @@ class LofFundMonitor {
             this.applyFilters();
             this.renderTable();
             this.updatePaginationInfo();
+            // 用 API 返回的原始总数更新基金总数
+            if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
         } catch (error) {
             throw new Error(`基金列表加载失败: ${error.message}`);
         } finally {
@@ -234,11 +238,12 @@ class LofFundMonitor {
     }
 
     updateStatusInfo(data) {
-        const els = ['cacheCount', 'lastFetch', 'refreshInterval', 'totalFunds'];
-        if (document.getElementById('cacheCount')) document.getElementById('cacheCount').textContent = data.cache_count;
+        if (document.getElementById('cacheCount')) document.getElementById('cacheCount').textContent = data.cache_count ?? '-';
         if (document.getElementById('lastFetch')) document.getElementById('lastFetch').textContent = this.formatTime(data.last_fetch);
         if (document.getElementById('refreshInterval')) document.getElementById('refreshInterval').textContent = (data.refresh_interval_sec || 300) / 60 + '分钟';
-        if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = this.funds.length;
+        // 基金总数优先使用 API 返回的总数字段，否则用缓存数
+        const total = data.total ?? data.cache_count ?? this.funds.length;
+        if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = total;
     }
 
     updatePaginationInfo() {
