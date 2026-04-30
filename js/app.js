@@ -289,8 +289,12 @@ class LofFundMonitor {
         }
         const prevBtn = document.getElementById('prevPageBtn');
         const nextBtn = document.getElementById('nextPageBtn');
+        const firstBtn = document.getElementById('firstPageBtn');
+        const lastBtn = document.getElementById('lastPageBtn');
         if (prevBtn) prevBtn.disabled = this.currentPage <= 1;
         if (nextBtn) nextBtn.disabled = this.currentPage >= totalPages;
+        if (firstBtn) firstBtn.disabled = this.currentPage <= 1;
+        if (lastBtn) lastBtn.disabled = this.currentPage >= totalPages;
     }
 
     changePage(delta) {
@@ -300,7 +304,23 @@ class LofFundMonitor {
         this.currentPage = newPage;
         this.renderTable();
         this.updatePaginationInfo();
-        // 滚动到表格顶部
+        document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    goToPage(page) {
+        const totalPages = Math.max(1, Math.ceil(this.filteredFunds.length / this.pageSize));
+        if (page < 1 || page > totalPages) return;
+        this.currentPage = page;
+        this.renderTable();
+        this.updatePaginationInfo();
+        document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    goToLastPage() {
+        const totalPages = Math.max(1, Math.ceil(this.filteredFunds.length / this.pageSize));
+        this.currentPage = totalPages;
+        this.renderTable();
+        this.updatePaginationInfo();
         document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
