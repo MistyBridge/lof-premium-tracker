@@ -100,15 +100,17 @@ class LofFundMonitor {
 
     renderTable() {
         const tbody = document.getElementById('fundTableBody');
-        if (!tbody) return;
+        const cardList = document.getElementById('mobileCardList');
         if (this.filteredFunds.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="icon">📭</i><p>暂无数据</p></td></tr>`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="icon">📭</i><p>暂无数据</p></td></tr>`;
+            if (cardList) cardList.innerHTML = `<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>`;
             return;
         }
         const start = (this.currentPage - 1) * this.pageSize;
         const end = start + this.pageSize;
         const pageData = this.filteredFunds.slice(start, end);
-        tbody.innerHTML = pageData.map(fund => this.createFundRow(fund)).join('');
+        if (tbody) tbody.innerHTML = pageData.map(fund => this.createFundRow(fund)).join('');
+        if (cardList) cardList.innerHTML = pageData.map(fund => this.createMobileCard(fund)).join('');
     }
 
     createFundRow(fund) {
@@ -143,17 +145,57 @@ class LofFundMonitor {
 
     renderRankings(funds) {
         const container = document.getElementById('rankingsContainer');
-        if (!container) return;
-        container.innerHTML = funds.slice(0, 5).map((fund, index) => `
-            <div class="ranking-item">
-                <span class="rank-num rank-${index + 1}">${index + 1}</span>
-                <div class="rank-info">
-                    <span class="rank-code">${fund.code}</span>
-                    <span class="rank-name">${this.truncateName(fund.name, 10)}</span>
+        if (container) {
+            container.innerHTML = funds.slice(0, 5).map((fund, index) => `
+                <div class="ranking-item">
+                    <span class="rank-num rank-${index + 1}">${index + 1}</span>
+                    <div class="rank-info">
+                        <span class="rank-code">${fund.code}</span>
+                        <span class="rank-name">${this.truncateName(fund.name, 10)}</span>
+                    </div>
+                    <span class="rank-premium premium-high">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
                 </div>
-                <span class="rank-premium premium-high">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
+            `).join('');
+        }
+        // 移动端排行条
+        const mobileScroll = document.getElementById('mobileRankingScroll');
+        if (mobileScroll) {
+            mobileScroll.innerHTML = funds.slice(0, 10).map(fund => `
+                <div class="strip-item">
+                    <span class="si-code">${fund.code}</span>
+                    <span class="si-rate">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    createMobileCard(fund) {
+        const pr = fund.premium_rate;
+        const premiumClass = pr > 0 ? 'mc-pos' : pr < 0 ? 'mc-neg' : 'mc-zero';
+        const premiumSign = pr > 0 ? '+' : '';
+        const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
+        const changeSign = fund.change_pct >= 0 ? '+' : '';
+        const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
+        const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
+        const navType = fund.is_formal_nav ? '正式' : '估算';
+        const navText = fund.nav !== null && fund.nav !== undefined ? navType + ' ' + fund.nav.toFixed(3) : '--';
+        const priceText = fund.price !== null && fund.price !== undefined ? fund.price.toFixed(3) : '--';
+        let amountText = '--';
+        if (fund.amount !== null && fund.amount !== undefined) {
+            const amountWan = fund.amount / 10000;
+            amountText = amountWan >= 10000 ? (amountWan / 10000).toFixed(1) + '亿' : amountWan.toFixed(0) + '万';
+        }
+        const statusHtml = fund.premium_status ? `<span class="mc-status-badge status-badge ${fund.premium_status}">${fund.premium_status}</span>` : '';
+        return `<div class="mobile-card" data-code="${fund.code}">
+            <div class="mc-left"><span class="mc-code">${fund.code}</span><span class="mc-name">${fund.name}</span>${statusHtml}</div>
+            <div class="mc-right"><span class="mc-premium ${premiumClass}">${premiumText}</span></div>
+            <div class="mc-bottom">
+                <span class="mb-item"><span class="mb-label">现价</span><span class="mb-val">${priceText}</span></span>
+                <span class="mb-item"><span class="mb-label">净值</span><span class="mb-val">${navText}</span></span>
+                <span class="mb-item"><span class="mb-label">涨跌</span><span class="mb-val ${changeClass}">${changeText}</span></span>
+                <span class="mb-item"><span class="mb-label">成交</span><span class="mb-val">${amountText}</span></span>
             </div>
-        `).join('');
+        </div>`;
     }
 
     truncateName(name, maxLen = 12) {

@@ -25,6 +25,12 @@
             <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
         </div>
 
+        <!-- 移动端排行条 -->
+        <div class="mobile-ranking-strip" id="mobileRankingStrip">
+            <div class="strip-header">🔥 溢价TOP</div>
+            <div class="strip-scroll" id="mobileRankingScroll"><div class="loading-mini">加载中...</div></div>
+        </div>
+
         <div class="main-content">
             <aside class="sidebar">
                 <div class="panel ranking-panel">
@@ -48,6 +54,7 @@
                     <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 搜索基金代码或名称..."></div>
                     <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
                 </div>
+                <!-- PC端表格 -->
                 <div class="table-container">
                     <table class="fund-table">
                         <thead>
@@ -67,6 +74,10 @@
                             <tr><td colspan="9" class="empty-state"><i class="icon">⏳</i><p>正在加载数据...</p></td></tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- 移动端卡片 -->
+                <div id="mobileCardList" class="mobile-card-list">
+                    <div class="mobile-empty"><i class="icon">⏳</i><p>正在加载数据...</p></div>
                 </div>
                 <div id="paginationBar" class="pagination-bar">
                     <button id="prevPageBtn" class="page-btn" onclick="lofMonitor.changePage(-1)">上一页</button>
