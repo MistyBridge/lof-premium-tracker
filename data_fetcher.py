@@ -246,6 +246,90 @@ class LOFDataFetcher:
         with self._lock:
             return self._fetch_error
 
+    def load_from_history(self, history_db) -> bool:
+        """
+        从 history_db 加载最近一天的数据作为缓存初始化。
+        适用于休市期间或实时抓取失败时的降级方案。
+        返回 True 表示加载成功。
+        """
+        try:
+            dates = history_db.get_available_dates()
+            if not dates:
+                logger.info("No history data available for fallback")
+                return False
+
+            latest_date = dates[0]
+            logger.info(f"Loading fallback data from history date: {latest_date}")
+
+            # 加载 sz_lof_codes.json 用于补充基金名称
+            name_map = {}
+            cache_path = os.path.join(os.path.dirname(__file__), "sz_lof_codes.json")
+            if os.path.exists(cache_path):
+                try:
+                    with open(cache_path, "r", encoding="utf-8") as f:
+                        name_map = json.load(f)
+                except Exception:
+                    pass
+
+            # 从 history_db 获取最新一天的所有数据
+            conn = history_db._get_conn()
+            rows = conn.execute(
+                "SELECT code, premium_rate, price, nav, amount, name FROM premium_snapshots "
+                "WHERE date = ? AND premium_rate IS NOT NULL",
+                (latest_date,)
+            ).fetchall()
+
+            if not rows:
+                logger.info("No data found in history for latest date")
+                return False
+
+            cache = {}
+            for r in rows:
+                code = r["code"]
+                premium = r["premium_rate"]
+                price = r["price"] or 0
+                nav = r["nav"] or 0
+                amount = r["amount"] or 0
+                # 优先使用数据库中的 name，其次 sz_lof_codes.json，最后用代码
+                db_name = r["name"] if "name" in r.keys() else ""
+                name = db_name or name_map.get(code, code)
+
+                premium_status = None
+                if premium is not None:
+                    premium_status = "溢价" if premium > 0 else "折价" if premium < 0 else "平价"
+
+                cache[code] = {
+                    "code": code,
+                    "name": name,
+                    "price": price,
+                    "nav": nav,
+                    "premium_rate": premium,
+                    "premium_status": premium_status,
+                    "amount": amount,
+                    "volume": 0,
+                    "change_pct": 0,
+                    "nav_date": latest_date,
+                    "is_formal_nav": True,
+                    # 休市数据标记
+                    "_from_history": True,
+                    "_history_date": latest_date,
+                }
+
+            with self._lock:
+                # 仅在缓存为空时用历史数据填充（不覆盖已有实时数据）
+                if not self._cache:
+                    self._cache = cache
+                    # 用历史日期作为 last_fetch_time 避免立刻触发懒更新
+                    self._last_fetch_time = datetime.strptime(latest_date, "%Y-%m-%d")
+                    self._fetch_error = None
+
+            logger.info(f"Loaded {len(cache)} funds from history ({latest_date})")
+            return True
+
+        except Exception as e:
+            logger.warning(f"Failed to load from history: {e}")
+            return False
+
     def fetch_all(self) -> bool:
         """
         Fetch all LOF fund data:

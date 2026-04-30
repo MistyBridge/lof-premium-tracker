@@ -54,6 +54,7 @@ class HistoryDB:
                 price REAL,
                 nav REAL,
                 amount REAL DEFAULT 0,
+                name TEXT DEFAULT '',
                 UNIQUE(date, code)
             );
             CREATE INDEX IF NOT EXISTS idx_snap_date ON premium_snapshots(date);
@@ -67,13 +68,20 @@ class HistoryDB:
             conn.execute("ALTER TABLE premium_snapshots ADD COLUMN amount REAL DEFAULT 0")
             conn.commit()
             logger.info("Added 'amount' column to existing premium_snapshots table")
+        # 兼容旧库：若缺少 name 列则添加
+        try:
+            conn.execute("SELECT name FROM premium_snapshots LIMIT 1")
+        except sqlite3.OperationalError:
+            conn.execute("ALTER TABLE premium_snapshots ADD COLUMN name TEXT DEFAULT ''")
+            conn.commit()
+            logger.info("Added 'name' column to existing premium_snapshots table")
         conn.commit()
         logger.info(f"HistoryDB initialized: {self._db_path}")
 
     def save_snapshot(self, funds: Dict[str, dict]):
         """
         保存当前时刻的溢价率快照
-        funds: { code: { "premium_rate": float, "price": float, "nav": float, "amount": float, ... }, ... }
+        funds: { code: { "premium_rate": float, "price": float, "nav": float, "amount": float, "name": str, ... }, ... }
         """
         today = datetime.now().strftime("%Y-%m-%d")
         conn = self._get_conn()
@@ -85,16 +93,17 @@ class HistoryDB:
             price = fund.get("price")
             nav = fund.get("nav")
             amount = fund.get("amount") or 0
+            name = fund.get("name", "")
             if premium is None:
                 continue
-            rows.append((today, code, premium, price, nav, amount))
+            rows.append((today, code, premium, price, nav, amount, name))
 
         if not rows:
             return
 
         try:
             conn.executemany(
-                "INSERT OR REPLACE INTO premium_snapshots (date, code, premium_rate, price, nav, amount) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT OR REPLACE INTO premium_snapshots (date, code, premium_rate, price, nav, amount, name) VALUES (?, ?, ?, ?, ?, ?, ?)",
                 rows
             )
             conn.commit()

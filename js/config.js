@@ -10,13 +10,13 @@
     // 本地开发环境
     const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    // 默认配置 - 使用已部署的Cloudflare后端
+    // 默认配置 - 使用已部署的Railway后端
     // 如需更换后端地址，可通过URL参数：index.html?api=https://your-api.com
     const DEFAULT_CONFIG = {
-        // 后端API地址 - Cloudflare免费部署
+        // 后端API地址 - Railway部署
         API_BASE_URL: isLocalDev 
             ? 'http://localhost:5000' 
-            : 'https://fastest-hardware-differently-honors.trycloudflare.com',
+            : 'https://lof-premium-tracker-production.up.railway.app',
         
         // 数据刷新间隔（毫秒）- 前端1.5分钟轮询
         REFRESH_INTERVAL: 90 * 1000,

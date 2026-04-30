@@ -109,6 +109,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         "avg_premium_3d": fund.get("avg_premium_3d"),  # 三日平均溢价率（%）
         # ── 状态 ──
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
+        "data_date": fund.get("_history_date"),     # 数据日期（历史回填时有值）
         # ── 推导字段 ──
         "change_amount": round(change_pct / 100 * nav, 4) if (nav and nav > 0) else None,
     }
@@ -447,27 +448,50 @@ def _trigger_lazy_refresh():
 
 if __name__ == "__main__":
     print("=" * 62)
-    print("  LOF基金数据服务  v1.0")
+    print("  LOF基金数据服务  v1.1")
     print("  数据源: 东方财富 + 天天基金网（免费公开，无需Key）")
     print("=" * 62)
 
     f = get_fetcher()
     hdb = get_history_db()
-    print("📡 正在拉取全量LOF基金数据（首次约需1-2分钟）...")
-    ok_flag = f.fetch_all()
-    if ok_flag:
-        # 首次启动也保存快照
+
+    # ── 第一步：用历史数据初始化缓存（即时可用，不依赖实时API）──
+    print("📦 正在从历史数据初始化...")
+    hist_ok = f.load_from_history(hdb)
+    if hist_ok:
+        # 注入三日平均溢价率
         try:
-            hdb.save_snapshot(f.get_all())
             avg_map = hdb.get_all_avg_premium_3d()
             with f._lock:
                 for code, fund in f._cache.items():
                     fund["avg_premium_3d"] = avg_map.get(code)
         except Exception as ex:
-            print(f"⚠️ 历史数据保存失败: {ex}")
-        print(f"✅ 初始化完成，当前缓存 {len(f.get_all())} 只基金")
+            print(f"⚠️ 三日均溢计算失败: {ex}")
+        cache_count = len(f.get_all())
+        print(f"✅ 历史数据加载完成，{cache_count} 只基金已就绪")
     else:
-        print("⚠️ 初始化未完全成功，服务仍会启动，懒更新稍后会自动重试")
+        print("⚠️ 无历史数据，需要实时抓取")
+
+    # ── 第二步：异步尝试实时数据抓取（休市可能失败，不影响服务）──
+    print("📡 正在尝试拉取实时数据（休市期间可能失败）...")
+
+    def _async_fetch():
+        ok_flag = f.fetch_all()
+        if ok_flag:
+            try:
+                hdb.save_snapshot(f.get_all())
+                avg_map = hdb.get_all_avg_premium_3d()
+                with f._lock:
+                    for code, fund in f._cache.items():
+                        fund["avg_premium_3d"] = avg_map.get(code)
+            except Exception as ex:
+                logger.warning(f"历史数据保存失败: {ex}")
+            logger.info(f"✅ 实时数据刷新完成，{len(f.get_all())} 只基金")
+        else:
+            logger.info("⚠️ 实时数据抓取失败（休市/网络问题），继续使用历史数据服务")
+
+    fetch_thread = threading.Thread(target=_async_fetch, daemon=True)
+    fetch_thread.start()
 
     print("")
     print(f"✅ 服务已启动（懒更新模式）")

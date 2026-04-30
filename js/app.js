@@ -78,6 +78,11 @@ class LofFundMonitor {
             this.updatePaginationInfo();
             // 用 API 返回的原始总数更新基金总数
             if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
+            // Check if data is from history (market closed)
+            const firstFund = result.data[0];
+            if (firstFund && firstFund.data_date) {
+                this.updateStatus('Historical data · ' + firstFund.data_date);
+            }
         } catch (error) {
             throw new Error(`基金列表加载失败: ${error.message}`);
         } finally {
