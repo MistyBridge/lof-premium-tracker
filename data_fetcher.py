@@ -75,6 +75,7 @@ def _jparse(text: str) -> dict:
 
 def _make_session() -> requests.Session:
     s = requests.Session()
+    s.trust_env = False  # 禁用系统代理，避免 VPN/代理软件干扰数据抓取
     retry = Retry(
         total=3, backoff_factor=1.0,
         status_forcelist={502, 503, 504, 429, 403},

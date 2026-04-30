@@ -5,7 +5,7 @@
 
 const CONFIG = {
     // 后端API基础地址 - 部署后替换为实际服务器地址
-    API_BASE_URL: 'http://localhost:5000',
+    API_BASE_URL: 'https://fastest-hardware-differently-honors.trycloudflare.com',
 
     // 数据刷新间隔（毫秒）- 后端每5分钟自动刷新，前端1.5分钟轮询排行榜
     REFRESH_INTERVAL: 90 * 1000,
