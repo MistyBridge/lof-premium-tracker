@@ -14,6 +14,8 @@ class LofFundMonitor {
         this.refreshTimer = null;
         this.searchTimeout = null;
         this.isLoading = false;
+        this.threshold = 0;
+        this.minAmount = 0;
         this.bindEvents();
         this.init();
     }
@@ -84,12 +86,27 @@ class LofFundMonitor {
 
     applyFilters() {
         let filtered = [...this.funds];
+        // 搜索关键词筛选
         if (this.searchKeyword) {
             const keyword = this.searchKeyword.toLowerCase();
             filtered = filtered.filter(fund => 
                 fund.code.toLowerCase().includes(keyword) ||
                 fund.name.toLowerCase().includes(keyword)
             );
+        }
+        // 溢价率/折价率绝对值阈值筛选
+        if (this.threshold > 0) {
+            filtered = filtered.filter(fund => {
+                const absRate = Math.abs(fund.premium_rate ?? 0);
+                return absRate >= this.threshold;
+            });
+        }
+        // 最小成交额阈值筛选
+        if (this.minAmount > 0) {
+            filtered = filtered.filter(fund => {
+                const amountWan = (fund.amount ?? 0) / 10000;
+                return amountWan >= this.minAmount;
+            });
         }
         filtered.sort((a, b) => {
             let valA = a[this.sortField] ?? 0;
@@ -240,6 +257,51 @@ class LofFundMonitor {
         if (retryBtn) retryBtn.addEventListener('click', () => this.init());
         const manualRefreshBtn = document.getElementById('manualRefreshBtn');
         if (manualRefreshBtn) manualRefreshBtn.addEventListener('click', () => this.handleManualRefresh());
+        // 设置弹窗事件
+        const settingsBtn = document.getElementById('settingsBtn');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const applySettingsBtn = document.getElementById('applySettingsBtn');
+        const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+        if (settingsBtn) settingsBtn.addEventListener('click', () => this.openSettingsModal());
+        if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
+        if (settingsModal) settingsModal.addEventListener('click', e => { if (e.target === settingsModal) this.closeSettingsModal(); });
+        if (applySettingsBtn) applySettingsBtn.addEventListener('click', () => this.applySettings());
+        if (resetSettingsBtn) resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+    }
+
+    openSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        const thresholdInput = document.getElementById('thresholdInput');
+        const minAmountInput = document.getElementById('minAmountInput');
+        if (thresholdInput) thresholdInput.value = this.threshold || 0;
+        if (minAmountInput) minAmountInput.value = this.minAmount || 0;
+        if (modal) modal.style.display = 'flex';
+    }
+
+    closeSettingsModal() {
+        const modal = document.getElementById('settingsModal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    applySettings() {
+        const thresholdInput = document.getElementById('thresholdInput');
+        const minAmountInput = document.getElementById('minAmountInput');
+        this.threshold = parseFloat(thresholdInput?.value) || 0;
+        this.minAmount = parseFloat(minAmountInput?.value) || 0;
+        this.currentPage = 1;
+        this.applyFilters();
+        this.renderTable();
+        this.updatePaginationInfo();
+        this.closeSettingsModal();
+        this.showToast(`筛选已应用：绝对值≥${this.threshold}%，成交额≥${this.minAmount}万`);
+    }
+
+    resetSettings() {
+        const thresholdInput = document.getElementById('thresholdInput');
+        const minAmountInput = document.getElementById('minAmountInput');
+        if (thresholdInput) thresholdInput.value = 0;
+        if (minAmountInput) minAmountInput.value = 0;
     }
 
     handleSort(field) {
