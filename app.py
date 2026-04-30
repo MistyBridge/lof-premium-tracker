@@ -179,6 +179,31 @@ def refresh():
     return err_resp("刷新失败，请检查网络或稍后重试", code=2, status=500)
 
 
+# ── 手动补填历史数据 ──
+@app.route("/init-history", methods=["POST"])
+def init_history():
+    """手动触发7天历史数据补填"""
+    try:
+        days = min(7, max(1, int(request.args.get("days", 7))))
+    except ValueError:
+        return err_resp("days 必须为正整数", code=10, status=400)
+    try:
+        from history_fetcher import fetch_historical_data
+        rows = fetch_historical_data(days=days)
+        hdb = get_history_db()
+        # 重新加载缓存
+        f = get_fetcher()
+        f.load_from_history(hdb)
+        # 注入三日均值
+        avg_map = hdb.get_all_avg_premium_3d()
+        with f._lock:
+            for code, fund in f._cache.items():
+                fund["avg_premium_3d"] = avg_map.get(code)
+        return ok({"rows": rows, "dates": hdb.get_available_dates(), "cache_count": len(f.get_all())})
+    except Exception as e:
+        return err_resp(f"历史数据补填失败: {e}", code=11, status=500)
+
+
 # ─────────────────────────────────────────────────────────────────
 # 接口1: GET /api/funds
 # 获取全量 LOF 基金列表（分页 + 排序 + 搜索 + 筛选）
@@ -475,8 +500,21 @@ if __name__ == "__main__":
     f = get_fetcher()
     hdb = get_history_db()
 
-    # ── 第一步：用历史数据初始化缓存（即时可用，不依赖实时API）──
-    print("📦 正在从历史数据初始化...")
+    # ── 第一步：检查是否需要补填历史数据 ──
+    available_dates = hdb.get_available_dates()
+    if len(available_dates) < 3:
+        print("📦 历史数据不足（少于3天），正在从API补填7个交易日数据...")
+        try:
+            from history_fetcher import fetch_historical_data
+            rows = fetch_historical_data(days=7)
+            print(f"✅ 历史数据补填完成，共 {rows} 条记录")
+        except Exception as ex:
+            print(f"⚠️ 历史数据补填失败: {ex}")
+    else:
+        print(f"📦 历史数据充足（{len(available_dates)}天），跳过补填")
+
+    # ── 第二步：用历史数据初始化缓存（即时可用，不依赖实时API）──
+    print("📦 正在从历史数据初始化缓存...")
     hist_ok = f.load_from_history(hdb)
     if hist_ok:
         # 注入三日平均溢价率
@@ -490,7 +528,7 @@ if __name__ == "__main__":
         cache_count = len(f.get_all())
         print(f"✅ 历史数据加载完成，{cache_count} 只基金已就绪")
     else:
-        print("⚠️ 无历史数据，需要实时抓取")
+        print("⚠️ 无历史数据可用，等待实时抓取")
 
     # ── 第二步：异步尝试实时数据抓取（休市可能失败，不影响服务）──
     print("📡 正在尝试拉取实时数据（休市期间可能失败）...")

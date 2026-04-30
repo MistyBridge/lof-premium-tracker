@@ -78,12 +78,13 @@ class HistoryDB:
         conn.commit()
         logger.info(f"HistoryDB initialized: {self._db_path}")
 
-    def save_snapshot(self, funds: Dict[str, dict]):
+    def save_snapshot(self, funds: Dict[str, dict], date: str = None):
         """
-        保存当前时刻的溢价率快照
+        保存溢价率快照
         funds: { code: { "premium_rate": float, "price": float, "nav": float, "amount": float, "name": str, ... }, ... }
+        date: 保存日期，默认为今天
         """
-        today = datetime.now().strftime("%Y-%m-%d")
+        snapshot_date = date or datetime.now().strftime("%Y-%m-%d")
         conn = self._get_conn()
 
         # 使用 INSERT OR REPLACE 实现幂等：同一天多次刷新只保留最新
@@ -96,7 +97,7 @@ class HistoryDB:
             name = fund.get("name", "")
             if premium is None:
                 continue
-            rows.append((today, code, premium, price, nav, amount, name))
+            rows.append((snapshot_date, code, premium, price, nav, amount, name))
 
         if not rows:
             return
@@ -107,7 +108,7 @@ class HistoryDB:
                 rows
             )
             conn.commit()
-            logger.info(f"Saved snapshot for {today}: {len(rows)} funds")
+            logger.info(f"Saved snapshot for {snapshot_date}: {len(rows)} funds")
         except Exception as e:
             logger.error(f"Failed to save snapshot: {e}")
             conn.rollback()
