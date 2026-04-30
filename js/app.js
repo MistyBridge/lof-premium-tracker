@@ -167,6 +167,21 @@ class LofFundMonitor {
                 </div>
             `).join('');
         }
+        // PC端折价排行榜
+        const discountContainer = document.getElementById('discountContainer');
+        if (discountContainer) {
+            const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
+            discountContainer.innerHTML = sorted.slice(0, 5).map((fund, index) => `
+                <div class="ranking-item">
+                    <span class="rank-num rank-${index + 1}">${index + 1}</span>
+                    <div class="rank-info">
+                        <span class="rank-code">${fund.code}</span>
+                        <span class="rank-name">${this.truncateName(fund.name, 10)}</span>
+                    </div>
+                    <span class="rank-premium rank-discount">${fund.premium_rate != null ? fund.premium_rate.toFixed(2) + '%' : '--'}</span>
+                </div>
+            `).join('');
+        }
         // 移动端折价排行条
         const mobileDiscountScroll = document.getElementById('mobileDiscountScroll');
         if (mobileDiscountScroll) {
