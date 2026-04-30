@@ -19,6 +19,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 from config import Config
+from history_db import get_history_db
 
 logger = logging.getLogger(__name__)
 
@@ -329,6 +330,60 @@ class LOFDataFetcher:
         except Exception as e:
             logger.warning(f"Failed to load from history: {e}")
             return False
+
+
+    def load_from_seed(self, seed_path: str = None) -> bool:
+        """
+        从 history_seed.json 加载预置历史数据到缓存和 history_db。
+        适用于 Railway 重启后 SQLite 丢失且实时 API 不可用的场景。
+        seed_path: 种子文件路径，默认为同目录下 history_seed.json
+        """
+        if seed_path is None:
+            seed_path = os.path.join(os.path.dirname(__file__), "history_seed.json")
+
+        if not os.path.exists(seed_path):
+            logger.info(f"Seed file not found: {seed_path}")
+            return False
+
+        try:
+            with open(seed_path, "r", encoding="utf-8") as f:
+                seed_data = json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load seed file: {e}")
+            return False
+
+        # 将种子数据写入 history_db
+        hdb = get_history_db()
+        dates = sorted(seed_data.keys(), reverse=True)
+        total_rows = 0
+
+        for date_str in dates:
+            date_funds = seed_data[date_str]
+            funds_dict = {}
+            for code, fund_data in date_funds.items():
+                premium = fund_data.get("premium_rate")
+                if premium is None:
+                    continue
+                funds_dict[code] = {
+                    "code": code,
+                    "name": fund_data.get("name", code),
+                    "price": fund_data.get("price", 0),
+                    "nav": fund_data.get("nav"),
+                    "premium_rate": premium,
+                    "premium_status": "溢价" if premium > 0 else "折价" if premium < 0 else "平价",
+                    "amount": fund_data.get("amount", 0),
+                    "volume": 0,
+                    "change_pct": fund_data.get("change_pct", 0),
+                    "nav_date": date_str,
+                    "is_formal_nav": True,
+                }
+                total_rows += 1
+            hdb.save_snapshot(funds_dict, date=date_str)
+
+        logger.info(f"Seed data loaded: {len(dates)} dates, {total_rows} records written to history_db")
+
+        # 从 history_db 加载最新数据到缓存
+        return self.load_from_history(hdb)
 
     def fetch_all(self) -> bool:
         """

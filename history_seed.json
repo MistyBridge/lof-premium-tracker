@@ -1,0 +1,6938 @@
+{
+  "2026-04-15": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.23,
+      "nav": 1.2395,
+      "amount": 11708.5,
+      "premium_rate": -0.766,
+      "change_pct": -0.57
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.482,
+      "nav": 1.4995,
+      "amount": 68392.2,
+      "premium_rate": -1.167,
+      "change_pct": 0
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.233,
+      "nav": 2.2516,
+      "amount": 381663.8,
+      "premium_rate": -0.826,
+      "change_pct": -0.89
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.751,
+      "nav": 1.7534,
+      "amount": 7227250.991,
+      "premium_rate": -0.137,
+      "change_pct": 1.04
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.855,
+      "nav": 0.8609,
+      "amount": 203735.596,
+      "premium_rate": -0.685,
+      "change_pct": 0.23
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.031,
+      "nav": 1.035,
+      "amount": 168666.2,
+      "premium_rate": -0.386,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.201,
+      "nav": 4.2379,
+      "amount": 481930.93,
+      "premium_rate": -0.871,
+      "change_pct": -0.71
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.04,
+      "nav": 1.0471,
+      "amount": 140611.331,
+      "premium_rate": -0.678,
+      "change_pct": -0.48
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.374,
+      "nav": 1.3858,
+      "amount": 2402728.658,
+      "premium_rate": -0.851,
+      "change_pct": 0.73
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.125,
+      "nav": 1.126,
+      "amount": 450.1,
+      "premium_rate": -0.089,
+      "change_pct": 0.09
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.365,
+      "nav": 1.4512,
+      "amount": 196753.1,
+      "premium_rate": -5.94,
+      "change_pct": -1.02
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.202,
+      "nav": 3.212,
+      "amount": 153670.04,
+      "premium_rate": -0.311,
+      "change_pct": -0.28
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.33,
+      "nav": 4.2981,
+      "amount": 122303.628,
+      "premium_rate": 0.742,
+      "change_pct": -1.88
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 2.839,
+      "nav": 2.828,
+      "amount": 194434.968,
+      "premium_rate": 0.389,
+      "change_pct": 1.9
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.743,
+      "nav": 0.751,
+      "amount": 19343424.084,
+      "premium_rate": -1.065,
+      "change_pct": 0
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.632,
+      "nav": 0.6307,
+      "amount": 220121.397,
+      "premium_rate": 0.206,
+      "change_pct": -1.56
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.566,
+      "nav": 0.5678,
+      "amount": 96178.238,
+      "premium_rate": -0.317,
+      "change_pct": 1.43
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.034,
+      "nav": 3.7014,
+      "amount": 814239.501,
+      "premium_rate": 8.986,
+      "change_pct": -0.35
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.507,
+      "nav": 2.507,
+      "amount": 3488772.903,
+      "premium_rate": 0,
+      "change_pct": -0.87
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.728,
+      "nav": 0.733,
+      "amount": 357056.672,
+      "premium_rate": -0.682,
+      "change_pct": -0.14
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 1.931,
+      "nav": 1.9449,
+      "amount": 622242.42,
+      "premium_rate": -0.715,
+      "change_pct": -0.87
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.048,
+      "nav": 2.0676,
+      "amount": 448303.599,
+      "premium_rate": -0.948,
+      "change_pct": -2.01
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.707,
+      "nav": 1.735,
+      "amount": 367522.3,
+      "premium_rate": -1.614,
+      "change_pct": -0.87
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.378,
+      "nav": 1.382,
+      "amount": 64315,
+      "premium_rate": -0.289,
+      "change_pct": 0
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.139,
+      "nav": 1.1436,
+      "amount": 1465082.021,
+      "premium_rate": -0.402,
+      "change_pct": 0.18
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.751,
+      "nav": 1.7513,
+      "amount": 1855907.024,
+      "premium_rate": -0.017,
+      "change_pct": -0.28
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.062,
+      "nav": 2.0695,
+      "amount": 222245.503,
+      "premium_rate": -0.362,
+      "change_pct": 0.24
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.482,
+      "nav": 1.5457,
+      "amount": 1720618.246,
+      "premium_rate": -4.121,
+      "change_pct": -0.6
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.859,
+      "nav": 0.8682,
+      "amount": 57436.5,
+      "premium_rate": -1.06,
+      "change_pct": 0
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.384,
+      "nav": 2.0802,
+      "amount": 760446802.94,
+      "premium_rate": 14.604,
+      "change_pct": -4.53
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.1,
+      "nav": 2.1219,
+      "amount": 162106.5,
+      "premium_rate": -1.032,
+      "change_pct": -1.69
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.272,
+      "nav": 1.283,
+      "amount": 3167234.3,
+      "premium_rate": -0.857,
+      "change_pct": -0.16
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.645,
+      "nav": 2.658,
+      "amount": 128957.992,
+      "premium_rate": -0.489,
+      "change_pct": 0.57
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.206,
+      "nav": 2.207,
+      "amount": 18727.3,
+      "premium_rate": -0.045,
+      "change_pct": 0.09
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.035,
+      "nav": 1.042,
+      "amount": 80578.54,
+      "premium_rate": -0.672,
+      "change_pct": -0.1
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.638,
+      "nav": 2.675,
+      "amount": 35349.2,
+      "premium_rate": -1.383,
+      "change_pct": -0.53
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.296,
+      "nav": 1.3046,
+      "amount": 129.6,
+      "premium_rate": -0.659,
+      "change_pct": 1.01
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.039,
+      "nav": 1.0613,
+      "amount": 14251.673,
+      "premium_rate": -2.101,
+      "change_pct": 0.58
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.328,
+      "nav": 1.3921,
+      "amount": 138061.6,
+      "premium_rate": -4.605,
+      "change_pct": 0.08
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.832,
+      "nav": 0.835,
+      "amount": 399693.065,
+      "premium_rate": -0.359,
+      "change_pct": -1.19
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.164,
+      "nav": 1.173,
+      "amount": 139640.362,
+      "premium_rate": -0.767,
+      "change_pct": -0.51
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.434,
+      "nav": 1.4512,
+      "amount": 65585.642,
+      "premium_rate": -1.185,
+      "change_pct": 0.49
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.217,
+      "nav": 1.2172,
+      "amount": 25697.7,
+      "premium_rate": -0.016,
+      "change_pct": 0.16
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.41,
+      "nav": 1.4062,
+      "amount": 6625.6,
+      "premium_rate": 0.27,
+      "change_pct": 0.86
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.32,
+      "nav": 2.3272,
+      "amount": 2561,
+      "premium_rate": -0.309,
+      "change_pct": -0.22
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.114,
+      "nav": 1.1172,
+      "amount": 2100.062,
+      "premium_rate": -0.286,
+      "change_pct": -0.09
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.625,
+      "nav": 1.6261,
+      "amount": 3497.542,
+      "premium_rate": -0.068,
+      "change_pct": -0.43
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.044,
+      "nav": 3.0537,
+      "amount": 243461.038,
+      "premium_rate": -0.318,
+      "change_pct": -0.69
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.153,
+      "nav": 1.1498,
+      "amount": 489719.526,
+      "premium_rate": 0.278,
+      "change_pct": 0.35
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.841,
+      "nav": 0.846,
+      "amount": 63747.2,
+      "premium_rate": -0.591,
+      "change_pct": -1.06
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.372,
+      "nav": 1.3697,
+      "amount": 47027.6,
+      "premium_rate": 0.168,
+      "change_pct": 0.66
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.541,
+      "nav": 0.5427,
+      "amount": 243421.443,
+      "premium_rate": -0.313,
+      "change_pct": -0.55
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.252,
+      "nav": 1.2574,
+      "amount": 48251.3,
+      "premium_rate": -0.429,
+      "change_pct": -1.03
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.173,
+      "nav": 1.1833,
+      "amount": 404437.222,
+      "premium_rate": -0.87,
+      "change_pct": -0.42
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.348,
+      "nav": 1.3543,
+      "amount": 495111.67,
+      "premium_rate": -0.465,
+      "change_pct": 1.35
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.307,
+      "nav": 0.3073,
+      "amount": 3720218.936,
+      "premium_rate": -0.098,
+      "change_pct": 0.66
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.055,
+      "nav": 1.0595,
+      "amount": 68084.192,
+      "premium_rate": -0.425,
+      "change_pct": -0.38
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.912,
+      "nav": 0.9154,
+      "amount": 89415.5,
+      "premium_rate": -0.371,
+      "change_pct": 1.33
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.612,
+      "nav": 1.6098,
+      "amount": 148339.2,
+      "premium_rate": 0.137,
+      "change_pct": -0.49
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.087,
+      "nav": 3.1155,
+      "amount": 118348.726,
+      "premium_rate": -0.915,
+      "change_pct": 0.16
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.889,
+      "nav": 0.8943,
+      "amount": 225743.767,
+      "premium_rate": -0.593,
+      "change_pct": -0.22
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 103.361,
+      "nav": 103.7341,
+      "amount": 62016.6,
+      "premium_rate": -0.36,
+      "change_pct": -0.21
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.082,
+      "nav": 2.0872,
+      "amount": 624.5,
+      "premium_rate": -0.249,
+      "change_pct": 1.36
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.403,
+      "nav": 1.4134,
+      "amount": 1379987.725,
+      "premium_rate": -0.736,
+      "change_pct": -1.13
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.696,
+      "nav": 1.6987,
+      "amount": 7000496.684,
+      "premium_rate": -0.159,
+      "change_pct": 2.54
+    }
+  },
+  "2026-04-16": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.239,
+      "nav": 1.2489,
+      "amount": 66921.531,
+      "premium_rate": -0.793,
+      "change_pct": 0.73
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.498,
+      "nav": 1.51,
+      "amount": 93217.932,
+      "premium_rate": -0.795,
+      "change_pct": 1.08
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.278,
+      "nav": 2.2882,
+      "amount": 916375.816,
+      "premium_rate": -0.446,
+      "change_pct": 2.02
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.789,
+      "nav": 1.8082,
+      "amount": 8078522.785,
+      "premium_rate": -1.062,
+      "change_pct": 2.17
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.872,
+      "nav": 0.8854,
+      "amount": 693123.554,
+      "premium_rate": -1.513,
+      "change_pct": 1.99
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.031,
+      "nav": 1.035,
+      "amount": 261259.3,
+      "premium_rate": -0.386,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.255,
+      "nav": 4.2861,
+      "amount": 451362.576,
+      "premium_rate": -0.726,
+      "change_pct": 1.29
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.051,
+      "nav": 1.053,
+      "amount": 629690.541,
+      "premium_rate": -0.19,
+      "change_pct": 1.06
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.379,
+      "nav": 1.3966,
+      "amount": 2355182.204,
+      "premium_rate": -1.26,
+      "change_pct": 0.36
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.124,
+      "nav": 1.1423,
+      "amount": 7861.9,
+      "premium_rate": -1.602,
+      "change_pct": -0.09
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.393,
+      "nav": 1.4929,
+      "amount": 147566.9,
+      "premium_rate": -6.692,
+      "change_pct": 2.05
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.27,
+      "nav": 3.297,
+      "amount": 209757,
+      "premium_rate": -0.819,
+      "change_pct": 2.12
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.32,
+      "nav": 4.3684,
+      "amount": 322395.32,
+      "premium_rate": -1.108,
+      "change_pct": -0.23
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 2.855,
+      "nav": 2.888,
+      "amount": 61147.68,
+      "premium_rate": -1.143,
+      "change_pct": 0.56
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.743,
+      "nav": 0.757,
+      "amount": 6196215.156,
+      "premium_rate": -1.849,
+      "change_pct": 0
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.633,
+      "nav": 0.6335,
+      "amount": 20546.695,
+      "premium_rate": -0.079,
+      "change_pct": 0.16
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.563,
+      "nav": 0.5666,
+      "amount": 97229.165,
+      "premium_rate": -0.635,
+      "change_pct": -0.53
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 3.772,
+      "nav": 3.7985,
+      "amount": 2589111.683,
+      "premium_rate": -0.698,
+      "change_pct": -6.49
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.558,
+      "nav": 2.5765,
+      "amount": 2496695.906,
+      "premium_rate": -0.718,
+      "change_pct": 2.03
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.73,
+      "nav": 0.7339,
+      "amount": 149085.05,
+      "premium_rate": -0.531,
+      "change_pct": 0.27
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 1.991,
+      "nav": 2.0043,
+      "amount": 586805.179,
+      "premium_rate": -0.664,
+      "change_pct": 3.11
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.112,
+      "nav": 2.1223,
+      "amount": 904582.178,
+      "premium_rate": -0.485,
+      "change_pct": 3.13
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.743,
+      "nav": 1.763,
+      "amount": 990781.387,
+      "premium_rate": -1.134,
+      "change_pct": 2.11
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.386,
+      "nav": 1.41,
+      "amount": 120110.602,
+      "premium_rate": -1.702,
+      "change_pct": 0.58
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.153,
+      "nav": 1.1559,
+      "amount": 1744899.97,
+      "premium_rate": -0.251,
+      "change_pct": 1.23
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.757,
+      "nav": 1.7599,
+      "amount": 1161750.549,
+      "premium_rate": -0.165,
+      "change_pct": 0.34
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.095,
+      "nav": 2.1252,
+      "amount": 126763.702,
+      "premium_rate": -1.421,
+      "change_pct": 1.6
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.52,
+      "nav": 1.5893,
+      "amount": 852532.667,
+      "premium_rate": -4.36,
+      "change_pct": 2.56
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.875,
+      "nav": 0.8876,
+      "amount": 217386,
+      "premium_rate": -1.42,
+      "change_pct": 1.86
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.38,
+      "nav": 2.1054,
+      "amount": 459082031.617,
+      "premium_rate": 13.043,
+      "change_pct": -0.17
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.136,
+      "nav": 2.1497,
+      "amount": 19017.7,
+      "premium_rate": -0.637,
+      "change_pct": 1.71
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.29,
+      "nav": 1.308,
+      "amount": 2896503.612,
+      "premium_rate": -1.376,
+      "change_pct": 1.42
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.7,
+      "nav": 2.709,
+      "amount": 81904.471,
+      "premium_rate": -0.332,
+      "change_pct": 2.08
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.207,
+      "nav": 2.2113,
+      "amount": 18135.604,
+      "premium_rate": -0.194,
+      "change_pct": 0.05
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.035,
+      "nav": 1.0418,
+      "amount": 87693.4,
+      "premium_rate": -0.653,
+      "change_pct": 0
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.683,
+      "nav": 2.712,
+      "amount": 28627.7,
+      "premium_rate": -1.069,
+      "change_pct": 1.71
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.307,
+      "nav": 1.3191,
+      "amount": 3136.8,
+      "premium_rate": -0.917,
+      "change_pct": 0.85
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.066,
+      "nav": 1.0876,
+      "amount": 119748.6,
+      "premium_rate": -1.986,
+      "change_pct": 2.6
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.35,
+      "nav": 1.4276,
+      "amount": 446508.457,
+      "premium_rate": -5.436,
+      "change_pct": 1.66
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.84,
+      "nav": 0.843,
+      "amount": 136105.365,
+      "premium_rate": -0.356,
+      "change_pct": 0.96
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.176,
+      "nav": 1.192,
+      "amount": 271457.907,
+      "premium_rate": -1.342,
+      "change_pct": 1.03
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.448,
+      "nav": 1.4564,
+      "amount": 85178.96,
+      "premium_rate": -0.577,
+      "change_pct": 0.98
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.219,
+      "nav": 1.2214,
+      "amount": 4983.9,
+      "premium_rate": -0.196,
+      "change_pct": 0.16
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.41,
+      "nav": 1.4211,
+      "amount": 14569.295,
+      "premium_rate": -0.781,
+      "change_pct": 0
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.348,
+      "nav": 2.3657,
+      "amount": 8659.5,
+      "premium_rate": -0.748,
+      "change_pct": 1.21
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.114,
+      "nav": 1.1187,
+      "amount": 72508.708,
+      "premium_rate": -0.42,
+      "change_pct": 0
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.627,
+      "nav": 1.6272,
+      "amount": 3277.79,
+      "premium_rate": -0.012,
+      "change_pct": 0.12
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.106,
+      "nav": 3.1238,
+      "amount": 343060.086,
+      "premium_rate": -0.57,
+      "change_pct": 2.04
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.154,
+      "nav": 1.1536,
+      "amount": 519137.7,
+      "premium_rate": 0.035,
+      "change_pct": 0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.85,
+      "nav": 0.85,
+      "amount": 158264.747,
+      "premium_rate": 0,
+      "change_pct": 1.07
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.384,
+      "nav": 1.3917,
+      "amount": 46150.55,
+      "premium_rate": -0.553,
+      "change_pct": 0.87
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.54,
+      "nav": 0.5433,
+      "amount": 56162.8,
+      "premium_rate": -0.607,
+      "change_pct": -0.18
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.283,
+      "nav": 1.2872,
+      "amount": 129949.117,
+      "premium_rate": -0.326,
+      "change_pct": 2.48
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.178,
+      "nav": 1.1875,
+      "amount": 256521.545,
+      "premium_rate": -0.8,
+      "change_pct": 0.43
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.342,
+      "nav": 1.3495,
+      "amount": 154078.029,
+      "premium_rate": -0.556,
+      "change_pct": -0.45
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.308,
+      "nav": 0.3078,
+      "amount": 2790622.679,
+      "premium_rate": 0.065,
+      "change_pct": 0.33
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.061,
+      "nav": 1.0659,
+      "amount": 347826.596,
+      "premium_rate": -0.46,
+      "change_pct": 0.57
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.908,
+      "nav": 0.913,
+      "amount": 49955.379,
+      "premium_rate": -0.548,
+      "change_pct": -0.44
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.651,
+      "nav": 1.659,
+      "amount": 270166.978,
+      "premium_rate": -0.482,
+      "change_pct": 2.42
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.142,
+      "nav": 3.1586,
+      "amount": 66241.024,
+      "premium_rate": -0.526,
+      "change_pct": 1.78
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.892,
+      "nav": 0.8992,
+      "amount": 76333.18,
+      "premium_rate": -0.801,
+      "change_pct": 0.34
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 103.798,
+      "nav": 104.1967,
+      "amount": 858481.9,
+      "premium_rate": -0.383,
+      "change_pct": 0.42
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.108,
+      "nav": 2.104,
+      "amount": 60258.8,
+      "premium_rate": 0.19,
+      "change_pct": 1.25
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.408,
+      "nav": 1.4179,
+      "amount": 604329.763,
+      "premium_rate": -0.698,
+      "change_pct": 0.36
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.72,
+      "nav": 1.7152,
+      "amount": 9657184.748,
+      "premium_rate": 0.28,
+      "change_pct": 1.42
+    }
+  },
+  "2026-04-17": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.232,
+      "nav": 1.235,
+      "amount": 9852.6,
+      "premium_rate": -0.243,
+      "change_pct": -0.56
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.49,
+      "nav": 1.4932,
+      "amount": 53870.9,
+      "premium_rate": -0.214,
+      "change_pct": -0.53
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.284,
+      "nav": 2.2972,
+      "amount": 430474.306,
+      "premium_rate": -0.575,
+      "change_pct": 0.26
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.763,
+      "nav": 1.7959,
+      "amount": 3013514.249,
+      "premium_rate": -1.832,
+      "change_pct": -1.45
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.872,
+      "nav": 0.8827,
+      "amount": 33646.6,
+      "premium_rate": -1.212,
+      "change_pct": 0
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.031,
+      "nav": 1.036,
+      "amount": 182578.2,
+      "premium_rate": -0.483,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.238,
+      "nav": 4.2504,
+      "amount": 680566.63,
+      "premium_rate": -0.292,
+      "change_pct": -0.4
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.047,
+      "nav": 1.0506,
+      "amount": 167568.533,
+      "premium_rate": -0.343,
+      "change_pct": -0.38
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.383,
+      "nav": 1.4158,
+      "amount": 2125971.433,
+      "premium_rate": -2.317,
+      "change_pct": 0.29
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.414,
+      "nav": 1.5216,
+      "amount": 101455.048,
+      "premium_rate": -7.072,
+      "change_pct": 1.51
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.288,
+      "nav": 3.316,
+      "amount": 23525.6,
+      "premium_rate": -0.844,
+      "change_pct": 0.55
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.38,
+      "nav": 4.3753,
+      "amount": 31291.809,
+      "premium_rate": 0.107,
+      "change_pct": 1.39
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 2.861,
+      "nav": 3.001,
+      "amount": 85895.705,
+      "premium_rate": -4.665,
+      "change_pct": 0.21
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.747,
+      "nav": 0.735,
+      "amount": 10816661.571,
+      "premium_rate": 1.633,
+      "change_pct": 0.54
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.642,
+      "nav": 0.6433,
+      "amount": 317448.068,
+      "premium_rate": -0.202,
+      "change_pct": 1.42
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.554,
+      "nav": 0.556,
+      "amount": 212577.883,
+      "premium_rate": -0.36,
+      "change_pct": -1.6
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 3.881,
+      "nav": 3.9431,
+      "amount": 3887170.629,
+      "premium_rate": -1.575,
+      "change_pct": 2.89
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.564,
+      "nav": 2.5795,
+      "amount": 1886106.068,
+      "premium_rate": -0.601,
+      "change_pct": 0.23
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.723,
+      "nav": 0.7234,
+      "amount": 179473.66,
+      "premium_rate": -0.055,
+      "change_pct": -0.96
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.017,
+      "nav": 2.0324,
+      "amount": 644232.464,
+      "premium_rate": -0.758,
+      "change_pct": 1.31
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.104,
+      "nav": 2.1175,
+      "amount": 739658.999,
+      "premium_rate": -0.638,
+      "change_pct": -0.38
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.743,
+      "nav": 1.758,
+      "amount": 289426.576,
+      "premium_rate": -0.853,
+      "change_pct": 0
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.4,
+      "nav": 1.426,
+      "amount": 186411.231,
+      "premium_rate": -1.823,
+      "change_pct": 1.01
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.134,
+      "nav": 1.1465,
+      "amount": 427275.2,
+      "premium_rate": -1.09,
+      "change_pct": -1.65
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.757,
+      "nav": 1.7603,
+      "amount": 1100476.382,
+      "premium_rate": -0.187,
+      "change_pct": 0
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.133,
+      "nav": 2.1599,
+      "amount": 280390.882,
+      "premium_rate": -1.245,
+      "change_pct": 1.81
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.53,
+      "nav": 1.6198,
+      "amount": 571600.925,
+      "premium_rate": -5.544,
+      "change_pct": 0.66
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.874,
+      "nav": 0.8973,
+      "amount": 58563.675,
+      "premium_rate": -2.597,
+      "change_pct": -0.11
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.351,
+      "nav": 2.0405,
+      "amount": 342243100.024,
+      "premium_rate": 15.217,
+      "change_pct": -1.22
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.129,
+      "nav": 2.1423,
+      "amount": 18291.7,
+      "premium_rate": -0.621,
+      "change_pct": -0.33
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.294,
+      "nav": 1.322,
+      "amount": 2332869.509,
+      "premium_rate": -2.118,
+      "change_pct": 0.31
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.725,
+      "nav": 2.76,
+      "amount": 5197.5,
+      "premium_rate": -1.268,
+      "change_pct": 0.93
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.21,
+      "nav": 2.2151,
+      "amount": 2207.5,
+      "premium_rate": -0.23,
+      "change_pct": 0.14
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.646,
+      "nav": 2.722,
+      "amount": 11040.6,
+      "premium_rate": -2.792,
+      "change_pct": -1.38
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.438,
+      "nav": 1.3136,
+      "amount": 18362.302,
+      "premium_rate": 9.47,
+      "change_pct": 10.02
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.084,
+      "nav": 1.1045,
+      "amount": 293294.47,
+      "premium_rate": -1.856,
+      "change_pct": 1.69
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.355,
+      "nav": 1.457,
+      "amount": 111321.1,
+      "premium_rate": -7.001,
+      "change_pct": 0.37
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.837,
+      "nav": 0.84,
+      "amount": 6599.8,
+      "premium_rate": -0.357,
+      "change_pct": -0.36
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.184,
+      "nav": 1.192,
+      "amount": 108453.2,
+      "premium_rate": -0.671,
+      "change_pct": 0.68
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.435,
+      "nav": 1.4391,
+      "amount": 59945.254,
+      "premium_rate": -0.285,
+      "change_pct": -0.9
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.217,
+      "nav": 1.2141,
+      "amount": 3290.072,
+      "premium_rate": 0.239,
+      "change_pct": -0.16
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.412,
+      "nav": 1.4189,
+      "amount": 14112.2,
+      "premium_rate": -0.486,
+      "change_pct": 0.14
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.362,
+      "nav": 2.3755,
+      "amount": 6885.814,
+      "premium_rate": -0.568,
+      "change_pct": 0.6
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.115,
+      "nav": 1.1194,
+      "amount": 3326.045,
+      "premium_rate": -0.393,
+      "change_pct": 0.09
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.1,
+      "nav": 3.1206,
+      "amount": 18747.692,
+      "premium_rate": -0.66,
+      "change_pct": -0.19
+    },
+    "160621": {
+      "code": "160621",
+      "name": "鹏华丰和LOF",
+      "price": 1.42,
+      "nav": 1.4184,
+      "amount": 1961.02,
+      "premium_rate": 0.113,
+      "change_pct": -0.28
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.159,
+      "nav": 1.1547,
+      "amount": 625977.635,
+      "premium_rate": 0.372,
+      "change_pct": 0.43
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.846,
+      "nav": 0.8463,
+      "amount": 94562.316,
+      "premium_rate": -0.035,
+      "change_pct": -0.47
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.405,
+      "nav": 1.4071,
+      "amount": 105709.201,
+      "premium_rate": -0.149,
+      "change_pct": 1.52
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.554,
+      "nav": 0.5563,
+      "amount": 184985.674,
+      "premium_rate": -0.413,
+      "change_pct": 2.59
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.279,
+      "nav": 1.2866,
+      "amount": 35608.45,
+      "premium_rate": -0.591,
+      "change_pct": -0.31
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.193,
+      "nav": 1.1998,
+      "amount": 524614.712,
+      "premium_rate": -0.567,
+      "change_pct": 1.27
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.337,
+      "nav": 1.3442,
+      "amount": 56500.432,
+      "premium_rate": -0.536,
+      "change_pct": -0.37
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.303,
+      "nav": 0.3026,
+      "amount": 5245520.082,
+      "premium_rate": 0.132,
+      "change_pct": -1.62
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.055,
+      "nav": 1.0632,
+      "amount": 43327.536,
+      "premium_rate": -0.771,
+      "change_pct": -0.57
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.896,
+      "nav": 0.8948,
+      "amount": 2600.089,
+      "premium_rate": 0.134,
+      "change_pct": -1.32
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.67,
+      "nav": 1.6822,
+      "amount": 438539.973,
+      "premium_rate": -0.725,
+      "change_pct": 1.15
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.152,
+      "nav": 3.1787,
+      "amount": 150571.915,
+      "premium_rate": -0.84,
+      "change_pct": 0.32
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.89,
+      "nav": 0.8972,
+      "amount": 65953.617,
+      "premium_rate": -0.802,
+      "change_pct": -0.22
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 104.072,
+      "nav": 104.5896,
+      "amount": 221326.344,
+      "premium_rate": -0.495,
+      "change_pct": 0.26
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.085,
+      "nav": 2.1044,
+      "amount": 2293.5,
+      "premium_rate": -0.922,
+      "change_pct": -1.09
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.422,
+      "nav": 1.4328,
+      "amount": 810799.541,
+      "premium_rate": -0.754,
+      "change_pct": 0.99
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.686,
+      "nav": 1.7213,
+      "amount": 7226287.113,
+      "premium_rate": -2.051,
+      "change_pct": -1.98
+    }
+  },
+  "2026-04-20": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.231,
+      "nav": 1.241,
+      "amount": 4070.9,
+      "premium_rate": -0.806,
+      "change_pct": -0.08
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.495,
+      "nav": 1.5005,
+      "amount": 43221.2,
+      "premium_rate": -0.367,
+      "change_pct": 0.34
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.305,
+      "nav": 2.3174,
+      "amount": 455217.68,
+      "premium_rate": -0.535,
+      "change_pct": 0.92
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.802,
+      "nav": 1.8049,
+      "amount": 9232228.484,
+      "premium_rate": -0.161,
+      "change_pct": 2.21
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.875,
+      "nav": 0.8839,
+      "amount": 41767.732,
+      "premium_rate": -1.007,
+      "change_pct": 0.34
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.032,
+      "nav": 1.024,
+      "amount": 193672.6,
+      "premium_rate": 0.781,
+      "change_pct": 0.1
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.202,
+      "nav": 4.2488,
+      "amount": 307196.8,
+      "premium_rate": -1.101,
+      "change_pct": -0.85
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.049,
+      "nav": 1.0535,
+      "amount": 211304.492,
+      "premium_rate": -0.427,
+      "change_pct": 0.19
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.399,
+      "nav": 1.4214,
+      "amount": 2764699.602,
+      "premium_rate": -1.576,
+      "change_pct": 1.16
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.129,
+      "nav": 1.1295,
+      "amount": 2932.6,
+      "premium_rate": -0.044,
+      "change_pct": 0.44
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.428,
+      "nav": 1.5158,
+      "amount": 392123.275,
+      "premium_rate": -5.792,
+      "change_pct": 0.99
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.252,
+      "nav": 3.305,
+      "amount": 198687.229,
+      "premium_rate": -1.604,
+      "change_pct": -1.09
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.403,
+      "nav": 4.3501,
+      "amount": 34073,
+      "premium_rate": 1.216,
+      "change_pct": 0.53
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.147,
+      "nav": 2.985,
+      "amount": 718033.024,
+      "premium_rate": 5.427,
+      "change_pct": 10
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.742,
+      "nav": 0.73,
+      "amount": 10337953.085,
+      "premium_rate": 1.644,
+      "change_pct": -0.67
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.638,
+      "nav": 0.64,
+      "amount": 48355.696,
+      "premium_rate": -0.313,
+      "change_pct": -0.62
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.555,
+      "nav": 0.5558,
+      "amount": 139733.069,
+      "premium_rate": -0.144,
+      "change_pct": 0.18
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 3.931,
+      "nav": 3.957,
+      "amount": 1287087.687,
+      "premium_rate": -0.657,
+      "change_pct": 1.29
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.58,
+      "nav": 2.5853,
+      "amount": 1397189.125,
+      "premium_rate": -0.205,
+      "change_pct": 0.62
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.725,
+      "nav": 0.7251,
+      "amount": 160834.284,
+      "premium_rate": -0.014,
+      "change_pct": 0.28
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.022,
+      "nav": 2.032,
+      "amount": 268804.403,
+      "premium_rate": -0.492,
+      "change_pct": 0.25
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.1,
+      "nav": 2.1097,
+      "amount": 513898.5,
+      "premium_rate": -0.46,
+      "change_pct": -0.19
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.754,
+      "nav": 1.778,
+      "amount": 555431.568,
+      "premium_rate": -1.35,
+      "change_pct": 0.63
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.415,
+      "nav": 1.438,
+      "amount": 97139.7,
+      "premium_rate": -1.599,
+      "change_pct": 1.07
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.165,
+      "nav": 1.1508,
+      "amount": 3286352.694,
+      "premium_rate": 1.234,
+      "change_pct": 2.73
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.76,
+      "nav": 1.7645,
+      "amount": 1513322.373,
+      "premium_rate": -0.255,
+      "change_pct": 0.17
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.117,
+      "nav": 2.1539,
+      "amount": 162407.265,
+      "premium_rate": -1.713,
+      "change_pct": -0.75
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.539,
+      "nav": 1.6223,
+      "amount": 518644,
+      "premium_rate": -5.135,
+      "change_pct": 0.59
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.89,
+      "nav": 0.9019,
+      "amount": 25484.499,
+      "premium_rate": -1.319,
+      "change_pct": 1.83
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.341,
+      "nav": 2.0496,
+      "amount": 296515994.334,
+      "premium_rate": 14.217,
+      "change_pct": -0.43
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.108,
+      "nav": 2.1383,
+      "amount": 4215.834,
+      "premium_rate": -1.417,
+      "change_pct": -0.99
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.309,
+      "nav": 1.319,
+      "amount": 3656176.522,
+      "premium_rate": -0.758,
+      "change_pct": 1.16
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.743,
+      "nav": 2.796,
+      "amount": 71286.918,
+      "premium_rate": -1.896,
+      "change_pct": 0.66
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.21,
+      "nav": 2.216,
+      "amount": 10604.6,
+      "premium_rate": -0.271,
+      "change_pct": 0
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.035,
+      "nav": 1.0433,
+      "amount": 10449.3,
+      "premium_rate": -0.796,
+      "change_pct": 0
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.717,
+      "nav": 2.733,
+      "amount": 142124.72,
+      "premium_rate": -0.585,
+      "change_pct": 2.68
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.331,
+      "nav": 1.3176,
+      "amount": 109109.807,
+      "premium_rate": 1.017,
+      "change_pct": -7.44
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.085,
+      "nav": 1.0916,
+      "amount": 79249.8,
+      "premium_rate": -0.605,
+      "change_pct": 0.09
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.365,
+      "nav": 1.4601,
+      "amount": 228198.7,
+      "premium_rate": -6.513,
+      "change_pct": 0.74
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.835,
+      "nav": 0.831,
+      "amount": 82109.704,
+      "premium_rate": 0.481,
+      "change_pct": -0.24
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.184,
+      "nav": 1.198,
+      "amount": 244019.256,
+      "premium_rate": -1.169,
+      "change_pct": 0
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.432,
+      "nav": 1.4511,
+      "amount": 20617.869,
+      "premium_rate": -1.316,
+      "change_pct": -0.21
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.217,
+      "nav": 1.2177,
+      "amount": 5879.26,
+      "premium_rate": -0.057,
+      "change_pct": 0
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.415,
+      "nav": 1.427,
+      "amount": 1436.225,
+      "premium_rate": -0.841,
+      "change_pct": 0.21
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.388,
+      "nav": 2.3961,
+      "amount": 10402.12,
+      "premium_rate": -0.338,
+      "change_pct": 1.1
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.117,
+      "nav": 1.1194,
+      "amount": 10719.9,
+      "premium_rate": -0.214,
+      "change_pct": 0.18
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.627,
+      "nav": 1.6287,
+      "amount": 813.5,
+      "premium_rate": -0.104,
+      "change_pct": 0
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.106,
+      "nav": 3.1188,
+      "amount": 111038.155,
+      "premium_rate": -0.41,
+      "change_pct": 0.19
+    },
+    "160621": {
+      "code": "160621",
+      "name": "鹏华丰和LOF",
+      "price": 1.42,
+      "nav": 1.4182,
+      "amount": 3541.6,
+      "premium_rate": 0.127,
+      "change_pct": 0
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.164,
+      "nav": 1.1546,
+      "amount": 391091.216,
+      "premium_rate": 0.814,
+      "change_pct": 0.43
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.846,
+      "nav": 0.8467,
+      "amount": 32103.962,
+      "premium_rate": -0.083,
+      "change_pct": 0
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.427,
+      "nav": 1.4349,
+      "amount": 137473.059,
+      "premium_rate": -0.551,
+      "change_pct": 1.57
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.548,
+      "nav": 0.5517,
+      "amount": 101566.719,
+      "premium_rate": -0.671,
+      "change_pct": -1.08
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.301,
+      "nav": 1.3081,
+      "amount": 236123.033,
+      "premium_rate": -0.543,
+      "change_pct": 1.72
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.217,
+      "nav": 1.2226,
+      "amount": 1548025.318,
+      "premium_rate": -0.458,
+      "change_pct": 2.01
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.346,
+      "nav": 1.3574,
+      "amount": 126235.49,
+      "premium_rate": -0.84,
+      "change_pct": 0.67
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.303,
+      "nav": 0.3024,
+      "amount": 1788648.571,
+      "premium_rate": 0.198,
+      "change_pct": 0
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.057,
+      "nav": 1.0613,
+      "amount": 130825.055,
+      "premium_rate": -0.405,
+      "change_pct": 0.19
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.893,
+      "nav": 0.8927,
+      "amount": 20722.8,
+      "premium_rate": 0.034,
+      "change_pct": -0.33
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.672,
+      "nav": 1.6818,
+      "amount": 128882.949,
+      "premium_rate": -0.583,
+      "change_pct": 0.12
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.178,
+      "nav": 3.2002,
+      "amount": 41118.859,
+      "premium_rate": -0.694,
+      "change_pct": 0.82
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.895,
+      "nav": 0.8997,
+      "amount": 76649.439,
+      "premium_rate": -0.522,
+      "change_pct": 0.56
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 104.077,
+      "nav": 104.7203,
+      "amount": 686909.3,
+      "premium_rate": -0.614,
+      "change_pct": 0
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.109,
+      "nav": 2.0899,
+      "amount": 421.8,
+      "premium_rate": 0.914,
+      "change_pct": 1.15
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.45,
+      "nav": 1.4595,
+      "amount": 1994527.635,
+      "premium_rate": -0.651,
+      "change_pct": 1.97
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.697,
+      "nav": 1.7162,
+      "amount": 4527522.444,
+      "premium_rate": -1.119,
+      "change_pct": 0.65
+    }
+  },
+  "2026-04-21": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.227,
+      "nav": 1.242,
+      "amount": 19491.314,
+      "premium_rate": -1.208,
+      "change_pct": -0.32
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.493,
+      "nav": 1.5017,
+      "amount": 31071.3,
+      "premium_rate": -0.579,
+      "change_pct": -0.13
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.301,
+      "nav": 2.3125,
+      "amount": 326771.72,
+      "premium_rate": -0.497,
+      "change_pct": -0.17
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.789,
+      "nav": 1.8268,
+      "amount": 1993927.508,
+      "premium_rate": -2.069,
+      "change_pct": -0.72
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.88,
+      "nav": 0.8931,
+      "amount": 154156.397,
+      "premium_rate": -1.467,
+      "change_pct": 0.57
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.024,
+      "amount": 276622.738,
+      "premium_rate": -0.293,
+      "change_pct": -1.07
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.236,
+      "nav": 4.2529,
+      "amount": 241911.012,
+      "premium_rate": -0.397,
+      "change_pct": 0.81
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.049,
+      "nav": 1.0543,
+      "amount": 135123.924,
+      "premium_rate": -0.503,
+      "change_pct": 0
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.413,
+      "nav": 1.399,
+      "amount": 3093172.598,
+      "premium_rate": 1.001,
+      "change_pct": 1
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.117,
+      "nav": 1.1283,
+      "amount": 10403.787,
+      "premium_rate": -1.002,
+      "change_pct": -1.06
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.428,
+      "nav": 1.5234,
+      "amount": 85904.9,
+      "premium_rate": -6.262,
+      "change_pct": 0
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.273,
+      "nav": 3.307,
+      "amount": 117468.204,
+      "premium_rate": -1.028,
+      "change_pct": 0.65
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.344,
+      "nav": 4.3725,
+      "amount": 26742.263,
+      "premium_rate": -0.652,
+      "change_pct": -1.34
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.053,
+      "nav": 3.005,
+      "amount": 533049.85,
+      "premium_rate": 1.597,
+      "change_pct": -2.99
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.734,
+      "nav": 0.72,
+      "amount": 9314286.705,
+      "premium_rate": 1.944,
+      "change_pct": -1.08
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.639,
+      "nav": 0.6407,
+      "amount": 40462.172,
+      "premium_rate": -0.265,
+      "change_pct": 0.16
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.549,
+      "nav": 0.5526,
+      "amount": 116839.087,
+      "premium_rate": -0.651,
+      "change_pct": -1.08
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 3.94,
+      "nav": 3.9854,
+      "amount": 1122229.796,
+      "premium_rate": -1.139,
+      "change_pct": 0.23
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.579,
+      "nav": 2.591,
+      "amount": 1387047.825,
+      "premium_rate": -0.463,
+      "change_pct": -0.04
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.724,
+      "nav": 0.7259,
+      "amount": 108552.9,
+      "premium_rate": -0.262,
+      "change_pct": -0.14
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.026,
+      "nav": 2.0382,
+      "amount": 212447.454,
+      "premium_rate": -0.599,
+      "change_pct": 0.2
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.135,
+      "nav": 2.1388,
+      "amount": 888158.701,
+      "premium_rate": -0.178,
+      "change_pct": 1.67
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.774,
+      "nav": 1.776,
+      "amount": 869428.445,
+      "premium_rate": -0.113,
+      "change_pct": 1.14
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.43,
+      "nav": 1.448,
+      "amount": 121850.392,
+      "premium_rate": -1.243,
+      "change_pct": 1.06
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.143,
+      "nav": 1.1557,
+      "amount": 1955811.458,
+      "premium_rate": -1.099,
+      "change_pct": -1.89
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.759,
+      "nav": 1.7655,
+      "amount": 1198446.073,
+      "premium_rate": -0.368,
+      "change_pct": -0.06
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.139,
+      "nav": 2.1857,
+      "amount": 197860.735,
+      "premium_rate": -2.137,
+      "change_pct": 1.04
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.54,
+      "nav": 1.6281,
+      "amount": 108239.578,
+      "premium_rate": -5.411,
+      "change_pct": 0.06
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.893,
+      "nav": 0.9024,
+      "amount": 4616.5,
+      "premium_rate": -1.042,
+      "change_pct": 0.34
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.247,
+      "nav": 2.0714,
+      "amount": 179479755.877,
+      "premium_rate": 8.477,
+      "change_pct": -4.02
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.118,
+      "nav": 2.145,
+      "amount": 57978.94,
+      "premium_rate": -1.259,
+      "change_pct": 0.47
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.312,
+      "nav": 1.325,
+      "amount": 1866330,
+      "premium_rate": -0.981,
+      "change_pct": 0.23
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.814,
+      "nav": 2.814,
+      "amount": 138334.768,
+      "premium_rate": 0,
+      "change_pct": 2.59
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.213,
+      "nav": 2.2169,
+      "amount": 60134.15,
+      "premium_rate": -0.176,
+      "change_pct": 0.14
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.035,
+      "nav": 1.0444,
+      "amount": 6934.5,
+      "premium_rate": -0.9,
+      "change_pct": 0
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.71,
+      "nav": 2.734,
+      "amount": 126542.3,
+      "premium_rate": -0.878,
+      "change_pct": -0.26
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.345,
+      "nav": 1.3276,
+      "amount": 33553.624,
+      "premium_rate": 1.311,
+      "change_pct": 1.05
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.087,
+      "nav": 1.0955,
+      "amount": 219339.1,
+      "premium_rate": -0.776,
+      "change_pct": 0.18
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.364,
+      "nav": 1.4603,
+      "amount": 147450.5,
+      "premium_rate": -6.595,
+      "change_pct": -0.07
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.827,
+      "nav": 0.829,
+      "amount": 236258.288,
+      "premium_rate": -0.241,
+      "change_pct": -0.96
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.178,
+      "nav": 1.196,
+      "amount": 343906.798,
+      "premium_rate": -1.505,
+      "change_pct": -0.51
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.433,
+      "nav": 1.4565,
+      "amount": 146891.284,
+      "premium_rate": -1.613,
+      "change_pct": 0.07
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.216,
+      "nav": 1.2213,
+      "amount": 8177.236,
+      "premium_rate": -0.434,
+      "change_pct": -0.08
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.422,
+      "nav": 1.431,
+      "amount": 45343.815,
+      "premium_rate": -0.629,
+      "change_pct": 0.49
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.384,
+      "nav": 2.3908,
+      "amount": 1418.7,
+      "premium_rate": -0.284,
+      "change_pct": -0.17
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.117,
+      "nav": 1.1206,
+      "amount": 7707.3,
+      "premium_rate": -0.321,
+      "change_pct": 0
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.108,
+      "nav": 3.1266,
+      "amount": 112320.17,
+      "premium_rate": -0.595,
+      "change_pct": 0.06
+    },
+    "160621": {
+      "code": "160621",
+      "name": "鹏华丰和LOF",
+      "price": 1.42,
+      "nav": 1.4195,
+      "amount": 1135.9,
+      "premium_rate": 0.035,
+      "change_pct": 0
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.159,
+      "nav": 1.1545,
+      "amount": 1162163.157,
+      "premium_rate": 0.39,
+      "change_pct": -0.43
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.843,
+      "nav": 0.8407,
+      "amount": 37264.458,
+      "premium_rate": 0.274,
+      "change_pct": -0.35
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.412,
+      "nav": 1.4292,
+      "amount": 75518.7,
+      "premium_rate": -1.203,
+      "change_pct": -1.05
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.549,
+      "nav": 0.5528,
+      "amount": 67447.409,
+      "premium_rate": -0.687,
+      "change_pct": 0.18
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.294,
+      "nav": 1.2938,
+      "amount": 80919.316,
+      "premium_rate": 0.015,
+      "change_pct": -0.54
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.2,
+      "nav": 1.2096,
+      "amount": 238919.423,
+      "premium_rate": -0.794,
+      "change_pct": -1.4
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.355,
+      "nav": 1.3621,
+      "amount": 171620.609,
+      "premium_rate": -0.521,
+      "change_pct": 0.67
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.303,
+      "nav": 0.3011,
+      "amount": 6519979.336,
+      "premium_rate": 0.631,
+      "change_pct": 0
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.052,
+      "nav": 1.0541,
+      "amount": 75550.08,
+      "premium_rate": -0.199,
+      "change_pct": -0.47
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.892,
+      "nav": 0.8884,
+      "amount": 37010.9,
+      "premium_rate": 0.405,
+      "change_pct": -0.11
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.672,
+      "nav": 1.6869,
+      "amount": 307814.628,
+      "premium_rate": -0.883,
+      "change_pct": 0
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.177,
+      "nav": 3.1992,
+      "amount": 65448.372,
+      "premium_rate": -0.694,
+      "change_pct": -0.03
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.894,
+      "nav": 0.9004,
+      "amount": 130323.493,
+      "premium_rate": -0.711,
+      "change_pct": -0.11
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 104.718,
+      "nav": 104.6669,
+      "amount": 10471.8,
+      "premium_rate": 0.049,
+      "change_pct": 0.62
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.09,
+      "nav": 2.0797,
+      "amount": 1670.2,
+      "premium_rate": 0.495,
+      "change_pct": -0.9
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.435,
+      "nav": 1.4431,
+      "amount": 1277696.039,
+      "premium_rate": -0.561,
+      "change_pct": -1.03
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.7,
+      "nav": 1.7135,
+      "amount": 3632284.637,
+      "premium_rate": -0.788,
+      "change_pct": 0.18
+    }
+  },
+  "2026-04-22": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.241,
+      "nav": 1.2465,
+      "amount": 49525.2,
+      "premium_rate": -0.441,
+      "change_pct": 1.14
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.496,
+      "nav": 1.507,
+      "amount": 38596,
+      "premium_rate": -0.73,
+      "change_pct": 0.2
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.33,
+      "nav": 2.3408,
+      "amount": 669200.208,
+      "premium_rate": -0.461,
+      "change_pct": 1.26
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.784,
+      "nav": 1.8213,
+      "amount": 2733448.787,
+      "premium_rate": -2.048,
+      "change_pct": -0.28
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.885,
+      "nav": 0.9004,
+      "amount": 178528.9,
+      "premium_rate": -1.71,
+      "change_pct": 0.57
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.025,
+      "amount": 115130.2,
+      "premium_rate": -0.39,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.222,
+      "nav": 4.2667,
+      "amount": 706800.122,
+      "premium_rate": -1.048,
+      "change_pct": -0.33
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.044,
+      "nav": 1.0501,
+      "amount": 59839.114,
+      "premium_rate": -0.581,
+      "change_pct": -0.48
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.397,
+      "nav": 1.384,
+      "amount": 2045379.725,
+      "premium_rate": 0.939,
+      "change_pct": -1.13
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.118,
+      "nav": 1.1334,
+      "amount": 17728,
+      "premium_rate": -1.359,
+      "change_pct": 0.09
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.453,
+      "nav": 1.5714,
+      "amount": 249178.968,
+      "premium_rate": -7.535,
+      "change_pct": 1.75
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.296,
+      "nav": 3.374,
+      "amount": 182086.32,
+      "premium_rate": -2.312,
+      "change_pct": 0.7
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.38,
+      "nav": 4.37,
+      "amount": 286458.47,
+      "premium_rate": 0.229,
+      "change_pct": 0.83
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.021,
+      "nav": 3.148,
+      "amount": 1409902.431,
+      "premium_rate": -4.034,
+      "change_pct": -1.05
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.728,
+      "nav": 0.732,
+      "amount": 19364984.683,
+      "premium_rate": -0.546,
+      "change_pct": -0.82
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.642,
+      "nav": 0.6443,
+      "amount": 91611.052,
+      "premium_rate": -0.357,
+      "change_pct": 0.47
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.553,
+      "nav": 0.5555,
+      "amount": 35165.519,
+      "premium_rate": -0.45,
+      "change_pct": 0.73
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.11,
+      "nav": 4.1696,
+      "amount": 3955820.919,
+      "premium_rate": -1.429,
+      "change_pct": 4.31
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.58,
+      "nav": 2.5955,
+      "amount": 1212750.442,
+      "premium_rate": -0.597,
+      "change_pct": 0.04
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.721,
+      "nav": 0.7229,
+      "amount": 67078.44,
+      "premium_rate": -0.263,
+      "change_pct": -0.41
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.058,
+      "nav": 2.0775,
+      "amount": 336323.414,
+      "premium_rate": -0.939,
+      "change_pct": 1.58
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.129,
+      "nav": 2.1421,
+      "amount": 822512.239,
+      "premium_rate": -0.612,
+      "change_pct": -0.28
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.768,
+      "nav": 1.782,
+      "amount": 286249.304,
+      "premium_rate": -0.786,
+      "change_pct": -0.34
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.452,
+      "nav": 1.464,
+      "amount": 154845.5,
+      "premium_rate": -0.82,
+      "change_pct": 1.54
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.136,
+      "nav": 1.1434,
+      "amount": 1271218.926,
+      "premium_rate": -0.647,
+      "change_pct": -0.61
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.761,
+      "nav": 1.7673,
+      "amount": 1270296.691,
+      "premium_rate": -0.356,
+      "change_pct": 0.11
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.221,
+      "nav": 2.2469,
+      "amount": 324335.117,
+      "premium_rate": -1.153,
+      "change_pct": 3.83
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.575,
+      "nav": 1.6652,
+      "amount": 928424.248,
+      "premium_rate": -5.417,
+      "change_pct": 2.27
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.898,
+      "nav": 0.9181,
+      "amount": 62989.4,
+      "premium_rate": -2.189,
+      "change_pct": 0.56
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.228,
+      "nav": 2.0914,
+      "amount": 299565112.633,
+      "premium_rate": 6.532,
+      "change_pct": -0.85
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.132,
+      "nav": 2.1506,
+      "amount": 22960.3,
+      "premium_rate": -0.865,
+      "change_pct": 0.66
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.315,
+      "nav": 1.331,
+      "amount": 2380353.478,
+      "premium_rate": -1.202,
+      "change_pct": 0.23
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.848,
+      "nav": 2.863,
+      "amount": 193575.159,
+      "premium_rate": -0.524,
+      "change_pct": 1.21
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.221,
+      "nav": 2.22,
+      "amount": 231568.906,
+      "premium_rate": 0.045,
+      "change_pct": 0.36
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.036,
+      "nav": 1.0452,
+      "amount": 1761.2,
+      "premium_rate": -0.88,
+      "change_pct": 0.1
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.735,
+      "nav": 2.77,
+      "amount": 547,
+      "premium_rate": -1.264,
+      "change_pct": 0.92
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.315,
+      "nav": 1.3328,
+      "amount": 188780.435,
+      "premium_rate": -1.336,
+      "change_pct": -2.23
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.084,
+      "nav": 1.1006,
+      "amount": 84608.5,
+      "premium_rate": -1.508,
+      "change_pct": -0.28
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.382,
+      "nav": 1.4856,
+      "amount": 311284.7,
+      "premium_rate": -6.974,
+      "change_pct": 1.32
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.833,
+      "nav": 0.841,
+      "amount": 208010.044,
+      "premium_rate": -0.951,
+      "change_pct": 0.73
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.199,
+      "nav": 1.216,
+      "amount": 265525.64,
+      "premium_rate": -1.398,
+      "change_pct": 1.78
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.435,
+      "nav": 1.4406,
+      "amount": 36930.988,
+      "premium_rate": -0.389,
+      "change_pct": 0.14
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.22,
+      "nav": 1.2201,
+      "amount": 485.7,
+      "premium_rate": -0.008,
+      "change_pct": 0.33
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.423,
+      "nav": 1.4412,
+      "amount": 124941.1,
+      "premium_rate": -1.263,
+      "change_pct": 0.07
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.398,
+      "nav": 2.4196,
+      "amount": 17006.9,
+      "premium_rate": -0.893,
+      "change_pct": 0.59
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.118,
+      "nav": 1.1215,
+      "amount": 25814.62,
+      "premium_rate": -0.312,
+      "change_pct": 0.09
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.626,
+      "nav": 1.6296,
+      "amount": 71354.958,
+      "premium_rate": -0.221,
+      "change_pct": -0.06
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.132,
+      "nav": 3.1454,
+      "amount": 219971.754,
+      "premium_rate": -0.426,
+      "change_pct": 0.77
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.158,
+      "nav": 1.1563,
+      "amount": 1236886.973,
+      "premium_rate": 0.147,
+      "change_pct": -0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.847,
+      "nav": 0.845,
+      "amount": 78110.934,
+      "premium_rate": 0.237,
+      "change_pct": 0.47
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.455,
+      "nav": 1.4709,
+      "amount": 176142.967,
+      "premium_rate": -1.081,
+      "change_pct": 3.05
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.551,
+      "nav": 0.5514,
+      "amount": 19172.048,
+      "premium_rate": -0.073,
+      "change_pct": 0.36
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.288,
+      "nav": 1.2915,
+      "amount": 48728.125,
+      "premium_rate": -0.271,
+      "change_pct": -0.46
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.208,
+      "nav": 1.2181,
+      "amount": 160813.184,
+      "premium_rate": -0.829,
+      "change_pct": 0.67
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.349,
+      "nav": 1.3533,
+      "amount": 83431.55,
+      "premium_rate": -0.318,
+      "change_pct": -0.44
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.302,
+      "nav": 0.3006,
+      "amount": 2455898.013,
+      "premium_rate": 0.466,
+      "change_pct": -0.33
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.057,
+      "nav": 1.0619,
+      "amount": 114213,
+      "premium_rate": -0.461,
+      "change_pct": 0.48
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.89,
+      "nav": 0.8918,
+      "amount": 20760.7,
+      "premium_rate": -0.202,
+      "change_pct": -0.22
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.708,
+      "nav": 1.7193,
+      "amount": 257453.78,
+      "premium_rate": -0.657,
+      "change_pct": 2.15
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.218,
+      "nav": 3.2428,
+      "amount": 209553.381,
+      "premium_rate": -0.765,
+      "change_pct": 1.29
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.892,
+      "nav": 0.8968,
+      "amount": 274080.195,
+      "premium_rate": -0.535,
+      "change_pct": -0.22
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.071,
+      "nav": 2.1256,
+      "amount": 3520.7,
+      "premium_rate": -2.569,
+      "change_pct": -0.91
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.445,
+      "nav": 1.4535,
+      "amount": 916284.472,
+      "premium_rate": -0.585,
+      "change_pct": 0.7
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.693,
+      "nav": 1.7484,
+      "amount": 3657889.759,
+      "premium_rate": -3.169,
+      "change_pct": -0.41
+    }
+  },
+  "2026-04-23": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.23,
+      "nav": 1.2303,
+      "amount": 18303.05,
+      "premium_rate": -0.024,
+      "change_pct": -0.89
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.498,
+      "nav": 1.4878,
+      "amount": 74616.65,
+      "premium_rate": 0.686,
+      "change_pct": 0.13
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.306,
+      "nav": 2.3193,
+      "amount": 1413318.19,
+      "premium_rate": -0.573,
+      "change_pct": -1.03
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.786,
+      "nav": 1.7938,
+      "amount": 3941614.46,
+      "premium_rate": -0.435,
+      "change_pct": 0.11
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.895,
+      "nav": 0.8994,
+      "amount": 210586.6,
+      "premium_rate": -0.489,
+      "change_pct": 1.13
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.025,
+      "amount": 125568.7,
+      "premium_rate": -0.39,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.222,
+      "nav": 4.2502,
+      "amount": 339575.756,
+      "premium_rate": -0.663,
+      "change_pct": 0
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.041,
+      "nav": 1.048,
+      "amount": 123043.699,
+      "premium_rate": -0.668,
+      "change_pct": -0.29
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.379,
+      "nav": 1.4029,
+      "amount": 958799.009,
+      "premium_rate": -1.704,
+      "change_pct": -1.29
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.115,
+      "nav": 1.1299,
+      "amount": 49908.7,
+      "premium_rate": -1.319,
+      "change_pct": -0.27
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.449,
+      "nav": 1.5451,
+      "amount": 292491.9,
+      "premium_rate": -6.22,
+      "change_pct": -0.28
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.286,
+      "nav": 3.343,
+      "amount": 156938.565,
+      "premium_rate": -1.705,
+      "change_pct": -0.3
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.334,
+      "nav": 4.3122,
+      "amount": 145151.9,
+      "premium_rate": 0.506,
+      "change_pct": -1.05
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.085,
+      "nav": 3.073,
+      "amount": 949855.748,
+      "premium_rate": 0.39,
+      "change_pct": 2.12
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.721,
+      "nav": 0.73,
+      "amount": 18885699.754,
+      "premium_rate": -1.233,
+      "change_pct": -0.96
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.644,
+      "nav": 0.6452,
+      "amount": 137814.837,
+      "premium_rate": -0.186,
+      "change_pct": 0.31
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.552,
+      "nav": 0.5533,
+      "amount": 53639.632,
+      "premium_rate": -0.235,
+      "change_pct": -0.18
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.092,
+      "nav": 4.0983,
+      "amount": 3594865.296,
+      "premium_rate": -0.154,
+      "change_pct": -0.44
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.505,
+      "nav": 2.5009,
+      "amount": 2783856.495,
+      "premium_rate": 0.164,
+      "change_pct": -2.91
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.726,
+      "nav": 0.7294,
+      "amount": 164988.345,
+      "premium_rate": -0.466,
+      "change_pct": 0.69
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.055,
+      "nav": 2.0605,
+      "amount": 215880.695,
+      "premium_rate": -0.267,
+      "change_pct": -0.15
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.097,
+      "nav": 2.108,
+      "amount": 459073.3,
+      "premium_rate": -0.522,
+      "change_pct": -1.5
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.766,
+      "nav": 1.779,
+      "amount": 474484.954,
+      "premium_rate": -0.731,
+      "change_pct": -0.11
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.428,
+      "nav": 1.445,
+      "amount": 358334.555,
+      "premium_rate": -1.176,
+      "change_pct": -1.65
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.125,
+      "nav": 1.1347,
+      "amount": 733007,
+      "premium_rate": -0.855,
+      "change_pct": -0.97
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.759,
+      "nav": 1.7617,
+      "amount": 1918581.904,
+      "premium_rate": -0.153,
+      "change_pct": -0.11
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.231,
+      "nav": 2.2485,
+      "amount": 387166.308,
+      "premium_rate": -0.778,
+      "change_pct": 0.45
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.578,
+      "nav": 1.6437,
+      "amount": 547699,
+      "premium_rate": -3.997,
+      "change_pct": 0.19
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.908,
+      "nav": 0.9102,
+      "amount": 317257.842,
+      "premium_rate": -0.242,
+      "change_pct": 1.11
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.294,
+      "nav": 2.1076,
+      "amount": 904909180.629,
+      "premium_rate": 8.844,
+      "change_pct": 2.96
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.115,
+      "nav": 2.1409,
+      "amount": 13771.9,
+      "premium_rate": -1.21,
+      "change_pct": -0.8
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.305,
+      "nav": 1.31,
+      "amount": 3314605.507,
+      "premium_rate": -0.382,
+      "change_pct": -0.76
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.82,
+      "nav": 2.851,
+      "amount": 28672.28,
+      "premium_rate": -1.087,
+      "change_pct": -0.98
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.222,
+      "nav": 2.2172,
+      "amount": 15734.782,
+      "premium_rate": 0.216,
+      "change_pct": 0.05
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.715,
+      "nav": 2.749,
+      "amount": 4075,
+      "premium_rate": -1.237,
+      "change_pct": -0.73
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.311,
+      "nav": 1.3265,
+      "amount": 167554.83,
+      "premium_rate": -1.168,
+      "change_pct": -0.3
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.08,
+      "nav": 1.0539,
+      "amount": 402317.2,
+      "premium_rate": 2.477,
+      "change_pct": -0.37
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.379,
+      "nav": 1.4616,
+      "amount": 226100.519,
+      "premium_rate": -5.651,
+      "change_pct": -0.22
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.829,
+      "nav": 0.84,
+      "amount": 175099.06,
+      "premium_rate": -1.31,
+      "change_pct": -0.48
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.195,
+      "nav": 1.2,
+      "amount": 319769.06,
+      "premium_rate": -0.417,
+      "change_pct": -0.33
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.425,
+      "nav": 1.4511,
+      "amount": 4843.1,
+      "premium_rate": -1.799,
+      "change_pct": -0.7
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.22,
+      "nav": 1.2224,
+      "amount": 12667.6,
+      "premium_rate": -0.196,
+      "change_pct": 0
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.426,
+      "nav": 1.4373,
+      "amount": 19815.438,
+      "premium_rate": -0.786,
+      "change_pct": 0.21
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.391,
+      "nav": 2.3973,
+      "amount": 22554.336,
+      "premium_rate": -0.263,
+      "change_pct": -0.29
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.119,
+      "nav": 1.1206,
+      "amount": 10239.936,
+      "premium_rate": -0.143,
+      "change_pct": 0.09
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.08,
+      "nav": 3.0859,
+      "amount": 237402.1,
+      "premium_rate": -0.191,
+      "change_pct": -1.66
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.159,
+      "nav": 1.1553,
+      "amount": 535950.008,
+      "premium_rate": 0.32,
+      "change_pct": 0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.838,
+      "nav": 0.8391,
+      "amount": 35619.5,
+      "premium_rate": -0.131,
+      "change_pct": -1.06
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.458,
+      "nav": 1.4584,
+      "amount": 150791.402,
+      "premium_rate": -0.027,
+      "change_pct": 0.21
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.543,
+      "nav": 0.548,
+      "amount": 52268.239,
+      "premium_rate": -0.912,
+      "change_pct": -1.45
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.28,
+      "nav": 1.2812,
+      "amount": 250809.073,
+      "premium_rate": -0.094,
+      "change_pct": -0.62
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.202,
+      "nav": 1.2103,
+      "amount": 592179.761,
+      "premium_rate": -0.686,
+      "change_pct": -0.5
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.351,
+      "nav": 1.3579,
+      "amount": 21902.743,
+      "premium_rate": -0.508,
+      "change_pct": 0.15
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.305,
+      "nav": 0.3056,
+      "amount": 6916496.86,
+      "premium_rate": -0.196,
+      "change_pct": 0.99
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.051,
+      "nav": 1.0532,
+      "amount": 46562.7,
+      "premium_rate": -0.209,
+      "change_pct": -0.57
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.885,
+      "nav": 0.8905,
+      "amount": 10032.7,
+      "premium_rate": -0.618,
+      "change_pct": -0.56
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.701,
+      "nav": 1.7052,
+      "amount": 71615.06,
+      "premium_rate": -0.246,
+      "change_pct": -0.41
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.221,
+      "nav": 3.2396,
+      "amount": 107207.544,
+      "premium_rate": -0.574,
+      "change_pct": 0.09
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.891,
+      "nav": 0.895,
+      "amount": 63395.217,
+      "premium_rate": -0.447,
+      "change_pct": -0.11
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 104.604,
+      "nav": 104.8839,
+      "amount": 10565.004,
+      "premium_rate": -0.267,
+      "change_pct": -0.11
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.093,
+      "nav": 2.1095,
+      "amount": 725.695,
+      "premium_rate": -0.782,
+      "change_pct": 1.06
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.44,
+      "nav": 1.4456,
+      "amount": 1466204.7,
+      "premium_rate": -0.387,
+      "change_pct": -0.35
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.717,
+      "nav": 1.7274,
+      "amount": 10530581.546,
+      "premium_rate": -0.602,
+      "change_pct": 1.42
+    }
+  },
+  "2026-04-24": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.221,
+      "nav": 1.2318,
+      "amount": 3926.4,
+      "premium_rate": -0.877,
+      "change_pct": -0.73
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.495,
+      "nav": 1.4881,
+      "amount": 19277.324,
+      "premium_rate": 0.464,
+      "change_pct": -0.2
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.292,
+      "nav": 2.3072,
+      "amount": 566370.771,
+      "premium_rate": -0.659,
+      "change_pct": -0.61
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.783,
+      "nav": 1.7967,
+      "amount": 3009583.319,
+      "premium_rate": -0.763,
+      "change_pct": -0.17
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.9,
+      "nav": 0.8969,
+      "amount": 122194.67,
+      "premium_rate": 0.346,
+      "change_pct": 0.56
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.025,
+      "amount": 46966,
+      "premium_rate": -0.39,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.23,
+      "nav": 4.2574,
+      "amount": 82840.1,
+      "premium_rate": -0.644,
+      "change_pct": 0.19
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.038,
+      "nav": 1.0446,
+      "amount": 333214.864,
+      "premium_rate": -0.632,
+      "change_pct": -0.29
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.389,
+      "nav": 1.3999,
+      "amount": 1718141.464,
+      "premium_rate": -0.779,
+      "change_pct": 0.73
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.118,
+      "nav": 1.1328,
+      "amount": 6694,
+      "premium_rate": -1.306,
+      "change_pct": 0.27
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.444,
+      "nav": 1.531,
+      "amount": 149719.6,
+      "premium_rate": -5.683,
+      "change_pct": -0.35
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.36,
+      "nav": 3.424,
+      "amount": 227558.955,
+      "premium_rate": -1.869,
+      "change_pct": 2.25
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.327,
+      "nav": 4.323,
+      "amount": 369449.621,
+      "premium_rate": 0.093,
+      "change_pct": -0.16
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.028,
+      "nav": 3.022,
+      "amount": 856537.605,
+      "premium_rate": 0.199,
+      "change_pct": -1.85
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.728,
+      "nav": 0.732,
+      "amount": 12208400.999,
+      "premium_rate": -0.546,
+      "change_pct": 0.97
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.639,
+      "nav": 0.6383,
+      "amount": 122152.685,
+      "premium_rate": 0.11,
+      "change_pct": -0.78
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.55,
+      "nav": 0.5534,
+      "amount": 21202.751,
+      "premium_rate": -0.614,
+      "change_pct": -0.36
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 3.992,
+      "nav": 4.0015,
+      "amount": 2260909.552,
+      "premium_rate": -0.237,
+      "change_pct": -2.44
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.504,
+      "nav": 2.5173,
+      "amount": 1297162.519,
+      "premium_rate": -0.528,
+      "change_pct": -0.04
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.726,
+      "nav": 0.7312,
+      "amount": 142441.635,
+      "premium_rate": -0.711,
+      "change_pct": 0
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.024,
+      "nav": 2.033,
+      "amount": 419576.254,
+      "premium_rate": -0.443,
+      "change_pct": -1.51
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.131,
+      "nav": 2.1409,
+      "amount": 369105.62,
+      "premium_rate": -0.462,
+      "change_pct": 1.62
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.774,
+      "nav": 1.786,
+      "amount": 601491.45,
+      "premium_rate": -0.672,
+      "change_pct": 0.45
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.43,
+      "nav": 1.443,
+      "amount": 396351.386,
+      "premium_rate": -0.901,
+      "change_pct": 0.14
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.126,
+      "nav": 1.1453,
+      "amount": 759006.112,
+      "premium_rate": -1.685,
+      "change_pct": 0.09
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.76,
+      "nav": 1.7644,
+      "amount": 1658458.269,
+      "premium_rate": -0.249,
+      "change_pct": 0.06
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.323,
+      "nav": 2.3042,
+      "amount": 1101316.315,
+      "premium_rate": 0.816,
+      "change_pct": 4.12
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.563,
+      "nav": 1.6299,
+      "amount": 727970.152,
+      "premium_rate": -4.105,
+      "change_pct": -0.95
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.893,
+      "nav": 0.9026,
+      "amount": 37048.2,
+      "premium_rate": -1.064,
+      "change_pct": -1.65
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.293,
+      "nav": 2.1041,
+      "amount": 491833352.651,
+      "premium_rate": 8.978,
+      "change_pct": -0.04
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.17,
+      "nav": 2.1741,
+      "amount": 116492.5,
+      "premium_rate": -0.189,
+      "change_pct": 2.6
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.305,
+      "nav": 1.316,
+      "amount": 1976134.964,
+      "premium_rate": -0.836,
+      "change_pct": 0
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.768,
+      "nav": 2.804,
+      "amount": 126934.092,
+      "premium_rate": -1.284,
+      "change_pct": -1.84
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.222,
+      "nav": 2.2146,
+      "amount": 20220.2,
+      "premium_rate": 0.334,
+      "change_pct": 0
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.72,
+      "nav": 2.74,
+      "amount": 69344.6,
+      "premium_rate": -0.73,
+      "change_pct": 0.18
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.311,
+      "nav": 1.3269,
+      "amount": 58119.485,
+      "premium_rate": -1.198,
+      "change_pct": 0
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.04,
+      "nav": 1.0589,
+      "amount": 12650.1,
+      "premium_rate": -1.785,
+      "change_pct": -3.7
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.373,
+      "nav": 1.4455,
+      "amount": 52810.5,
+      "premium_rate": -5.016,
+      "change_pct": -0.44
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.836,
+      "nav": 0.845,
+      "amount": 117884.529,
+      "premium_rate": -1.065,
+      "change_pct": 0.84
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.182,
+      "nav": 1.191,
+      "amount": 314342.6,
+      "premium_rate": -0.756,
+      "change_pct": -1.09
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.45,
+      "nav": 1.453,
+      "amount": 146657.36,
+      "premium_rate": -0.206,
+      "change_pct": 1.75
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.221,
+      "nav": 1.2238,
+      "amount": 13452.244,
+      "premium_rate": -0.229,
+      "change_pct": 0.08
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.425,
+      "nav": 1.4335,
+      "amount": 284.5,
+      "premium_rate": -0.593,
+      "change_pct": -0.07
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.39,
+      "nav": 2.3879,
+      "amount": 1660.4,
+      "premium_rate": 0.088,
+      "change_pct": -0.04
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.119,
+      "nav": 1.1208,
+      "amount": 23219.618,
+      "premium_rate": -0.161,
+      "change_pct": 0
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.627,
+      "nav": 1.628,
+      "amount": 4881,
+      "premium_rate": -0.061,
+      "change_pct": 0.06
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.078,
+      "nav": 3.0856,
+      "amount": 189756.932,
+      "premium_rate": -0.246,
+      "change_pct": -0.06
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.158,
+      "nav": 1.154,
+      "amount": 191940.3,
+      "premium_rate": 0.347,
+      "change_pct": -0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.833,
+      "nav": 0.8329,
+      "amount": 68518.277,
+      "premium_rate": 0.012,
+      "change_pct": -0.6
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.453,
+      "nav": 1.4627,
+      "amount": 186670.031,
+      "premium_rate": -0.663,
+      "change_pct": -0.34
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.543,
+      "nav": 0.5441,
+      "amount": 52253.84,
+      "premium_rate": -0.202,
+      "change_pct": 0
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.246,
+      "nav": 1.2507,
+      "amount": 79556.3,
+      "premium_rate": -0.376,
+      "change_pct": -2.66
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.177,
+      "nav": 1.1811,
+      "amount": 227423.175,
+      "premium_rate": -0.347,
+      "change_pct": -2.08
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.35,
+      "nav": 1.3541,
+      "amount": 171717.564,
+      "premium_rate": -0.303,
+      "change_pct": -0.07
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.306,
+      "nav": 0.3065,
+      "amount": 5010458.854,
+      "premium_rate": -0.163,
+      "change_pct": 0.33
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.044,
+      "nav": 1.0441,
+      "amount": 54466.274,
+      "premium_rate": -0.01,
+      "change_pct": -0.67
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.889,
+      "nav": 0.8893,
+      "amount": 9259.552,
+      "premium_rate": -0.034,
+      "change_pct": 0.45
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.681,
+      "nav": 1.6825,
+      "amount": 312110.26,
+      "premium_rate": -0.089,
+      "change_pct": -1.18
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.192,
+      "nav": 3.1946,
+      "amount": 203336.19,
+      "premium_rate": -0.081,
+      "change_pct": -0.9
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.886,
+      "nav": 0.8906,
+      "amount": 113159.514,
+      "premium_rate": -0.517,
+      "change_pct": -0.56
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.407,
+      "nav": 1.4147,
+      "amount": 1259241.373,
+      "premium_rate": -0.544,
+      "change_pct": -2.29
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.715,
+      "nav": 1.7755,
+      "amount": 6675086.674,
+      "premium_rate": -3.407,
+      "change_pct": -0.12
+    }
+  },
+  "2026-04-27": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.234,
+      "nav": 1.2398,
+      "amount": 17181.2,
+      "premium_rate": -0.468,
+      "change_pct": 1.06
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.498,
+      "nav": 1.4976,
+      "amount": 60684.036,
+      "premium_rate": 0.027,
+      "change_pct": 0.2
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.31,
+      "nav": 2.3206,
+      "amount": 475371.9,
+      "premium_rate": -0.457,
+      "change_pct": 0.79
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.776,
+      "nav": 1.7882,
+      "amount": 2408631.463,
+      "premium_rate": -0.682,
+      "change_pct": -0.39
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.891,
+      "nav": 0.8942,
+      "amount": 99628.604,
+      "premium_rate": -0.358,
+      "change_pct": -1
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.025,
+      "amount": 66567,
+      "premium_rate": -0.39,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.228,
+      "nav": 4.2612,
+      "amount": 104100.869,
+      "premium_rate": -0.779,
+      "change_pct": -0.05
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.039,
+      "nav": 1.0419,
+      "amount": 35604.884,
+      "premium_rate": -0.278,
+      "change_pct": 0.1
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.392,
+      "nav": 1.3925,
+      "amount": 4169509.092,
+      "premium_rate": -0.036,
+      "change_pct": 0.22
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.121,
+      "nav": 1.1293,
+      "amount": 58024.9,
+      "premium_rate": -0.735,
+      "change_pct": 0.27
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.458,
+      "nav": 1.5472,
+      "amount": 57867,
+      "premium_rate": -5.765,
+      "change_pct": 0.97
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.5,
+      "nav": 3.432,
+      "amount": 460087.452,
+      "premium_rate": 1.981,
+      "change_pct": 4.17
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.395,
+      "nav": 4.3474,
+      "amount": 78578.381,
+      "premium_rate": 1.095,
+      "change_pct": 1.57
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.069,
+      "nav": 3.047,
+      "amount": 884038.901,
+      "premium_rate": 0.722,
+      "change_pct": 1.35
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.724,
+      "nav": 0.731,
+      "amount": 6251662.492,
+      "premium_rate": -0.958,
+      "change_pct": -0.55
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.635,
+      "nav": 0.6366,
+      "amount": 108700.66,
+      "premium_rate": -0.251,
+      "change_pct": -0.63
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.548,
+      "nav": 0.5513,
+      "amount": 75433.092,
+      "premium_rate": -0.599,
+      "change_pct": -0.36
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.019,
+      "nav": 4.084,
+      "amount": 1398471.208,
+      "premium_rate": -1.592,
+      "change_pct": 0.68
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.485,
+      "nav": 2.4887,
+      "amount": 842759.02,
+      "premium_rate": -0.149,
+      "change_pct": -0.76
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.721,
+      "nav": 0.7228,
+      "amount": 165940.497,
+      "premium_rate": -0.249,
+      "change_pct": -0.69
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.014,
+      "nav": 2.023,
+      "amount": 164082.5,
+      "premium_rate": -0.445,
+      "change_pct": -0.49
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.147,
+      "nav": 2.1514,
+      "amount": 335148.62,
+      "premium_rate": -0.205,
+      "change_pct": 0.75
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.773,
+      "nav": 1.78,
+      "amount": 184701.9,
+      "premium_rate": -0.393,
+      "change_pct": -0.06
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.424,
+      "nav": 1.448,
+      "amount": 100787.424,
+      "premium_rate": -1.657,
+      "change_pct": -0.42
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.136,
+      "nav": 1.1466,
+      "amount": 507977.9,
+      "premium_rate": -0.924,
+      "change_pct": 0.89
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.762,
+      "nav": 1.7693,
+      "amount": 1567501.878,
+      "premium_rate": -0.413,
+      "change_pct": 0.11
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.331,
+      "nav": 2.341,
+      "amount": 604143.436,
+      "premium_rate": -0.427,
+      "change_pct": 0.34
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.557,
+      "nav": 1.6271,
+      "amount": 428241.134,
+      "premium_rate": -4.308,
+      "change_pct": -0.38
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.896,
+      "nav": 0.9051,
+      "amount": 19207.2,
+      "premium_rate": -1.005,
+      "change_pct": 0.34
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.24,
+      "nav": 2.104,
+      "amount": 144856553.896,
+      "premium_rate": 6.464,
+      "change_pct": -2.31
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.17,
+      "nav": 2.1905,
+      "amount": 124896.775,
+      "premium_rate": -0.936,
+      "change_pct": 0
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.304,
+      "nav": 1.313,
+      "amount": 1919692.936,
+      "premium_rate": -0.685,
+      "change_pct": -0.08
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.802,
+      "nav": 2.807,
+      "amount": 15198.342,
+      "premium_rate": -0.178,
+      "change_pct": 1.23
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.253,
+      "nav": 2.2135,
+      "amount": 233945.61,
+      "premium_rate": 1.785,
+      "change_pct": 1.4
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.745,
+      "nav": 2.753,
+      "amount": 106873.3,
+      "premium_rate": -0.291,
+      "change_pct": 0.92
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.311,
+      "nav": 1.3255,
+      "amount": 14991.423,
+      "premium_rate": -1.094,
+      "change_pct": 0
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.057,
+      "nav": 1.0621,
+      "amount": 124792.9,
+      "premium_rate": -0.48,
+      "change_pct": 1.63
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.372,
+      "nav": 1.451,
+      "amount": 62872.9,
+      "premium_rate": -5.445,
+      "change_pct": -0.07
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.841,
+      "nav": 0.849,
+      "amount": 110487.182,
+      "premium_rate": -0.942,
+      "change_pct": 0.6
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.209,
+      "nav": 1.216,
+      "amount": 361032.5,
+      "premium_rate": -0.576,
+      "change_pct": 2.28
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.442,
+      "nav": 1.4495,
+      "amount": 91887.02,
+      "premium_rate": -0.517,
+      "change_pct": -0.55
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.219,
+      "nav": 1.22,
+      "amount": 1093.6,
+      "premium_rate": -0.082,
+      "change_pct": -0.16
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.425,
+      "nav": 1.434,
+      "amount": 1425,
+      "premium_rate": -0.628,
+      "change_pct": 0
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.394,
+      "nav": 2.4022,
+      "amount": 15260.5,
+      "premium_rate": -0.341,
+      "change_pct": 0.17
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.055,
+      "nav": 3.0696,
+      "amount": 63878.2,
+      "premium_rate": -0.476,
+      "change_pct": -0.75
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.157,
+      "nav": 1.1534,
+      "amount": 271762.247,
+      "premium_rate": 0.312,
+      "change_pct": -0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.836,
+      "nav": 0.8323,
+      "amount": 32221.231,
+      "premium_rate": 0.445,
+      "change_pct": 0.36
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.504,
+      "nav": 1.5085,
+      "amount": 255042.63,
+      "premium_rate": -0.298,
+      "change_pct": 3.51
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.538,
+      "nav": 0.539,
+      "amount": 29529.732,
+      "premium_rate": -0.186,
+      "change_pct": -0.92
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.239,
+      "nav": 1.2415,
+      "amount": 34103.076,
+      "premium_rate": -0.201,
+      "change_pct": -0.56
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.173,
+      "nav": 1.1796,
+      "amount": 179730.437,
+      "premium_rate": -0.56,
+      "change_pct": -0.34
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.345,
+      "nav": 1.3495,
+      "amount": 123603.339,
+      "premium_rate": -0.333,
+      "change_pct": -0.37
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.302,
+      "nav": 0.301,
+      "amount": 4329839.584,
+      "premium_rate": 0.332,
+      "change_pct": -1.31
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.036,
+      "nav": 1.0448,
+      "amount": 163531.36,
+      "premium_rate": -0.842,
+      "change_pct": -0.77
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.883,
+      "nav": 0.8853,
+      "amount": 18279.2,
+      "premium_rate": -0.26,
+      "change_pct": -0.67
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.662,
+      "nav": 1.6741,
+      "amount": 23529,
+      "premium_rate": -0.723,
+      "change_pct": -1.13
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.167,
+      "nav": 3.1762,
+      "amount": 70036.1,
+      "premium_rate": -0.29,
+      "change_pct": -0.78
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.886,
+      "nav": 0.8883,
+      "amount": 94883.02,
+      "premium_rate": -0.259,
+      "change_pct": 0
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.153,
+      "nav": 2.1906,
+      "amount": 11696.486,
+      "premium_rate": -1.716,
+      "change_pct": 2.87
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.401,
+      "nav": 1.4131,
+      "amount": 447533.138,
+      "premium_rate": -0.856,
+      "change_pct": -0.43
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.762,
+      "nav": 1.7978,
+      "amount": 17059682.178,
+      "premium_rate": -1.991,
+      "change_pct": 2.74
+    }
+  },
+  "2026-04-28": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.247,
+      "nav": 1.2515,
+      "amount": 18741.396,
+      "premium_rate": -0.36,
+      "change_pct": 1.05
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.508,
+      "nav": 1.5116,
+      "amount": 103781.64,
+      "premium_rate": -0.238,
+      "change_pct": 0.67
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.282,
+      "nav": 2.2951,
+      "amount": 240136.9,
+      "premium_rate": -0.571,
+      "change_pct": -1.21
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.763,
+      "nav": 1.7623,
+      "amount": 689074.649,
+      "premium_rate": 0.04,
+      "change_pct": -0.73
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.883,
+      "nav": 0.8901,
+      "amount": 12364.4,
+      "premium_rate": -0.798,
+      "change_pct": -0.9
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.025,
+      "amount": 64790.3,
+      "premium_rate": -0.39,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.256,
+      "nav": 4.2796,
+      "amount": 394790.575,
+      "premium_rate": -0.551,
+      "change_pct": 0.66
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.034,
+      "nav": 1.0418,
+      "amount": 168316.076,
+      "premium_rate": -0.749,
+      "change_pct": -0.48
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.388,
+      "nav": 1.4054,
+      "amount": 719342.16,
+      "premium_rate": -1.238,
+      "change_pct": -0.29
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.135,
+      "nav": 1.1347,
+      "amount": 92256,
+      "premium_rate": 0.026,
+      "change_pct": 1.25
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.455,
+      "nav": 1.5263,
+      "amount": 174535.6,
+      "premium_rate": -4.671,
+      "change_pct": -0.21
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.39,
+      "nav": 3.365,
+      "amount": 529226.8,
+      "premium_rate": 0.743,
+      "change_pct": -3.14
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.271,
+      "nav": 4.2892,
+      "amount": 296032.611,
+      "premium_rate": -0.424,
+      "change_pct": -2.82
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 2.979,
+      "nav": 2.99,
+      "amount": 356405.936,
+      "premium_rate": -0.368,
+      "change_pct": -2.93
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.726,
+      "nav": 0.723,
+      "amount": 7324479.856,
+      "premium_rate": 0.415,
+      "change_pct": 0.28
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.636,
+      "nav": 0.6391,
+      "amount": 197701.679,
+      "premium_rate": -0.485,
+      "change_pct": 0.16
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.557,
+      "nav": 0.5579,
+      "amount": 144201.116,
+      "premium_rate": -0.161,
+      "change_pct": 1.64
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.006,
+      "nav": 4.0194,
+      "amount": 702689.845,
+      "premium_rate": -0.333,
+      "change_pct": -0.32
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.427,
+      "nav": 2.4347,
+      "amount": 1272983.695,
+      "premium_rate": -0.316,
+      "change_pct": -2.33
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.717,
+      "nav": 0.7233,
+      "amount": 87863.396,
+      "premium_rate": -0.871,
+      "change_pct": -0.55
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 1.992,
+      "nav": 1.9956,
+      "amount": 255242.8,
+      "premium_rate": -0.18,
+      "change_pct": -1.09
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.1,
+      "nav": 2.108,
+      "amount": 322229.137,
+      "premium_rate": -0.38,
+      "change_pct": -2.19
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.758,
+      "nav": 1.759,
+      "amount": 226053.3,
+      "premium_rate": -0.057,
+      "change_pct": -0.85
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.41,
+      "nav": 1.426,
+      "amount": 42668.3,
+      "premium_rate": -1.122,
+      "change_pct": -0.98
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.126,
+      "nav": 1.1375,
+      "amount": 609855.7,
+      "premium_rate": -1.011,
+      "change_pct": -0.88
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.762,
+      "nav": 1.7691,
+      "amount": 2311746.798,
+      "premium_rate": -0.401,
+      "change_pct": 0
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.361,
+      "nav": 2.3357,
+      "amount": 2102611.2,
+      "premium_rate": 1.083,
+      "change_pct": 1.29
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.547,
+      "nav": 1.615,
+      "amount": 228234.844,
+      "premium_rate": -4.211,
+      "change_pct": -0.64
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.892,
+      "nav": 0.8951,
+      "amount": 43978.9,
+      "premium_rate": -0.346,
+      "change_pct": -0.45
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.256,
+      "nav": 2.1363,
+      "amount": 251799618.972,
+      "premium_rate": 5.603,
+      "change_pct": 0.71
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.168,
+      "nav": 2.176,
+      "amount": 69024.9,
+      "premium_rate": -0.368,
+      "change_pct": -0.09
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.291,
+      "nav": 1.295,
+      "amount": 1264771.5,
+      "premium_rate": -0.309,
+      "change_pct": -1
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.778,
+      "nav": 2.784,
+      "amount": 2219.2,
+      "premium_rate": -0.216,
+      "change_pct": -0.86
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.253,
+      "nav": 2.2118,
+      "amount": 72279.384,
+      "premium_rate": 1.863,
+      "change_pct": 0
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.036,
+      "nav": 1.0443,
+      "amount": 79237.6,
+      "premium_rate": -0.795,
+      "change_pct": 0
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.695,
+      "nav": 2.722,
+      "amount": 239599.6,
+      "premium_rate": -0.992,
+      "change_pct": -1.82
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.31,
+      "nav": 1.326,
+      "amount": 57440.272,
+      "premium_rate": -1.207,
+      "change_pct": -0.08
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.037,
+      "nav": 1.0392,
+      "amount": 9662.1,
+      "premium_rate": -0.212,
+      "change_pct": -1.89
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.363,
+      "nav": 1.4323,
+      "amount": 193998.6,
+      "premium_rate": -4.838,
+      "change_pct": -0.66
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.843,
+      "nav": 0.849,
+      "amount": 206761.217,
+      "premium_rate": -0.707,
+      "change_pct": 0.24
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.199,
+      "nav": 1.205,
+      "amount": 377887.588,
+      "premium_rate": -0.498,
+      "change_pct": -0.83
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.44,
+      "nav": 1.4405,
+      "amount": 3018.8,
+      "premium_rate": -0.035,
+      "change_pct": -0.14
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.215,
+      "nav": 1.2228,
+      "amount": 726.5,
+      "premium_rate": -0.638,
+      "change_pct": -0.33
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.429,
+      "nav": 1.4303,
+      "amount": 142.9,
+      "premium_rate": -0.091,
+      "change_pct": 0.28
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.376,
+      "nav": 2.3761,
+      "amount": 41931.7,
+      "premium_rate": -0.004,
+      "change_pct": -0.75
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.119,
+      "nav": 1.1203,
+      "amount": 4324.735,
+      "premium_rate": -0.116,
+      "change_pct": 0
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.625,
+      "nav": 1.6277,
+      "amount": 1787.5,
+      "premium_rate": -0.166,
+      "change_pct": -0.12
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.012,
+      "nav": 3.0353,
+      "amount": 113561.05,
+      "premium_rate": -0.768,
+      "change_pct": -1.41
+    },
+    "160621": {
+      "code": "160621",
+      "name": "鹏华丰和LOF",
+      "price": 1.415,
+      "nav": 1.4205,
+      "amount": 9736.3,
+      "premium_rate": -0.387,
+      "change_pct": -0.35
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.156,
+      "nav": 1.1517,
+      "amount": 406392.485,
+      "premium_rate": 0.373,
+      "change_pct": -0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.843,
+      "nav": 0.8396,
+      "amount": 30617.583,
+      "premium_rate": 0.405,
+      "change_pct": 0.84
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.486,
+      "nav": 1.4886,
+      "amount": 203194.095,
+      "premium_rate": -0.175,
+      "change_pct": -1.2
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.54,
+      "nav": 0.5446,
+      "amount": 68916.12,
+      "premium_rate": -0.845,
+      "change_pct": 0.37
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.223,
+      "nav": 1.2235,
+      "amount": 73310.981,
+      "premium_rate": -0.041,
+      "change_pct": -1.29
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.145,
+      "nav": 1.1493,
+      "amount": 338799.685,
+      "premium_rate": -0.374,
+      "change_pct": -2.39
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.347,
+      "nav": 1.3546,
+      "amount": 82761.731,
+      "premium_rate": -0.561,
+      "change_pct": 0.15
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.301,
+      "nav": 0.3013,
+      "amount": 2361527.888,
+      "premium_rate": -0.1,
+      "change_pct": -0.33
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.055,
+      "nav": 1.0567,
+      "amount": 131905.318,
+      "premium_rate": -0.161,
+      "change_pct": 1.83
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.903,
+      "nav": 0.898,
+      "amount": 84852.758,
+      "premium_rate": 0.557,
+      "change_pct": 2.27
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.636,
+      "nav": 1.6516,
+      "amount": 123953.235,
+      "premium_rate": -0.945,
+      "change_pct": -1.56
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.149,
+      "nav": 3.161,
+      "amount": 53171.378,
+      "premium_rate": -0.38,
+      "change_pct": -0.57
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.883,
+      "nav": 0.8882,
+      "amount": 49185.609,
+      "premium_rate": -0.585,
+      "change_pct": -0.34
+    },
+    "160641": {
+      "code": "160641",
+      "name": "鹏华丰锐LOF",
+      "price": 104.499,
+      "nav": 104.5658,
+      "amount": 271995.62,
+      "premium_rate": -0.064,
+      "change_pct": -0.1
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.175,
+      "nav": 2.1629,
+      "amount": 435,
+      "premium_rate": 0.559,
+      "change_pct": 1.02
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.365,
+      "nav": 1.3766,
+      "amount": 1239741.6,
+      "premium_rate": -0.843,
+      "change_pct": -2.57
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.774,
+      "nav": 1.7496,
+      "amount": 7682571.687,
+      "premium_rate": 1.395,
+      "change_pct": 0.68
+    }
+  },
+  "2026-04-29": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.256,
+      "nav": 1.27,
+      "amount": 16421.851,
+      "premium_rate": -1.102,
+      "change_pct": 0.72
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.519,
+      "nav": 1.5329,
+      "amount": 141525.71,
+      "premium_rate": -0.907,
+      "change_pct": 0.73
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.322,
+      "nav": 2.3329,
+      "amount": 1127748.674,
+      "premium_rate": -0.467,
+      "change_pct": 1.75
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.766,
+      "nav": 1.7724,
+      "amount": 1785629.427,
+      "premium_rate": -0.361,
+      "change_pct": 0.17
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.897,
+      "nav": 0.9097,
+      "amount": 552521.911,
+      "premium_rate": -1.396,
+      "change_pct": 1.59
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.021,
+      "nav": 1.025,
+      "amount": 103833.8,
+      "premium_rate": -0.39,
+      "change_pct": 0
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.3,
+      "nav": 4.3392,
+      "amount": 440822.017,
+      "premium_rate": -0.903,
+      "change_pct": 1.03
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.046,
+      "nav": 1.0494,
+      "amount": 147711.136,
+      "premium_rate": -0.324,
+      "change_pct": 1.16
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.397,
+      "nav": 1.3954,
+      "amount": 894911.316,
+      "premium_rate": 0.115,
+      "change_pct": 0.65
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.133,
+      "nav": 1.1565,
+      "amount": 63061.132,
+      "premium_rate": -2.032,
+      "change_pct": -0.18
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.481,
+      "nav": 1.5356,
+      "amount": 206765.8,
+      "premium_rate": -3.556,
+      "change_pct": 1.79
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.435,
+      "nav": 3.455,
+      "amount": 407137.835,
+      "premium_rate": -0.579,
+      "change_pct": 1.33
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.364,
+      "nav": 4.4184,
+      "amount": 382753.678,
+      "premium_rate": -1.231,
+      "change_pct": 2.18
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.007,
+      "nav": 3.023,
+      "amount": 1278867.33,
+      "premium_rate": -0.529,
+      "change_pct": 0.94
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.725,
+      "nav": 0.73,
+      "amount": 5480364.83,
+      "premium_rate": -0.685,
+      "change_pct": -0.14
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.643,
+      "nav": 0.6486,
+      "amount": 122087.884,
+      "premium_rate": -0.863,
+      "change_pct": 1.1
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.556,
+      "nav": 0.5595,
+      "amount": 81616.487,
+      "premium_rate": -0.626,
+      "change_pct": -0.18
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.05,
+      "nav": 4.0468,
+      "amount": 1673821.612,
+      "premium_rate": 0.079,
+      "change_pct": 1.1
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.518,
+      "nav": 2.533,
+      "amount": 4165609.999,
+      "premium_rate": -0.592,
+      "change_pct": 3.75
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.728,
+      "nav": 0.7339,
+      "amount": 851709.733,
+      "premium_rate": -0.804,
+      "change_pct": 1.53
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.033,
+      "nav": 2.0432,
+      "amount": 94305.23,
+      "premium_rate": -0.499,
+      "change_pct": 2.06
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.194,
+      "nav": 2.2087,
+      "amount": 917550.023,
+      "premium_rate": -0.666,
+      "change_pct": 4.48
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.786,
+      "nav": 1.793,
+      "amount": 364241.13,
+      "premium_rate": -0.39,
+      "change_pct": 1.59
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.437,
+      "nav": 1.438,
+      "amount": 400247.526,
+      "premium_rate": -0.07,
+      "change_pct": 1.91
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.144,
+      "nav": 1.161,
+      "amount": 667251.38,
+      "premium_rate": -1.464,
+      "change_pct": 1.6
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.769,
+      "nav": 1.7809,
+      "amount": 2873139.561,
+      "premium_rate": -0.668,
+      "change_pct": 0.4
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.374,
+      "nav": 2.3491,
+      "amount": 847667.892,
+      "premium_rate": 1.06,
+      "change_pct": 0.55
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.575,
+      "nav": 1.6573,
+      "amount": 712076.496,
+      "premium_rate": -4.966,
+      "change_pct": 1.81
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.9,
+      "nav": 0.9107,
+      "amount": 88355.026,
+      "premium_rate": -1.175,
+      "change_pct": 0.9
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.245,
+      "nav": 2.1698,
+      "amount": 156830070.604,
+      "premium_rate": 3.466,
+      "change_pct": -0.49
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.2,
+      "nav": 2.213,
+      "amount": 246522.6,
+      "premium_rate": -0.587,
+      "change_pct": 1.48
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.319,
+      "nav": 1.334,
+      "amount": 1806608.738,
+      "premium_rate": -1.124,
+      "change_pct": 2.17
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.81,
+      "nav": 2.829,
+      "amount": 449838.1,
+      "premium_rate": -0.672,
+      "change_pct": 1.15
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.231,
+      "nav": 2.2158,
+      "amount": 87669.577,
+      "premium_rate": 0.686,
+      "change_pct": -0.98
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.037,
+      "nav": 1.0447,
+      "amount": 2281.4,
+      "premium_rate": -0.737,
+      "change_pct": 0.1
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.744,
+      "nav": 2.76,
+      "amount": 62112.8,
+      "premium_rate": -0.58,
+      "change_pct": 1.82
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.323,
+      "nav": 1.3372,
+      "amount": 46028.671,
+      "premium_rate": -1.062,
+      "change_pct": 0.99
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.052,
+      "nav": 1.0679,
+      "amount": 99123.97,
+      "premium_rate": -1.489,
+      "change_pct": 1.45
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.382,
+      "nav": 1.4743,
+      "amount": 141324.8,
+      "premium_rate": -6.261,
+      "change_pct": 1.39
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.86,
+      "nav": 0.865,
+      "amount": 925395.731,
+      "premium_rate": -0.578,
+      "change_pct": 2.02
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.204,
+      "nav": 1.216,
+      "amount": 1002185.353,
+      "premium_rate": -0.987,
+      "change_pct": 0.42
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.457,
+      "nav": 1.4733,
+      "amount": 33744.05,
+      "premium_rate": -1.106,
+      "change_pct": 1.18
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.225,
+      "nav": 1.2341,
+      "amount": 25705.02,
+      "premium_rate": -0.737,
+      "change_pct": 0.82
+    },
+    "160615": {
+      "code": "160615",
+      "name": "鹏华300LOF",
+      "price": 1.434,
+      "nav": 1.4452,
+      "amount": 2868,
+      "premium_rate": -0.775,
+      "change_pct": 0.35
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.407,
+      "nav": 2.4144,
+      "amount": 33671.64,
+      "premium_rate": -0.306,
+      "change_pct": 1.3
+    },
+    "160617": {
+      "code": "160617",
+      "name": "鹏华丰润LOF",
+      "price": 1.119,
+      "nav": 1.1218,
+      "amount": 512.414,
+      "premium_rate": -0.25,
+      "change_pct": 0
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.624,
+      "nav": 1.6289,
+      "amount": 57652,
+      "premium_rate": -0.301,
+      "change_pct": -0.06
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.114,
+      "nav": 3.1263,
+      "amount": 195652.883,
+      "premium_rate": -0.393,
+      "change_pct": 3.39
+    },
+    "160621": {
+      "code": "160621",
+      "name": "鹏华丰和LOF",
+      "price": 1.415,
+      "nav": 1.4226,
+      "amount": 126218,
+      "premium_rate": -0.534,
+      "change_pct": 0
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.156,
+      "nav": 1.1541,
+      "amount": 570022.994,
+      "premium_rate": 0.165,
+      "change_pct": 0
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.849,
+      "nav": 0.8478,
+      "amount": 58366.593,
+      "premium_rate": 0.142,
+      "change_pct": 0.71
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.479,
+      "nav": 1.4905,
+      "amount": 134143.065,
+      "premium_rate": -0.772,
+      "change_pct": -0.47
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.552,
+      "nav": 0.5554,
+      "amount": 88993.8,
+      "premium_rate": -0.612,
+      "change_pct": 2.22
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.239,
+      "nav": 1.2464,
+      "amount": 75677.225,
+      "premium_rate": -0.594,
+      "change_pct": 1.31
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.146,
+      "nav": 1.1498,
+      "amount": 467646.575,
+      "premium_rate": -0.33,
+      "change_pct": 0.09
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.343,
+      "nav": 1.3499,
+      "amount": 27286.198,
+      "premium_rate": -0.511,
+      "change_pct": -0.3
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.303,
+      "nav": 0.3045,
+      "amount": 3519075.565,
+      "premium_rate": -0.493,
+      "change_pct": 0.66
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.058,
+      "nav": 1.061,
+      "amount": 107920.03,
+      "premium_rate": -0.283,
+      "change_pct": 0.28
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.9,
+      "nav": 0.9001,
+      "amount": 15564.768,
+      "premium_rate": -0.011,
+      "change_pct": -0.33
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.68,
+      "nav": 1.6908,
+      "amount": 214227.799,
+      "premium_rate": -0.639,
+      "change_pct": 2.69
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.187,
+      "nav": 3.2034,
+      "amount": 77057.77,
+      "premium_rate": -0.512,
+      "change_pct": 1.21
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.892,
+      "nav": 0.8947,
+      "amount": 76068.51,
+      "premium_rate": -0.302,
+      "change_pct": 1.02
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.193,
+      "nav": 2.1842,
+      "amount": 35104.5,
+      "premium_rate": 0.403,
+      "change_pct": 0.83
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.371,
+      "nav": 1.3769,
+      "amount": 904221.84,
+      "premium_rate": -0.428,
+      "change_pct": 0.44
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.77,
+      "nav": 1.7854,
+      "amount": 6707047.928,
+      "premium_rate": -0.863,
+      "change_pct": -0.23
+    }
+  },
+  "2026-04-30": {
+    "160105": {
+      "code": "160105",
+      "name": "南方积配LOF",
+      "price": 1.265,
+      "nav": 1.266,
+      "amount": 41863.646,
+      "premium_rate": -0.079,
+      "change_pct": 0.72
+    },
+    "160106": {
+      "code": "160106",
+      "name": "南方高增LOF",
+      "price": 1.523,
+      "nav": 1.5279,
+      "amount": 131273.145,
+      "premium_rate": -0.321,
+      "change_pct": 0.26
+    },
+    "160119": {
+      "code": "160119",
+      "name": "500ETF联接LOF",
+      "price": 2.324,
+      "nav": 2.3349,
+      "amount": 1433415.804,
+      "premium_rate": -0.467,
+      "change_pct": 0.09
+    },
+    "160125": {
+      "code": "160125",
+      "name": "南方香港LOF",
+      "price": 1.74,
+      "nav": null,
+      "amount": 1680924.618,
+      "premium_rate": null,
+      "change_pct": -1.47
+    },
+    "160127": {
+      "code": "160127",
+      "name": "南方消费LOF",
+      "price": 0.9,
+      "nav": 0.9095,
+      "amount": 200626.725,
+      "premium_rate": -1.045,
+      "change_pct": 0.33
+    },
+    "160128": {
+      "code": "160128",
+      "name": "南方金利定开",
+      "price": 1.023,
+      "nav": 1.025,
+      "amount": 128386.896,
+      "premium_rate": -0.195,
+      "change_pct": 0.2
+    },
+    "160133": {
+      "code": "160133",
+      "name": "南方天元LOF",
+      "price": 4.313,
+      "nav": 4.3356,
+      "amount": 434869.096,
+      "premium_rate": -0.521,
+      "change_pct": 0.3
+    },
+    "160135": {
+      "code": "160135",
+      "name": "高铁基金LOF",
+      "price": 1.04,
+      "nav": 1.0413,
+      "amount": 57756.918,
+      "premium_rate": -0.125,
+      "change_pct": -0.57
+    },
+    "160140": {
+      "code": "160140",
+      "name": "美国REIT精选LOF",
+      "price": 1.383,
+      "nav": null,
+      "amount": 4847554.259,
+      "premium_rate": null,
+      "change_pct": -1
+    },
+    "160142": {
+      "code": "160142",
+      "name": "南方优势产业LOF",
+      "price": 1.14,
+      "nav": 1.17,
+      "amount": 45141.8,
+      "premium_rate": -2.564,
+      "change_pct": 0.62
+    },
+    "160143": {
+      "code": "160143",
+      "name": "创业板定开南方",
+      "price": 1.48,
+      "nav": 1.5426,
+      "amount": 72234.2,
+      "premium_rate": -4.058,
+      "change_pct": -0.07
+    },
+    "160211": {
+      "code": "160211",
+      "name": "国泰小盘LOF",
+      "price": 3.442,
+      "nav": 3.459,
+      "amount": 112517.718,
+      "premium_rate": -0.491,
+      "change_pct": 0.2
+    },
+    "160212": {
+      "code": "160212",
+      "name": "国泰估值LOF",
+      "price": 4.482,
+      "nav": 4.4948,
+      "amount": 629303.024,
+      "premium_rate": -0.285,
+      "change_pct": 2.7
+    },
+    "160215": {
+      "code": "160215",
+      "name": "国泰价值LOF",
+      "price": 3.022,
+      "nav": 3.044,
+      "amount": 1145270.164,
+      "premium_rate": -0.723,
+      "change_pct": 0.5
+    },
+    "160216": {
+      "code": "160216",
+      "name": "国泰商品LOF",
+      "price": 0.727,
+      "nav": null,
+      "amount": 6910415.589,
+      "premium_rate": null,
+      "change_pct": 0.28
+    },
+    "160218": {
+      "code": "160218",
+      "name": "房地产LOF",
+      "price": 0.655,
+      "nav": 0.6548,
+      "amount": 108016.604,
+      "premium_rate": 0.031,
+      "change_pct": 1.87
+    },
+    "160219": {
+      "code": "160219",
+      "name": "医药LOF",
+      "price": 0.555,
+      "nav": 0.5573,
+      "amount": 91501.254,
+      "premium_rate": -0.413,
+      "change_pct": -0.18
+    },
+    "160220": {
+      "code": "160220",
+      "name": "国泰民益LOF",
+      "price": 4.02,
+      "nav": 4.0374,
+      "amount": 988481.935,
+      "premium_rate": -0.431,
+      "change_pct": -0.74
+    },
+    "160221": {
+      "code": "160221",
+      "name": "有色金属LOF",
+      "price": 2.502,
+      "nav": 2.5115,
+      "amount": 4038303.132,
+      "premium_rate": -0.378,
+      "change_pct": -0.64
+    },
+    "160222": {
+      "code": "160222",
+      "name": "食品LOF",
+      "price": 0.727,
+      "nav": 0.7316,
+      "amount": 173558.719,
+      "premium_rate": -0.629,
+      "change_pct": -0.14
+    },
+    "160223": {
+      "code": "160223",
+      "name": "创业板LOF",
+      "price": 2.029,
+      "nav": 2.0393,
+      "amount": 172685.5,
+      "premium_rate": -0.505,
+      "change_pct": -0.2
+    },
+    "160225": {
+      "code": "160225",
+      "name": "新能源汽车LOF",
+      "price": 2.195,
+      "nav": 2.1939,
+      "amount": 1521873.71,
+      "premium_rate": 0.05,
+      "change_pct": 0.05
+    },
+    "160311": {
+      "code": "160311",
+      "name": "华夏蓝筹LOF",
+      "price": 1.787,
+      "nav": 1.786,
+      "amount": 728412.358,
+      "premium_rate": 0.056,
+      "change_pct": 0.06
+    },
+    "160314": {
+      "code": "160314",
+      "name": "华夏行业LOF",
+      "price": 1.435,
+      "nav": 1.45,
+      "amount": 67460.65,
+      "premium_rate": -1.034,
+      "change_pct": -0.14
+    },
+    "160322": {
+      "code": "160322",
+      "name": "港股精选LOF",
+      "price": 1.141,
+      "nav": 1.1592,
+      "amount": 535934.201,
+      "premium_rate": -1.57,
+      "change_pct": -0.26
+    },
+    "160323": {
+      "code": "160323",
+      "name": "华夏磐泰LOF",
+      "price": 1.777,
+      "nav": 1.7874,
+      "amount": 3352646.828,
+      "premium_rate": -0.582,
+      "change_pct": 0.45
+    },
+    "160324": {
+      "code": "160324",
+      "name": "华夏磐晟LOF",
+      "price": 2.593,
+      "nav": 2.4598,
+      "amount": 2161459.591,
+      "premium_rate": 5.415,
+      "change_pct": 9.22
+    },
+    "160325": {
+      "code": "160325",
+      "name": "华夏创业板定开",
+      "price": 1.585,
+      "nav": 1.6639,
+      "amount": 625565.118,
+      "premium_rate": -4.742,
+      "change_pct": 0.63
+    },
+    "160326": {
+      "code": "160326",
+      "name": "优选配置FOF-LOF",
+      "price": 0.903,
+      "nav": 0.9137,
+      "amount": 98187.745,
+      "premium_rate": -1.171,
+      "change_pct": 0.33
+    },
+    "160416": {
+      "code": "160416",
+      "name": "石油基金LOF",
+      "price": 2.232,
+      "nav": null,
+      "amount": 296216401.691,
+      "premium_rate": null,
+      "change_pct": -0.58
+    },
+    "160421": {
+      "code": "160421",
+      "name": "华安智增LOF",
+      "price": 2.212,
+      "nav": 2.2205,
+      "amount": 22821.8,
+      "premium_rate": -0.383,
+      "change_pct": 0.55
+    },
+    "160505": {
+      "code": "160505",
+      "name": "博时主题LOF",
+      "price": 1.32,
+      "nav": 1.325,
+      "amount": 1895224.495,
+      "premium_rate": -0.377,
+      "change_pct": 0.08
+    },
+    "160512": {
+      "code": "160512",
+      "name": "博时卓越LOF",
+      "price": 2.811,
+      "nav": 2.838,
+      "amount": 102835.162,
+      "premium_rate": -0.951,
+      "change_pct": 0.04
+    },
+    "160513": {
+      "code": "160513",
+      "name": "稳健债LOF",
+      "price": 2.215,
+      "nav": 2.2149,
+      "amount": 72505.94,
+      "premium_rate": 0.005,
+      "change_pct": -0.72
+    },
+    "160515": {
+      "code": "160515",
+      "name": "安丰18定开",
+      "price": 1.036,
+      "nav": 1.0446,
+      "amount": 26853.3,
+      "premium_rate": -0.823,
+      "change_pct": -0.1
+    },
+    "160518": {
+      "code": "160518",
+      "name": "博时睿远LOF",
+      "price": 2.749,
+      "nav": 2.759,
+      "amount": 12592.9,
+      "premium_rate": -0.362,
+      "change_pct": 0.18
+    },
+    "160526": {
+      "code": "160526",
+      "name": "博时优势企业",
+      "price": 1.316,
+      "nav": 1.3326,
+      "amount": 15856.492,
+      "premium_rate": -1.246,
+      "change_pct": -0.53
+    },
+    "160527": {
+      "code": "160527",
+      "name": "博时研究优选LOF",
+      "price": 1.047,
+      "nav": 1.0597,
+      "amount": 1790,
+      "premium_rate": -1.198,
+      "change_pct": -0.48
+    },
+    "160529": {
+      "code": "160529",
+      "name": "创业板博时定开",
+      "price": 1.398,
+      "nav": 1.4884,
+      "amount": 370102.376,
+      "premium_rate": -6.074,
+      "change_pct": 1.16
+    },
+    "160607": {
+      "code": "160607",
+      "name": "鹏华价值优势LOF",
+      "price": 0.861,
+      "nav": 0.872,
+      "amount": 540097.076,
+      "premium_rate": -1.261,
+      "change_pct": 0.12
+    },
+    "160610": {
+      "code": "160610",
+      "name": "鹏华动力LOF",
+      "price": 1.222,
+      "nav": 1.227,
+      "amount": 246535.7,
+      "premium_rate": -0.407,
+      "change_pct": 1.5
+    },
+    "160611": {
+      "code": "160611",
+      "name": "鹏华优质治理LOF",
+      "price": 1.458,
+      "nav": 1.4622,
+      "amount": 44639.465,
+      "premium_rate": -0.287,
+      "change_pct": 0.07
+    },
+    "160613": {
+      "code": "160613",
+      "name": "鹏华盛世创新LOF",
+      "price": 1.233,
+      "nav": 1.2349,
+      "amount": 47220.514,
+      "premium_rate": -0.154,
+      "change_pct": 0.65
+    },
+    "160616": {
+      "code": "160616",
+      "name": "鹏华500LOF",
+      "price": 2.409,
+      "nav": 2.4183,
+      "amount": 481.6,
+      "premium_rate": -0.385,
+      "change_pct": 0.08
+    },
+    "160618": {
+      "code": "160618",
+      "name": "鹏华丰泽LOF",
+      "price": 1.629,
+      "nav": 1.6287,
+      "amount": 46941.8,
+      "premium_rate": 0.018,
+      "change_pct": 0.31
+    },
+    "160620": {
+      "code": "160620",
+      "name": "资源LOF",
+      "price": 3.094,
+      "nav": 3.109,
+      "amount": 189094.944,
+      "premium_rate": -0.482,
+      "change_pct": -0.64
+    },
+    "160621": {
+      "code": "160621",
+      "name": "鹏华丰和LOF",
+      "price": 1.414,
+      "nav": 1.4223,
+      "amount": 141.4,
+      "premium_rate": -0.584,
+      "change_pct": -0.07
+    },
+    "160622": {
+      "code": "160622",
+      "name": "鹏华丰利LOF",
+      "price": 1.157,
+      "nav": 1.1538,
+      "amount": 386586.48,
+      "premium_rate": 0.277,
+      "change_pct": 0.09
+    },
+    "160625": {
+      "code": "160625",
+      "name": "证保LOF",
+      "price": 0.852,
+      "nav": 0.8487,
+      "amount": 49693.082,
+      "premium_rate": 0.389,
+      "change_pct": 0.35
+    },
+    "160626": {
+      "code": "160626",
+      "name": "信息LOF",
+      "price": 1.506,
+      "nav": 1.5155,
+      "amount": 206354.646,
+      "premium_rate": -0.627,
+      "change_pct": 1.83
+    },
+    "160628": {
+      "code": "160628",
+      "name": "地产LOF",
+      "price": 0.561,
+      "nav": 0.5642,
+      "amount": 64594.952,
+      "premium_rate": -0.567,
+      "change_pct": 1.63
+    },
+    "160629": {
+      "code": "160629",
+      "name": "传媒LOF",
+      "price": 1.233,
+      "nav": 1.2326,
+      "amount": 27960.1,
+      "premium_rate": 0.032,
+      "change_pct": -0.48
+    },
+    "160630": {
+      "code": "160630",
+      "name": "国防LOF",
+      "price": 1.157,
+      "nav": 1.1641,
+      "amount": 121729.589,
+      "premium_rate": -0.61,
+      "change_pct": 0.96
+    },
+    "160631": {
+      "code": "160631",
+      "name": "银行LOF基金",
+      "price": 1.33,
+      "nav": 1.3405,
+      "amount": 76275.9,
+      "premium_rate": -0.783,
+      "change_pct": -0.97
+    },
+    "160632": {
+      "code": "160632",
+      "name": "酒LOF",
+      "price": 0.301,
+      "nav": 0.3023,
+      "amount": 3122583.2,
+      "premium_rate": -0.43,
+      "change_pct": -0.66
+    },
+    "160633": {
+      "code": "160633",
+      "name": "券商LOF",
+      "price": 1.057,
+      "nav": 1.0635,
+      "amount": 155838.6,
+      "premium_rate": -0.611,
+      "change_pct": -0.09
+    },
+    "160635": {
+      "code": "160635",
+      "name": "医药LOF基金",
+      "price": 0.89,
+      "nav": 0.8957,
+      "amount": 53296.11,
+      "premium_rate": -0.636,
+      "change_pct": -1.11
+    },
+    "160637": {
+      "code": "160637",
+      "name": "创业板LOF基金",
+      "price": 1.678,
+      "nav": 1.6875,
+      "amount": 128066.152,
+      "premium_rate": -0.563,
+      "change_pct": -0.12
+    },
+    "160638": {
+      "code": "160638",
+      "name": "带路LOF",
+      "price": 3.188,
+      "nav": 3.1912,
+      "amount": 202588.126,
+      "premium_rate": -0.1,
+      "change_pct": 0.03
+    },
+    "160639": {
+      "code": "160639",
+      "name": "高铁LOF",
+      "price": 0.888,
+      "nav": 0.8877,
+      "amount": 47198.268,
+      "premium_rate": 0.034,
+      "change_pct": -0.45
+    },
+    "160642": {
+      "code": "160642",
+      "name": "鹏华增瑞LOF",
+      "price": 2.218,
+      "nav": 2.2308,
+      "amount": 3820.826,
+      "premium_rate": -0.574,
+      "change_pct": 1.14
+    },
+    "160643": {
+      "code": "160643",
+      "name": "空天军工LOF",
+      "price": 1.386,
+      "nav": 1.3919,
+      "amount": 867480.04,
+      "premium_rate": -0.424,
+      "change_pct": 1.09
+    },
+    "160644": {
+      "code": "160644",
+      "name": "港美互联网LOF",
+      "price": 1.771,
+      "nav": null,
+      "amount": 11345546.522,
+      "premium_rate": null,
+      "change_pct": 0.06
+    }
+  }
+}

@@ -495,40 +495,67 @@ def _startup_init():
     """
     后台初始化线程，模块导入时启动。
     兼容 gunicorn：不依赖 __main__ 块。
+    策略：seed文件 → history_db → 实时API（逐级降级）
     """
     f = get_fetcher()
     hdb = get_history_db()
 
-    # ── 第一步：检查是否需要补填历史数据 ──
+    # ── 第一步：从种子文件加载数据（解决Railway重启SQLite丢失问题）──
     available_dates = hdb.get_available_dates()
-    if len(available_dates) < 3:
-        logger.info("📦 历史数据不足（少于3天），正在从API补填7个交易日数据...")
-        try:
-            from history_fetcher import fetch_historical_data
-            rows = fetch_historical_data(days=7)
-            logger.info(f"✅ 历史数据补填完成，共 {rows} 条记录")
-        except Exception as ex:
-            logger.warning(f"⚠️ 历史数据补填失败: {ex}")
-    else:
-        logger.info(f"📦 历史数据充足（{len(available_dates)}天），跳过补填")
+    cache_empty = len(f.get_all()) == 0
 
-    # ── 第二步：用历史数据初始化缓存 ──
-    logger.info("📦 正在从历史数据初始化缓存...")
-    hist_ok = f.load_from_history(hdb)
-    if hist_ok:
-        try:
-            avg_map = hdb.get_all_avg_premium_3d()
-            with f._lock:
-                for code, fund in f._cache.items():
-                    fund["avg_premium_3d"] = avg_map.get(code)
-        except Exception as ex:
-            logger.warning(f"⚠️ 三日均溢计算失败: {ex}")
-        cache_count = len(f.get_all())
-        logger.info(f"✅ 历史数据加载完成，{cache_count} 只基金已就绪")
+    if cache_empty and len(available_dates) < 3:
+        logger.info("📦 缓存为空且历史数据不足，尝试从种子文件加载...")
+        seed_ok = f.load_from_seed()
+        if seed_ok:
+            # 注入三日平均溢价率
+            try:
+                avg_map = hdb.get_all_avg_premium_3d()
+                with f._lock:
+                    for code, fund in f._cache.items():
+                        fund["avg_premium_3d"] = avg_map.get(code)
+            except Exception as ex:
+                logger.warning(f"⚠️ 三日均溢计算失败: {ex}")
+            cache_count = len(f.get_all())
+            logger.info(f"✅ 种子数据加载完成，{cache_count} 只基金已就绪")
+        else:
+            logger.info("⚠️ 种子文件不可用，尝试从history_db降级...")
+            hist_ok = f.load_from_history(hdb)
+            if hist_ok:
+                try:
+                    avg_map = hdb.get_all_avg_premium_3d()
+                    with f._lock:
+                        for code, fund in f._cache.items():
+                            fund["avg_premium_3d"] = avg_map.get(code)
+                except Exception as ex:
+                    logger.warning(f"⚠️ 三日均溢计算失败: {ex}")
+                logger.info(f"✅ 历史数据降级加载完成，{len(f.get_all())} 只基金")
+            else:
+                # 尝试从API补填（可能因网络问题失败）
+                logger.info("📦 尝试从API补填历史数据...")
+                try:
+                    from history_fetcher import fetch_historical_data
+                    rows = fetch_historical_data(days=7)
+                    logger.info(f"✅ 历史数据补填完成，共 {rows} 条记录")
+                except Exception as ex:
+                    logger.warning(f"⚠️ 历史数据补填失败: {ex}")
+    elif cache_empty and len(available_dates) >= 3:
+        # SQLite有数据，直接加载
+        logger.info(f"📦 从history_db加载（{len(available_dates)}天数据）...")
+        hist_ok = f.load_from_history(hdb)
+        if hist_ok:
+            try:
+                avg_map = hdb.get_all_avg_premium_3d()
+                with f._lock:
+                    for code, fund in f._cache.items():
+                        fund["avg_premium_3d"] = avg_map.get(code)
+            except Exception as ex:
+                logger.warning(f"⚠️ 三日均溢计算失败: {ex}")
+            logger.info(f"✅ 历史数据加载完成，{len(f.get_all())} 只基金已就绪")
     else:
-        logger.info("⚠️ 无历史数据可用，等待实时抓取")
+        logger.info(f"📦 缓存已有 {len(f.get_all())} 只基金，跳过初始化")
 
-    # ── 第三步：尝试实时数据抓取 ──
+    # ── 第二步：尝试实时数据抓取 ──
     logger.info("📡 正在尝试拉取实时数据...")
     ok_flag = f.fetch_all()
     if ok_flag:
