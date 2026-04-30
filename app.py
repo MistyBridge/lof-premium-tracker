@@ -400,8 +400,11 @@ def _trigger_lazy_refresh():
     global _lazy_refreshing
     f = get_fetcher()
 
+    # 缓存为空时强制刷新（Railway重启后SQLite丢失场景）
+    cache_empty = len(f.get_all()) == 0
+
     # 检查是否需要刷新
-    if f.last_fetch_time is not None:
+    if not cache_empty and f.last_fetch_time is not None:
         age = (datetime.now() - f.last_fetch_time).total_seconds()
         if age < Config.REFRESH_INTERVAL_SECONDS:
             return  # 数据还新鲜，不用刷新
@@ -416,8 +419,9 @@ def _trigger_lazy_refresh():
         _lazy_refreshing = True
 
     def _do_refresh():
+        nonlocal cache_empty
         try:
-            logger.info("⏰ 懒更新触发，数据已陈旧，开始刷新...")
+            logger.info("⏰ 懒更新触发，开始刷新...")
             ok_flag = f.fetch_all()
             if ok_flag:
                 # 保存溢价率快照到历史数据库
@@ -433,7 +437,23 @@ def _trigger_lazy_refresh():
                     logger.warning(f"历史数据保存失败: {ex}")
                 logger.info(f"✅ 懒更新完成，当前缓存 {len(f.get_all())} 只基金")
             else:
-                logger.warning("⚠️ 懒更新失败，稍后重试")
+                # 实时抓取失败，尝试从历史数据降级
+                if len(f.get_all()) == 0:
+                    hdb = get_history_db()
+                    hist_ok = f.load_from_history(hdb)
+                    if hist_ok:
+                        try:
+                            avg_map = hdb.get_all_avg_premium_3d()
+                            with f._lock:
+                                for code, fund in f._cache.items():
+                                    fund["avg_premium_3d"] = avg_map.get(code)
+                        except Exception as ex:
+                            logger.warning(f"历史三日均溢计算失败: {ex}")
+                        logger.info(f"✅ 懒更新降级到历史数据，{len(f.get_all())} 只基金")
+                    else:
+                        logger.warning("⚠️ 懒更新失败且无历史数据可用，稍后重试")
+                else:
+                    logger.warning("⚠️ 懒更新失败，继续使用当前缓存")
         finally:
             global _lazy_refreshing
             _lazy_refreshing = False

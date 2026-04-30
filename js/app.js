@@ -24,19 +24,30 @@ class LofFundMonitor {
     async init() {
         this.showLoading(true);
         this.updateStatus('正在连接服务...');
-        try {
-            await this.checkHealth();
-            await this.loadRankings();
-            await this.loadFunds();
-            this.startAutoRefresh();
-            this.showError(false);
-            this.updateStatus('数据已加载');
-        } catch (error) {
-            this.updateStatus('连接失败');
-            this.showError(true, error.message);
-        } finally {
-            this.showLoading(false);
+        let retries = 0;
+        const maxRetries = 5;
+        const retryDelay = 5000; // 5秒重试间隔
+        while (retries < maxRetries) {
+            try {
+                await this.checkHealth();
+                await this.loadRankings();
+                await this.loadFunds();
+                this.startAutoRefresh();
+                this.showError(false);
+                this.updateStatus('数据已加载');
+                return; // 成功则退出
+            } catch (error) {
+                retries++;
+                if (retries < maxRetries) {
+                    this.updateStatus(`服务初始化中，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
+                    await new Promise(r => setTimeout(r, retryDelay));
+                } else {
+                    this.updateStatus('连接失败，请稍后刷新页面');
+                    this.showError(true, error.message);
+                }
+            }
         }
+        this.showLoading(false);
     }
 
     async checkHealth() {
@@ -387,9 +398,10 @@ class LofFundMonitor {
                     await this.loadRankings();
                     await this.loadFunds();
                     this.updateStatus('自动刷新成功');
+                    this.showError(false);
                 } catch (error) {
                     console.warn('自动刷新失败:', error.message);
-                    this.updateStatus('自动刷新失败');
+                    this.updateStatus('自动刷新失败，下次继续重试');
                 }
             }
         }, window.LOF_CONFIG?.REFRESH_INTERVAL || 90000);
