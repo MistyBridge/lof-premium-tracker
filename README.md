@@ -21,6 +21,23 @@
 
 ---
 
+## 📦 Windows 安装包
+
+现已支持 Windows 10 一键安装！
+
+### 下载地址
+- **ZIP便携版**: `dist/LOF基金服务_v1.0.0_Windows.zip` (~18.6MB)
+- **专业安装包**: 需先安装 [Inno Setup 6](https://jrsoftware.org/isdownload.php)，然后运行 `installer/setup.iss`
+
+### 安装方法
+1. 解压ZIP文件到任意目录
+2. 双击 `启动服务.bat`
+3. 浏览器自动打开前端页面
+
+详见 [installer/README.md](installer/README.md)
+
+---
+
 ## 快速启动
 
 ### 1. 安装依赖

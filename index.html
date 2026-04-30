@@ -66,6 +66,16 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="paginationBar" class="pagination-bar">
+                    <button id="prevPageBtn" class="page-btn" onclick="lofMonitor.changePage(-1)">上一页</button>
+                    <span id="pageInfo" class="page-info">第 1 页 / 共 1 页</span>
+                    <button id="nextPageBtn" class="page-btn" onclick="lofMonitor.changePage(1)">下一页</button>
+                    <select id="pageSizeSelect" class="page-size-select" onchange="lofMonitor.changePageSize(this.value)">
+                        <option value="50" selected>50条/页</option>
+                        <option value="100">100条/页</option>
+                        <option value="200">200条/页</option>
+                    </select>
+                </div>
             </main>
         </div>
 

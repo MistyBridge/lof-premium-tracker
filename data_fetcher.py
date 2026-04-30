@@ -75,6 +75,7 @@ def _jparse(text: str) -> dict:
 
 def _make_session() -> requests.Session:
     s = requests.Session()
+    s.trust_env = False  # 禁用系统代理，避免 VPN/代理软件干扰数据抓取
     retry = Retry(
         total=3, backoff_factor=1.0,
         status_forcelist={502, 503, 504, 429, 403},
@@ -156,12 +157,26 @@ def _parse_tencent_qt(text: str) -> Dict[str, Dict[str, Any]]:
         # change_pct
         change_pct = round((price_f - prev_f) / prev_f * 100, 3) if prev_f else 0.0
 
+        # Tencent qt.gtimg.cn fields:
+        #   36 = volume (成交量，单位：手 / lots)
+        #   57 = turnover (成交额，单位：万元 / 万元)
+        volume_raw = parts[36] if len(parts) > 36 else ""
+        turn_raw   = parts[57] if len(parts) > 57 else ""
+        volume = int(_safe_float(volume_raw)) if volume_raw not in ("", "-") else 0
+        # 成交额字段57是万元，需转为元
+        amount = round(_safe_float(turn_raw, 0.0) * 10000, 2) if turn_raw not in ("", "-") else 0.0
+        # 若成交额字段为空（停牌/极低成交），用 price * volume * 100 估算
+        if amount == 0.0 and price_f > 0 and volume > 0:
+            amount = round(price_f * volume * 100, 2)
+
         result[code] = {
             "code":        code,
             "name":        name,
             "price":       price_f,
             "prev_close":  prev_f,
-            "change_pct": change_pct,
+            "change_pct":  change_pct,
+            "volume":      volume,
+            "amount":      amount,
         }
 
     return result
@@ -399,7 +414,8 @@ class LOFDataFetcher:
 
             try:
                 resp = self._sess().get(url, headers=_TT_HEADERS, timeout=Config.REQUEST_TIMEOUT)
-                resp.encoding = "utf-8"
+                # 腾讯 qt.gtimg.cn 返回 GBK 编码，必须用 apparent_encoding 或直接 gbk
+                resp.encoding = resp.apparent_encoding or "gbk"
                 parsed = _parse_tencent_qt(resp.text)
                 result.update(parsed)
             except Exception as ex:
@@ -414,21 +430,32 @@ class LOFDataFetcher:
     def _fetch_nav_batch(self, funds: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
         """
         Batch fetch NAV/Estimated NAV from fundgz.1234567.com.cn.
-        Max 30 concurrent threads.
+        Uses 10 concurrent threads (reduced from 30 to avoid rate-limiting),
+        with per-request retry and a second pass for missed funds.
         """
         result: Dict[str, Dict[str, Any]] = {}
-        sem = threading.Semaphore(30)
+        lock = threading.Lock()
+        sem = threading.Semaphore(10)  # 降低并发，避免 fundgz 限流
         total = len(funds)
+        MAX_RETRIES = 2
 
         def fetch_one(fund: Dict[str, Any]) -> None:
             code = fund["code"]
             with sem:
-                try:
-                    nav_info = self._fetch_single_nav(code)
+                nav_info = None
+                for attempt in range(MAX_RETRIES + 1):
+                    try:
+                        nav_info = self._fetch_single_nav(code)
+                        break
+                    except Exception as ex:
+                        if attempt < MAX_RETRIES:
+                            time.sleep(0.5 * (attempt + 1))  # 递增等待
+                        else:
+                            logger.warning(f"NAV fetch failed {code} after {MAX_RETRIES+1} attempts: {ex}")
+                if nav_info is None:
+                    nav_info = {"nav": None, "nav_date": None, "prev_nav": None, "is_formal_nav": False}
+                with lock:
                     result[code] = {**fund, **nav_info}
-                except Exception as ex:
-                    logger.debug(f"NAV fetch failed {code}: {ex}")
-                    result[code] = {**fund, "nav": None, "nav_date": None}
 
         threads: List[threading.Thread] = []
         for i, fund in enumerate(funds):
@@ -436,7 +463,7 @@ class LOFDataFetcher:
             t.start()
             threads.append(t)
 
-            if len(threads) >= 100:
+            if len(threads) >= 50:
                 for tt in threads:
                     tt.join()
                 threads = []
@@ -445,7 +472,23 @@ class LOFDataFetcher:
         for tt in threads:
             tt.join()
 
-        logger.info(f"NAV batch complete: {total}/{total}")
+        # 第二轮：对缺失 NAV 的基金重试（单线程，更稳定）
+        missing = [f for f in funds if f["code"] not in result or result[f["code"]].get("nav") is None]
+        if missing:
+            logger.info(f"NAV 2nd pass: {len(missing)} funds missing NAV, retrying...")
+            for fund in missing:
+                code = fund["code"]
+                try:
+                    nav_info = self._fetch_single_nav(code)
+                    if nav_info.get("nav") is not None:
+                        with lock:
+                            result[code] = {**fund, **nav_info}
+                        logger.debug(f"NAV 2nd pass recovered: {code}")
+                except Exception as ex:
+                    logger.warning(f"NAV 2nd pass failed {code}: {ex}")
+
+        nav_ok = sum(1 for v in result.values() if v.get("nav") is not None)
+        logger.info(f"NAV batch complete: {nav_ok}/{total} with NAV")
         return result
 
     def _fetch_single_nav(self, code: str) -> Dict[str, Any]:

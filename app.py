@@ -15,7 +15,7 @@ except Exception:
 
 import logging
 from datetime import datetime
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -63,6 +63,24 @@ def err_resp(message, code=1, status=400, details=None):
 # 辅助函数
 # ══════════════════════════════════════════════════════════════════
 
+def _is_suspended(fund: dict) -> bool:
+    """判断基金是否停牌或无成交"""
+    vol = fund.get("volume")
+    amt = fund.get("amount")
+    # 成交量为0 → 停牌
+    if vol is not None and vol == 0:
+        return True
+    # 成交额为0 → 停牌（SSE 数据有 amount）
+    if amt is not None and amt == 0:
+        return True
+    # SZ 数据可能缺少 volume/amount，但 price=1.0 且无波动 → 停牌基金典型特征
+    price = fund.get("price", 0) or 0
+    pct = fund.get("change_pct", 0) or 0
+    if price == 1.0 and pct == 0 and (vol is None or vol == 0):
+        return True
+    return False
+
+
 def _fmt(fund: dict, detail: bool = False) -> dict:
     """
     统一格式化输出字段
@@ -88,6 +106,8 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         # ── 溢价分析 ──
         "premium_rate":  premium,                   # 溢价率（%），正=溢价，负=折价
         "premium_status": fund.get("premium_status"),  # 溢价/折价/平价
+        # ── 状态 ──
+        "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
         # ── 推导字段 ──
         "change_amount": round(change_pct / 100 * nav, 4) if (nav and nav > 0) else None,
     }
@@ -100,6 +120,28 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         })
 
     return result
+
+
+# ══════════════════════════════════════════════════════════════════
+# Web 前端静态文件服务
+# ══════════════════════════════════════════════════════════════════
+
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+@app.route("/")
+def index():
+    """返回 Web 前端首页"""
+    return send_from_directory(BASE_DIR, "index.html")
+
+@app.route("/css/<path:filename>")
+def css_files(filename):
+    return send_from_directory(os.path.join(BASE_DIR, "css"), filename)
+
+@app.route("/js/<path:filename>")
+def js_files(filename):
+    return send_from_directory(os.path.join(BASE_DIR, "js"), filename)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -153,7 +195,7 @@ def list_funds():
     # ── 分页参数 ──
     try:
         page     = max(1, int(request.args.get("page", 1)))
-        page_size = min(500, max(1, int(request.args.get("page_size", 100))))
+        page_size = min(1000, max(1, int(request.args.get("page_size", 100))))
     except ValueError:
         return err_resp("page 和 page_size 必须为正整数", code=4, status=400)
 
@@ -183,6 +225,12 @@ def list_funds():
     elif filt == "discount":
         all_data = {k: v for k, v in all_data.items()
                     if (v.get("premium_rate") or 0) < 0}
+
+    # ── 停牌筛选 ──
+    show_suspended = request.args.get("suspended", "0")
+    if show_suspended != "1":
+        all_data = {k: v for k, v in all_data.items()
+                    if not _is_suspended(v)}
 
     # ── 排序 ──
     items = list(all_data.values())
@@ -215,6 +263,13 @@ def list_funds():
         }
     )
 
+
+@app.route("/api/debug/cache/<code>", methods=["GET"])
+def debug_cache_raw(code: str):
+    """临时调试端点：直接读原始cache，不走_fmt"""
+    f = get_fetcher()
+    fund = f.get_one(code)
+    return ok({"raw": fund, "cache_count": len(f.get_all())})
 
 # ─────────────────────────────────────────────────────────────────
 # 接口2: GET /api/funds/<code>
@@ -251,7 +306,8 @@ def rankings():
     except ValueError:
         return err_resp("limit 必须为正整数", code=8, status=400)
 
-    valid = [v for v in all_data.values() if v.get("premium_rate") is not None]
+    valid = [v for v in all_data.values()
+             if v.get("premium_rate") is not None and not _is_suspended(v)]
 
     if rank_type == "premium":
         sorted_funds = sorted(valid, key=lambda x: x["premium_rate"], reverse=True)

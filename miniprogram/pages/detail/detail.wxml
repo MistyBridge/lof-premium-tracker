@@ -1,0 +1,87 @@
+<!--
+  LOF基金监控 - 详情页
+-->
+<view class="container" wx:if="{{!loading && fund}}">
+  <!-- 基金名称 & 代码 -->
+  <view class="fund-header">
+    <view class="fund-name">{{fund.name}}</view>
+    <view class="fund-code" bindtap="copyCode">
+      {{fund.code}}
+      <text class="copy-hint">复制</text>
+    </view>
+  </view>
+
+  <!-- 场内行情 -->
+  <view class="card">
+    <view class="card-title">场内行情</view>
+    <view class="price-row">
+      <text class="big-price">{{formatPrice(fund.price)}}</text>
+      <text class="change {{fund.change_pct >= 0 ? 'up' : 'down'}}">
+        {{fund.change_pct >= 0 ? '+' : ''}}{{formatChangePct(fund.change_pct)}}
+      </text>
+      <text class="change-amount">
+        {{fund.change_amount >= 0 ? '+' : ''}}{{formatPrice(fund.change_amount)}}元
+      </text>
+    </view>
+    <view class="info-grid">
+      <view class="info-item">
+        <text class="label">昨净值</text>
+        <text>{{formatPrice(fund.prev_nav)}}</text>
+      </view>
+      <view class="info-item">
+        <text class="label">成交量</text>
+        <text>{{fund.volume_w || '--'}}万</text>
+      </view>
+      <view class="info-item">
+        <text class="label">成交额</text>
+        <text>{{fund.amount_w || '--'}}万</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 净值 & 溢价 -->
+  <view class="card">
+    <view class="card-title">净值与溢价</view>
+    <view class="nav-row">
+      <view class="nav-block">
+        <text class="label">当前净值</text>
+        <text class="value">{{fund.nav !== null ? formatPrice(fund.nav) : '--'}}</text>
+        <text class="sub">{{fund.nav_date || '未知'}}</text>
+        <view class="nav-tag {{fund.is_formal_nav ? 'est' : 'formal'}}">
+          {{fund.is_formal_nav ? '正式净值' : '估算净值'}}
+        </view>
+      </view>
+      <view class="premium-block">
+        <text class="label">溢价率</text>
+        <text class="premium-value {{getPremiumClass(fund.premium_rate)}}">
+          {{fund.premium_rate !== null ? formatPremiumRate(fund.premium_rate) : '--'}}
+        </text>
+        <text class="premium-label">{{fund.premium_status || '无数据'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 说明 -->
+  <view class="tip-card">
+    <text>溢价率 = (场内现价 - 净值) / 净值 × 100%</text>
+    <text>溢价 = 现价高于净值（场内溢价买入），折价 = 现价低于净值（场内折价买入）</text>
+  </view>
+
+  <!-- 返回按钮 -->
+  <view class="back-btn-wrap">
+    <button class="back-btn" bindtap="goBack">返回列表</button>
+  </view>
+</view>
+
+<!-- Loading -->
+<view class="global-loading" wx:if="{{loading}}">
+  <view class="loading-spinner"></view>
+  <text>加载中...</text>
+</view>
+
+<!-- 加载失败 -->
+<view class="error-state" wx:if="{{!loading && !fund}}">
+  <text class="error-icon">⚠️</text>
+  <text class="error-text">数据加载失败</text>
+  <button class="retry-btn" size="mini" bindtap="goBack">返回</button>
+</view>

@@ -27,7 +27,7 @@
 
         // 溢价率异常值过滤阈值
         PREMIUM_THRESHOLD: 50,      // 溢价率>50%视为异常
-        DISCOUNT_THRESHOLD: -30,       // 折价率<-30%视为异常
+        DISCOUNT_THRESHOLD: -30,   // 折价率<-30%视为异常
 
         // 数字格式化
         PRICE_DECIMALS: 3,
