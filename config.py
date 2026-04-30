@@ -9,8 +9,9 @@ class Config:
     """应用配置"""
 
     # Flask
+    # Railway 兼容
     HOST       = os.getenv("HOST", "0.0.0.0")
-    PORT       = int(os.getenv("PORT", 5000))
+    PORT       = int(os.getenv("PORT", os.getenv("RAILWAY_PORT", 5000)))
     DEBUG      = os.getenv("DEBUG", "false").lower() == "true"
 
     # 数据刷新间隔（秒），默认 5 分钟
