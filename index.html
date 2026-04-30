@@ -77,13 +77,14 @@
                                 <th class="sortable" data-field="nav">净值 ↕</th>
                                 <th class="sortable" data-field="change_pct">涨跌幅 ↕</th>
                                 <th class="sortable active" data-field="premium_rate">溢价率 ↕</th>
+                                <th class="sortable" data-field="avg_premium_3d">三日均溢 ↕</th>
                                 <th class="sortable" data-field="amount_w">成交额 ↕</th>
                                 <th>状态</th>
                                 <th>净值时间</th>
                             </tr>
                         </thead>
                         <tbody id="fundTableBody">
-                            <tr><td colspan="9" class="empty-state"><i class="icon">⏳</i><p>正在加载数据...</p></td></tr>
+                            <tr><td colspan="10" class="empty-state"><i class="icon">⏳</i><p>正在加载数据...</p></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -126,6 +127,14 @@
                             <span class="unit">%</span>
                         </div>
                         <p class="form-hint">只显示绝对值 ≥ 此值的基金（0 = 不过滤）</p>
+                    </div>
+                    <div class="form-group">
+                        <label>三日平均溢价率绝对值阈值</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="avgThresholdInput" min="0" max="50" step="0.1" value="0">
+                            <span class="unit">%</span>
+                        </div>
+                        <p class="form-hint">只显示三日均溢绝对值 ≥ 此值的基金（0 = 不过滤）</p>
                     </div>
                     <div class="form-group">
                         <label>最小成交额阈值</label>

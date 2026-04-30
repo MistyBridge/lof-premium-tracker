@@ -137,7 +137,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .col-code { width: 80px; font-weight: 600; }
 .col-name { max-width: 180px; }
 .col-price, .col-nav { text-align: right; width: 100px; }
-.col-change, .col-premium, .col-amount { text-align: right; }
+.col-change, .col-premium, .col-avg-premium, .col-amount { text-align: right; }
 .col-status { width: 80px; }
 .col-time { width: 130px; font-size: 0.85rem; color: var(--text2); }
 .premium-positive { color: var(--pos); font-weight: 600; }

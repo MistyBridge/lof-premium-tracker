@@ -15,7 +15,9 @@ class LofFundMonitor {
         this.searchTimeout = null;
         this.isLoading = false;
         this.threshold = 0;
+        this.avgThreshold = 0;
         this.minAmount = 0;
+        this.premiumHistory = this.loadPremiumHistory();
         this.bindEvents();
         this.init();
     }
@@ -75,6 +77,8 @@ class LofFundMonitor {
             this.renderTable();
             this.renderDiscountRankings();
             this.updatePaginationInfo();
+            // 保存当日溢价率历史
+            this.savePremiumHistory();
             // 用 API 返回的原始总数更新基金总数
             if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
         } catch (error) {
@@ -82,6 +86,42 @@ class LofFundMonitor {
         } finally {
             this.isLoading = false;
         }
+    }
+
+    // ===== 三日平均溢价率历史数据 =====
+    loadPremiumHistory() {
+        try {
+            const raw = localStorage.getItem('lof_premium_history');
+            return raw ? JSON.parse(raw) : {};
+        } catch { return {}; }
+    }
+
+    savePremiumHistory() {
+        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const snapshot = {};
+        this.funds.forEach(f => {
+            if (f.premium_rate !== null && f.premium_rate !== undefined) {
+                snapshot[f.code] = f.premium_rate;
+            }
+        });
+        this.premiumHistory[today] = snapshot;
+        // 只保留最近7天
+        const keys = Object.keys(this.premiumHistory).sort();
+        while (keys.length > 7) {
+            delete this.premiumHistory[keys.shift()];
+        }
+        try { localStorage.setItem('lof_premium_history', JSON.stringify(this.premiumHistory)); } catch {}
+    }
+
+    getAvgPremium3d(code) {
+        const dates = Object.keys(this.premiumHistory).sort().slice(-3);
+        if (dates.length === 0) return null;
+        let sum = 0, count = 0;
+        dates.forEach(d => {
+            const val = this.premiumHistory[d]?.[code];
+            if (val !== undefined && val !== null) { sum += val; count++; }
+        });
+        return count > 0 ? sum / count : null;
     }
 
     applyFilters() {
@@ -108,9 +148,25 @@ class LofFundMonitor {
                 return amountWan >= this.minAmount;
             });
         }
+        // 三日平均溢价率绝对值阈值筛选
+        if (this.avgThreshold > 0) {
+            filtered = filtered.filter(fund => {
+                const avg = this.getAvgPremium3d(fund.code);
+                return avg !== null && Math.abs(avg) >= this.avgThreshold;
+            });
+        }
         filtered.sort((a, b) => {
-            let valA = a[this.sortField] ?? 0;
-            let valB = b[this.sortField] ?? 0;
+            let valA, valB;
+            if (this.sortField === 'avg_premium_3d') {
+                valA = this.getAvgPremium3d(a.code) ?? 0;
+                valB = this.getAvgPremium3d(b.code) ?? 0;
+            } else if (this.sortField === 'amount_w') {
+                valA = (a.amount ?? 0) / 10000;
+                valB = (b.amount ?? 0) / 10000;
+            } else {
+                valA = a[this.sortField] ?? 0;
+                valB = b[this.sortField] ?? 0;
+            }
             return this.sortOrder === 'asc' ? valA - valB : valB - valA;
         });
         this.filteredFunds = filtered;
@@ -120,7 +176,7 @@ class LofFundMonitor {
         const tbody = document.getElementById('fundTableBody');
         const cardList = document.getElementById('mobileCardList');
         if (this.filteredFunds.length === 0) {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><i class="icon">📭</i><p>暂无数据</p></td></tr>`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="icon">📭</i><p>暂无数据</p></td></tr>`;
             if (cardList) cardList.innerHTML = `<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>`;
             return;
         }
@@ -136,6 +192,11 @@ class LofFundMonitor {
         const premiumClass = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
         const premiumSign = pr > 0 ? '+' : '';
         const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
+        // 三日平均溢价率
+        const avg3d = this.getAvgPremium3d(fund.code);
+        const avgPremiumClass = avg3d > 0 ? 'premium-positive' : avg3d < 0 ? 'premium-negative' : 'premium-zero';
+        const avgPremiumSign = avg3d > 0 ? '+' : '';
+        const avgPremiumText = avg3d !== null ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
         const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
         const changeSign = fund.change_pct >= 0 ? '+' : '';
         const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
@@ -155,6 +216,7 @@ class LofFundMonitor {
             <td class="col-nav">${navText}${fund.nav ? '<span class="nav-badge">' + navType + '</span>' : ''}</td>
             <td class="col-change ${changeClass}">${changeText}</td>
             <td class="col-premium ${premiumClass}">${premiumText}</td>
+            <td class="col-avg-premium ${avgPremiumClass}">${avgPremiumText}</td>
             <td class="col-amount">${amountText}</td>
             <td class="col-status"><span class="status-badge ${fund.premium_status || ''}">${fund.premium_status || '未知'}</span></td>
             <td class="col-time">${fund.nav_date || '-'}</td>
@@ -219,6 +281,10 @@ class LofFundMonitor {
         const premiumClass = pr > 0 ? 'mc-pos' : pr < 0 ? 'mc-neg' : 'mc-zero';
         const premiumSign = pr > 0 ? '+' : '';
         const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
+        const avg3d = this.getAvgPremium3d(fund.code);
+        const avgPremiumClass = avg3d > 0 ? 'mc-pos' : avg3d < 0 ? 'mc-neg' : 'mc-zero';
+        const avgPremiumSign = avg3d > 0 ? '+' : '';
+        const avgPremiumText = avg3d !== null ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
         const changeSign = fund.change_pct >= 0 ? '+' : '';
         const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
         const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
@@ -238,6 +304,7 @@ class LofFundMonitor {
                 <span class="mb-item"><span class="mb-label">现价</span><span class="mb-val">${priceText}</span></span>
                 <span class="mb-item"><span class="mb-label">净值</span><span class="mb-val">${navText}</span></span>
                 <span class="mb-item"><span class="mb-label">涨跌</span><span class="mb-val ${changeClass}">${changeText}</span></span>
+                <span class="mb-item"><span class="mb-label">三日均</span><span class="mb-val ${avgPremiumClass}">${avgPremiumText}</span></span>
                 <span class="mb-item"><span class="mb-label">成交</span><span class="mb-val">${amountText}</span></span>
             </div>
         </div>`;
@@ -273,8 +340,10 @@ class LofFundMonitor {
     openSettingsModal() {
         const modal = document.getElementById('settingsModal');
         const thresholdInput = document.getElementById('thresholdInput');
+        const avgThresholdInput = document.getElementById('avgThresholdInput');
         const minAmountInput = document.getElementById('minAmountInput');
         if (thresholdInput) thresholdInput.value = this.threshold || 0;
+        if (avgThresholdInput) avgThresholdInput.value = this.avgThreshold || 0;
         if (minAmountInput) minAmountInput.value = this.minAmount || 0;
         if (modal) modal.style.display = 'flex';
     }
@@ -286,21 +355,29 @@ class LofFundMonitor {
 
     applySettings() {
         const thresholdInput = document.getElementById('thresholdInput');
+        const avgThresholdInput = document.getElementById('avgThresholdInput');
         const minAmountInput = document.getElementById('minAmountInput');
         this.threshold = parseFloat(thresholdInput?.value) || 0;
+        this.avgThreshold = parseFloat(avgThresholdInput?.value) || 0;
         this.minAmount = parseFloat(minAmountInput?.value) || 0;
         this.currentPage = 1;
         this.applyFilters();
         this.renderTable();
         this.updatePaginationInfo();
         this.closeSettingsModal();
-        this.showToast(`筛选已应用：绝对值≥${this.threshold}%，成交额≥${this.minAmount}万`);
+        const parts = [];
+        if (this.threshold > 0) parts.push(`溢价率≥${this.threshold}%`);
+        if (this.avgThreshold > 0) parts.push(`三日均溢≥${this.avgThreshold}%`);
+        if (this.minAmount > 0) parts.push(`成交额≥${this.minAmount}万`);
+        this.showToast(parts.length ? '筛选已应用：' + parts.join('，') : '筛选已重置');
     }
 
     resetSettings() {
         const thresholdInput = document.getElementById('thresholdInput');
+        const avgThresholdInput = document.getElementById('avgThresholdInput');
         const minAmountInput = document.getElementById('minAmountInput');
         if (thresholdInput) thresholdInput.value = 0;
+        if (avgThresholdInput) avgThresholdInput.value = 0;
         if (minAmountInput) minAmountInput.value = 0;
     }
 
