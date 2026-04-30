@@ -20,6 +20,7 @@ from flask_cors import CORS
 
 from config import Config
 from data_fetcher import get_fetcher
+from history_db import get_history_db
 
 # ─────────────────────────────────────────────
 # 日志配置
@@ -105,6 +106,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         # ── 溢价分析 ──
         "premium_rate":  premium,                   # 溢价率（%），正=溢价，负=折价
         "premium_status": fund.get("premium_status"),  # 溢价/折价/平价
+        "avg_premium_3d": fund.get("avg_premium_3d"),  # 三日平均溢价率（%）
         # ── 状态 ──
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
         # ── 推导字段 ──
@@ -152,12 +154,16 @@ def js_files(filename):
 def health():
     """健康检查: 返回服务状态、缓存数量、最后更新时间"""
     f = get_fetcher()
+    hdb = get_history_db()
+    available_dates = hdb.get_available_dates()
     return ok({
         "status": "running",
         "cache_count": len(f.get_all()),
         "last_fetch": f.last_fetch_time.isoformat() if f.last_fetch_time else None,
         "error": f.fetch_error,
         "refresh_interval_sec": Config.REFRESH_INTERVAL_SECONDS,
+        "history_dates": available_dates,
+        "history_days": len(available_dates),
     })
 
 
@@ -203,7 +209,7 @@ def list_funds():
     # ── 排序 ──
     sort_field = request.args.get("sort", "amount")
     sort_order = request.args.get("order", "desc")
-    valid_sorts = {"amount", "change_pct", "premium_rate", "price", "code", "name"}
+    valid_sorts = {"amount", "change_pct", "premium_rate", "price", "code", "name", "avg_premium_3d"}
     if sort_field not in valid_sorts:
         return err_resp(f"sort 可选值: {','.join(valid_sorts)}", code=5, status=400)
     if sort_order not in {"asc", "desc"}:
@@ -247,6 +253,8 @@ def list_funds():
         items.sort(key=lambda x: x.get("code", ""), reverse=reverse)
     elif sort_field == "name":
         items.sort(key=lambda x: x.get("name", ""), reverse=reverse)
+    elif sort_field == "avg_premium_3d":
+        items.sort(key=lambda x: x.get("avg_premium_3d") if x.get("avg_premium_3d") is not None else -9999.0, reverse=reverse)
 
     total = len(items)
     start = (page - 1) * page_size
@@ -326,6 +334,54 @@ def rankings():
 
 
 # ══════════════════════════════════════════════════════════════════
+# 历史数据 API
+# ══════════════════════════════════════════════════════════════════
+
+@app.route("/api/history", methods=["GET"])
+def history():
+    """
+    获取历史溢价率数据
+    参数:
+      code: 基金代码（可选，不传则返回概览）
+      days: 查询天数（默认7，最大7）
+    """
+    _trigger_lazy_refresh()
+    hdb = get_history_db()
+
+    try:
+        days = min(7, max(1, int(request.args.get("days", 7))))
+    except ValueError:
+        return err_resp("days 必须为正整数", code=9, status=400)
+
+    code = request.args.get("code")
+    code = code.strip().zfill(6) if code else None
+
+    if code:
+        # 单只基金历史
+        fund = get_fetcher().get_one(code)
+        if not fund:
+            return err_resp(f"未找到基金: {code}", code=7, status=404)
+        data = hdb.get_history(code=code, days=days)
+        avg = hdb.get_avg_premium_3d(code)
+        return ok({
+            "code": code,
+            "name": fund.get("name"),
+            "avg_premium_3d": avg,
+            "history": data,
+        })
+    else:
+        # 全量概览：返回可用日期列表 + 所有基金的三日均溢
+        avg_map = hdb.get_all_avg_premium_3d()
+        dates = hdb.get_available_dates()
+        return ok({
+            "available_dates": dates,
+            "avg_premium_3d": avg_map,
+        }, meta={
+            "history_days": len(dates),
+        })
+
+
+# ══════════════════════════════════════════════════════════════════
 # 懒更新机制（替代 APScheduler，适用于 Railway 等休眠平台）
 # ══════════════════════════════════════════════════════════════════
 
@@ -363,6 +419,17 @@ def _trigger_lazy_refresh():
             logger.info("⏰ 懒更新触发，数据已陈旧，开始刷新...")
             ok_flag = f.fetch_all()
             if ok_flag:
+                # 保存溢价率快照到历史数据库
+                try:
+                    hdb = get_history_db()
+                    hdb.save_snapshot(f.get_all())
+                    # 注入三日平均溢价率到缓存
+                    avg_map = hdb.get_all_avg_premium_3d()
+                    with f._lock:
+                        for code, fund in f._cache.items():
+                            fund["avg_premium_3d"] = avg_map.get(code)
+                except Exception as ex:
+                    logger.warning(f"历史数据保存失败: {ex}")
                 logger.info(f"✅ 懒更新完成，当前缓存 {len(f.get_all())} 只基金")
             else:
                 logger.warning("⚠️ 懒更新失败，稍后重试")
@@ -385,9 +452,19 @@ if __name__ == "__main__":
     print("=" * 62)
 
     f = get_fetcher()
+    hdb = get_history_db()
     print("📡 正在拉取全量LOF基金数据（首次约需1-2分钟）...")
     ok_flag = f.fetch_all()
     if ok_flag:
+        # 首次启动也保存快照
+        try:
+            hdb.save_snapshot(f.get_all())
+            avg_map = hdb.get_all_avg_premium_3d()
+            with f._lock:
+                for code, fund in f._cache.items():
+                    fund["avg_premium_3d"] = avg_map.get(code)
+        except Exception as ex:
+            print(f"⚠️ 历史数据保存失败: {ex}")
         print(f"✅ 初始化完成，当前缓存 {len(f.get_all())} 只基金")
     else:
         print("⚠️ 初始化未完全成功，服务仍会启动，懒更新稍后会自动重试")

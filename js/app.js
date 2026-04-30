@@ -17,7 +17,6 @@ class LofFundMonitor {
         this.threshold = 0;
         this.avgThreshold = 0;
         this.minAmount = 0;
-        this.premiumHistory = this.loadPremiumHistory();
         this.bindEvents();
         this.init();
     }
@@ -77,8 +76,6 @@ class LofFundMonitor {
             this.renderTable();
             this.renderDiscountRankings();
             this.updatePaginationInfo();
-            // 保存当日溢价率历史
-            this.savePremiumHistory();
             // 用 API 返回的原始总数更新基金总数
             if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
         } catch (error) {
@@ -88,40 +85,11 @@ class LofFundMonitor {
         }
     }
 
-    // ===== 三日平均溢价率历史数据 =====
-    loadPremiumHistory() {
-        try {
-            const raw = localStorage.getItem('lof_premium_history');
-            return raw ? JSON.parse(raw) : {};
-        } catch { return {}; }
-    }
-
-    savePremiumHistory() {
-        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-        const snapshot = {};
-        this.funds.forEach(f => {
-            if (f.premium_rate !== null && f.premium_rate !== undefined) {
-                snapshot[f.code] = f.premium_rate;
-            }
-        });
-        this.premiumHistory[today] = snapshot;
-        // 只保留最近7天
-        const keys = Object.keys(this.premiumHistory).sort();
-        while (keys.length > 7) {
-            delete this.premiumHistory[keys.shift()];
-        }
-        try { localStorage.setItem('lof_premium_history', JSON.stringify(this.premiumHistory)); } catch {}
-    }
-
+    // ===== 三日平均溢价率（从后端API获取，字段 avg_premium_3d）=====
     getAvgPremium3d(code) {
-        const dates = Object.keys(this.premiumHistory).sort().slice(-3);
-        if (dates.length === 0) return null;
-        let sum = 0, count = 0;
-        dates.forEach(d => {
-            const val = this.premiumHistory[d]?.[code];
-            if (val !== undefined && val !== null) { sum += val; count++; }
-        });
-        return count > 0 ? sum / count : null;
+        // 从 this.funds 中查找
+        const fund = this.funds.find(f => f.code === code);
+        return fund?.avg_premium_3d ?? null;
     }
 
     applyFilters() {
@@ -157,10 +125,7 @@ class LofFundMonitor {
         }
         filtered.sort((a, b) => {
             let valA, valB;
-            if (this.sortField === 'avg_premium_3d') {
-                valA = this.getAvgPremium3d(a.code) ?? 0;
-                valB = this.getAvgPremium3d(b.code) ?? 0;
-            } else if (this.sortField === 'amount_w') {
+            if (this.sortField === 'amount_w') {
                 valA = (a.amount ?? 0) / 10000;
                 valB = (b.amount ?? 0) / 10000;
             } else {
@@ -193,10 +158,10 @@ class LofFundMonitor {
         const premiumSign = pr > 0 ? '+' : '';
         const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
         // 三日平均溢价率
-        const avg3d = this.getAvgPremium3d(fund.code);
+        const avg3d = fund.avg_premium_3d;
         const avgPremiumClass = avg3d > 0 ? 'premium-positive' : avg3d < 0 ? 'premium-negative' : 'premium-zero';
         const avgPremiumSign = avg3d > 0 ? '+' : '';
-        const avgPremiumText = avg3d !== null ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
+        const avgPremiumText = avg3d !== null && avg3d !== undefined ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
         const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
         const changeSign = fund.change_pct >= 0 ? '+' : '';
         const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
@@ -281,10 +246,10 @@ class LofFundMonitor {
         const premiumClass = pr > 0 ? 'mc-pos' : pr < 0 ? 'mc-neg' : 'mc-zero';
         const premiumSign = pr > 0 ? '+' : '';
         const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
-        const avg3d = this.getAvgPremium3d(fund.code);
+        const avg3d = fund.avg_premium_3d;
         const avgPremiumClass = avg3d > 0 ? 'mc-pos' : avg3d < 0 ? 'mc-neg' : 'mc-zero';
         const avgPremiumSign = avg3d > 0 ? '+' : '';
-        const avgPremiumText = avg3d !== null ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
+        const avgPremiumText = avg3d !== null && avg3d !== undefined ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
         const changeSign = fund.change_pct >= 0 ? '+' : '';
         const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
         const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
