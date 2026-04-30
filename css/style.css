@@ -19,11 +19,32 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header h1 { font-size: 1.8rem; font-weight: 600; }
 .header-info { display: flex; align-items: center; gap: 15px; }
 .status-text { font-size: 0.9rem; opacity: 0.9; }
-.btn-manual-refresh { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: all 0.3s; line-height: 1; }
-.btn-manual-refresh:hover { background: rgba(255,255,255,0.3); }
-.btn-manual-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
-.refresh-icon { display: inline-block; transition: transform 0.3s; }
-.refresh-icon.spinning { animation: spin 1s linear infinite; }
+.btn-manual-refresh { background: transparent; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
+.btn-manual-refresh:hover { opacity: 0.8; }
+.btn-manual-refresh:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* 太极图 */
+.taiji {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: block; position: relative;
+    background: linear-gradient(to right, #fff 50%, #333 50%);
+    transition: transform 0.3s ease;
+}
+.taiji::before, .taiji::after {
+    content: ''; position: absolute; left: 50%;
+    width: 14px; height: 14px; border-radius: 50%;
+    transform: translateX(-50%);
+}
+.taiji::before {
+    top: 0; background: #fff;
+    box-shadow: inset 0 0 0 3px #333, inset 0 0 0 5.5px #fff;
+}
+.taiji::after {
+    bottom: 0; background: #333;
+    box-shadow: inset 0 0 0 3px #fff, inset 0 0 0 5.5px #333;
+}
+.taiji.spinning { animation: taiji-spin 1s linear infinite; }
+@keyframes taiji-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* Status Bar */
 .status-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
