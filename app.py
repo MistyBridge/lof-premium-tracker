@@ -488,76 +488,82 @@ def _trigger_lazy_refresh():
 
 
 # ══════════════════════════════════════════════════════════════════
-# 启动入口
+# 启动初始化（gunicorn兼容 - 模块导入时执行后台初始化）
 # ══════════════════════════════════════════════════════════════════
 
-if __name__ == "__main__":
-    print("=" * 62)
-    print("  LOF基金数据服务  v1.1")
-    print("  数据源: 东方财富 + 天天基金网（免费公开，无需Key）")
-    print("=" * 62)
-
+def _startup_init():
+    """
+    后台初始化线程，模块导入时启动。
+    兼容 gunicorn：不依赖 __main__ 块。
+    """
     f = get_fetcher()
     hdb = get_history_db()
 
     # ── 第一步：检查是否需要补填历史数据 ──
     available_dates = hdb.get_available_dates()
     if len(available_dates) < 3:
-        print("📦 历史数据不足（少于3天），正在从API补填7个交易日数据...")
+        logger.info("📦 历史数据不足（少于3天），正在从API补填7个交易日数据...")
         try:
             from history_fetcher import fetch_historical_data
             rows = fetch_historical_data(days=7)
-            print(f"✅ 历史数据补填完成，共 {rows} 条记录")
+            logger.info(f"✅ 历史数据补填完成，共 {rows} 条记录")
         except Exception as ex:
-            print(f"⚠️ 历史数据补填失败: {ex}")
+            logger.warning(f"⚠️ 历史数据补填失败: {ex}")
     else:
-        print(f"📦 历史数据充足（{len(available_dates)}天），跳过补填")
+        logger.info(f"📦 历史数据充足（{len(available_dates)}天），跳过补填")
 
-    # ── 第二步：用历史数据初始化缓存（即时可用，不依赖实时API）──
-    print("📦 正在从历史数据初始化缓存...")
+    # ── 第二步：用历史数据初始化缓存 ──
+    logger.info("📦 正在从历史数据初始化缓存...")
     hist_ok = f.load_from_history(hdb)
     if hist_ok:
-        # 注入三日平均溢价率
         try:
             avg_map = hdb.get_all_avg_premium_3d()
             with f._lock:
                 for code, fund in f._cache.items():
                     fund["avg_premium_3d"] = avg_map.get(code)
         except Exception as ex:
-            print(f"⚠️ 三日均溢计算失败: {ex}")
+            logger.warning(f"⚠️ 三日均溢计算失败: {ex}")
         cache_count = len(f.get_all())
-        print(f"✅ 历史数据加载完成，{cache_count} 只基金已就绪")
+        logger.info(f"✅ 历史数据加载完成，{cache_count} 只基金已就绪")
     else:
-        print("⚠️ 无历史数据可用，等待实时抓取")
+        logger.info("⚠️ 无历史数据可用，等待实时抓取")
 
-    # ── 第二步：异步尝试实时数据抓取（休市可能失败，不影响服务）──
-    print("📡 正在尝试拉取实时数据（休市期间可能失败）...")
+    # ── 第三步：尝试实时数据抓取 ──
+    logger.info("📡 正在尝试拉取实时数据...")
+    ok_flag = f.fetch_all()
+    if ok_flag:
+        try:
+            hdb.save_snapshot(f.get_all())
+            avg_map = hdb.get_all_avg_premium_3d()
+            with f._lock:
+                for code, fund in f._cache.items():
+                    fund["avg_premium_3d"] = avg_map.get(code)
+        except Exception as ex:
+            logger.warning(f"历史数据保存失败: {ex}")
+        logger.info(f"✅ 实时数据刷新完成，{len(f.get_all())} 只基金")
+    else:
+        logger.info("⚠️ 实时数据抓取失败，继续使用历史数据服务")
 
-    def _async_fetch():
-        ok_flag = f.fetch_all()
-        if ok_flag:
-            try:
-                hdb.save_snapshot(f.get_all())
-                avg_map = hdb.get_all_avg_premium_3d()
-                with f._lock:
-                    for code, fund in f._cache.items():
-                        fund["avg_premium_3d"] = avg_map.get(code)
-            except Exception as ex:
-                logger.warning(f"历史数据保存失败: {ex}")
-            logger.info(f"✅ 实时数据刷新完成，{len(f.get_all())} 只基金")
-        else:
-            logger.info("⚠️ 实时数据抓取失败（休市/网络问题），继续使用历史数据服务")
 
-    fetch_thread = threading.Thread(target=_async_fetch, daemon=True)
-    fetch_thread.start()
+# 启动后台初始化线程（gunicorn导入模块时自动触发）
+_init_thread = threading.Thread(target=_startup_init, daemon=True)
+_init_thread.start()
 
-    print("")
-    print(f"✅ 服务已启动（懒更新模式）")
+
+# ══════════════════════════════════════════════════════════════════
+# 本地开发启动入口
+# ══════════════════════════════════════════════════════════════════
+
+if __name__ == "__main__":
+    print("=" * 62)
+    print("  LOF基金数据服务  v1.2")
+    print("  数据源: 东方财富 + 天天基金网（免费公开，无需Key）")
+    print("=" * 62)
+    print("✅ 服务已启动（后台初始化中）")
     print(f"   API文档: http://localhost:{Config.PORT}/api/funds")
     print(f"   健康检查: http://localhost:{Config.PORT}/health")
     print(f"   溢价排行: http://localhost:{Config.PORT}/api/rankings")
     print(f"   刷新间隔: {Config.REFRESH_INTERVAL_SECONDS}秒（用户访问时触发）")
-    print(f"   按 Ctrl+C 停止")
     print("=" * 62)
 
     app.run(
