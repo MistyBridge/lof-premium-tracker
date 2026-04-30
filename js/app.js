@@ -27,7 +27,9 @@ class LofFundMonitor {
             await this.loadFunds();
             this.startAutoRefresh();
             this.showError(false);
+            this.updateStatus('数据已加载');
         } catch (error) {
+            this.updateStatus('连接失败');
             this.showError(true, error.message);
         } finally {
             this.showLoading(false);
@@ -166,6 +168,8 @@ class LofFundMonitor {
         if (searchInput) searchInput.addEventListener('input', e => this.handleSearch(e.target.value));
         const retryBtn = document.getElementById('retryBtn');
         if (retryBtn) retryBtn.addEventListener('click', () => this.init());
+        const manualRefreshBtn = document.getElementById('manualRefreshBtn');
+        if (manualRefreshBtn) manualRefreshBtn.addEventListener('click', () => this.handleManualRefresh());
     }
 
     handleSort(field) {
@@ -200,10 +204,13 @@ class LofFundMonitor {
         this.refreshTimer = setInterval(async () => {
             if (!this.isLoading) {
                 try {
+                    await this.checkHealth();
                     await this.loadRankings();
+                    await this.loadFunds();
                     this.updateStatus('自动刷新成功');
                 } catch (error) {
                     console.warn('自动刷新失败:', error.message);
+                    this.updateStatus('自动刷新失败');
                 }
             }
         }, window.LOF_CONFIG?.REFRESH_INTERVAL || 90000);
@@ -271,6 +278,22 @@ class LofFundMonitor {
         const el = document.getElementById('errorContainer');
         if (el) el.style.display = show ? 'block' : 'none';
         if (document.getElementById('errorMessage') && message) document.getElementById('errorMessage').textContent = message;
+    }
+
+    async handleManualRefresh() {
+        const btn = document.getElementById('manualRefreshBtn');
+        if (btn) { btn.disabled = true; btn.querySelector('.refresh-icon').classList.add('spinning'); }
+        try {
+            await this.checkHealth();
+            await this.loadRankings();
+            await this.loadFunds();
+            this.updateStatus('刷新成功');
+        } catch (error) {
+            this.updateStatus('刷新失败');
+            this.showToast('刷新失败: ' + error.message);
+        } finally {
+            if (btn) { btn.disabled = false; btn.querySelector('.refresh-icon').classList.remove('spinning'); }
+        }
     }
 
     showToast(message) { alert(message); }
