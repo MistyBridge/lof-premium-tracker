@@ -188,6 +188,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     }
     .strip-item .si-code { font-size: 0.7rem; font-weight: 600; color: var(--text); }
     .strip-item .si-rate { font-size: 0.8rem; font-weight: 700; color: var(--pos); }
+    .mobile-ranking-strip-neg { background: #f8fffe; border-bottom-color: #e0f0ec; }
+    .strip-header-neg { color: var(--neg) !important; }
+    .mobile-ranking-strip-neg .strip-item { background: #f0faf7; }
+    .mobile-ranking-strip-neg .strip-item .si-rate { color: var(--neg); }
 
     /* 隐藏PC端侧边栏、表格 */
     .sidebar { display: none !important; }

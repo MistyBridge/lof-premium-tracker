@@ -167,6 +167,17 @@ class LofFundMonitor {
                 </div>
             `).join('');
         }
+        // 移动端折价排行条
+        const mobileDiscountScroll = document.getElementById('mobileDiscountScroll');
+        if (mobileDiscountScroll) {
+            const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
+            mobileDiscountScroll.innerHTML = sorted.slice(0, 10).map(fund => `
+                <div class="strip-item">
+                    <span class="si-code">${fund.code}</span>
+                    <span class="si-rate">${fund.premium_rate != null ? fund.premium_rate.toFixed(2) + '%' : '--'}</span>
+                </div>
+            `).join('');
+        }
     }
 
     createMobileCard(fund) {
