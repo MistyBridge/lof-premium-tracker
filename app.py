@@ -17,7 +17,6 @@ import logging
 from datetime import datetime
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-from apscheduler.schedulers.background import BackgroundScheduler
 
 from config import Config
 from data_fetcher import get_fetcher
@@ -180,6 +179,8 @@ def refresh():
 
 @app.route("/api/funds", methods=["GET"])
 def list_funds():
+    # 懒更新：用户访问时检查数据是否陈旧，在后台触发刷新
+    _trigger_lazy_refresh()
     f = get_fetcher()
     all_data = f.get_all()
 
@@ -278,6 +279,8 @@ def debug_cache_raw(code: str):
 
 @app.route("/api/funds/<code>", methods=["GET"])
 def fund_detail(code: str):
+    # 懒更新
+    _trigger_lazy_refresh()
     f = get_fetcher()
     fund = f.get_one(code)
     if not fund:
@@ -297,6 +300,8 @@ def fund_detail(code: str):
 
 @app.route("/api/rankings", methods=["GET"])
 def rankings():
+    # 懒更新
+    _trigger_lazy_refresh()
     f = get_fetcher()
     all_data = f.get_all()
 
@@ -321,43 +326,52 @@ def rankings():
 
 
 # ══════════════════════════════════════════════════════════════════
-# 定时任务调度（APScheduler）
+# 懒更新机制（替代 APScheduler，适用于 Railway 等休眠平台）
 # ══════════════════════════════════════════════════════════════════
 
-_scheduler: BackgroundScheduler = None
+import threading
+
+_lazy_refreshing = False   # 防止并发刷新
+_lazy_lock = threading.Lock()
 
 
-def _scheduled_fetch():
-    """定时抓取任务（由 APScheduler 在后台线程触发）"""
-    logger.info("⏰ 定时刷新任务触发")
+def _trigger_lazy_refresh():
+    """
+    检查数据是否陈旧，若是则在后台线程触发刷新。
+    所有 API 请求入口调用此方法，确保数据常新。
+    """
+    global _lazy_refreshing
     f = get_fetcher()
-    ok_flag = f.fetch_all()
-    if ok_flag:
-        logger.info(f"✅ 定时刷新完成，当前缓存 {len(f.get_all())} 只基金")
-    else:
-        logger.warning("⚠️ 定时刷新失败（网络波动或API限流，下次重试）")
 
+    # 检查是否需要刷新
+    if f.last_fetch_time is not None:
+        age = (datetime.now() - f.last_fetch_time).total_seconds()
+        if age < Config.REFRESH_INTERVAL_SECONDS:
+            return  # 数据还新鲜，不用刷新
 
-def _start_scheduler():
-    global _scheduler
-    _scheduler = BackgroundScheduler(
-        timezone="Asia/Shanghai",
-        job_defaults={
-            "coalesce":  True,   # 合并错过的任务
-            "misfire_grace_time": 60,  # 容忍60秒延迟
-            "max_instances": 1,  # 同一任务最多一个实例
-        }
-    )
-    _scheduler.add_job(
-        func=_scheduled_fetch,
-        trigger="interval",
-        seconds=Config.REFRESH_INTERVAL_SECONDS,
-        id="lof_data_refresh",
-        name="LOF基金数据定时刷新",
-        replace_existing=True,
-    )
-    _scheduler.start()
-    logger.info(f"🕐 定时调度器已启动，刷新间隔: {Config.REFRESH_INTERVAL_SECONDS}秒")
+    # 避免并发刷新
+    if _lazy_refreshing:
+        return
+
+    with _lazy_lock:
+        if _lazy_refreshing:
+            return
+        _lazy_refreshing = True
+
+    def _do_refresh():
+        try:
+            logger.info("⏰ 懒更新触发，数据已陈旧，开始刷新...")
+            ok_flag = f.fetch_all()
+            if ok_flag:
+                logger.info(f"✅ 懒更新完成，当前缓存 {len(f.get_all())} 只基金")
+            else:
+                logger.warning("⚠️ 懒更新失败，稍后重试")
+        finally:
+            global _lazy_refreshing
+            _lazy_refreshing = False
+
+    t = threading.Thread(target=_do_refresh, daemon=True)
+    t.start()
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -376,16 +390,14 @@ if __name__ == "__main__":
     if ok_flag:
         print(f"✅ 初始化完成，当前缓存 {len(f.get_all())} 只基金")
     else:
-        print("⚠️ 初始化未完全成功，服务仍会启动，稍后定时任务会重试")
-
-    _start_scheduler()
+        print("⚠️ 初始化未完全成功，服务仍会启动，懒更新稍后会自动重试")
 
     print("")
-    print(f"✅ 服务已启动")
+    print(f"✅ 服务已启动（懒更新模式）")
     print(f"   API文档: http://localhost:{Config.PORT}/api/funds")
     print(f"   健康检查: http://localhost:{Config.PORT}/health")
     print(f"   溢价排行: http://localhost:{Config.PORT}/api/rankings")
-    print(f"   刷新间隔: {Config.REFRESH_INTERVAL_SECONDS}秒")
+    print(f"   刷新间隔: {Config.REFRESH_INTERVAL_SECONDS}秒（用户访问时触发）")
     print(f"   按 Ctrl+C 停止")
     print("=" * 62)
 
@@ -393,6 +405,6 @@ if __name__ == "__main__":
         host=Config.HOST,
         port=Config.PORT,
         debug=Config.DEBUG,
-        use_reloader=False,   # 防止 Windows 下双倍启动
-        threaded=True,         # 多线程支持并发请求
+        use_reloader=False,
+        threaded=True,
     )

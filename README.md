@@ -1,351 +1,226 @@
-# LOF基金数据服务
+# LOF 基金溢价监控系统
 
-> A股场内LOF基金实时行情 + 净值/估值 + 溢价率分析 RESTful API
+> A股场内LOF基金实时行情 + 净值/估值 + 溢价率分析 Web 平台
 
-## 功能特性
+**仓库**: https://github.com/woredasdnmv/lof-premium-tracker
 
-| 功能 | 说明 |
+---
+
+## 一、项目概述
+
+本项目旨在帮助投资者监控 A股场内LOF基金的**溢价率**，发现折溢价套利机会。
+
+### 什么是 LOF 基金溢价率？
+
+LOF（Listed Open-Ended Fund，上市型开放式基金）同时在场内（股票账户）和场外（天天基金等渠道）交易。
+
+- **溢价**：场内价格 > 场外净值 → 可卖出场内 + 申购场外套利
+- **折价**：场内价格 < 场外净值 → 可买入场内 + 赎回场外套利
+
+### 核心数据
+
+| 指标 | 说明 |
 |------|------|
-| 全量LOF基金列表 | 采集沪深两市所有场内LOF基金 |
-| 实时交易价格 | 东方财富实时行情推送 |
-| 估算净值/正式净值 | 天天基金网盘后估值（15:30前）+ 盘后正式净值（15:30后） |
-| 溢价率自动计算 | `(现价-净值)/净值×100%`，精确到小数点后3位 |
-| 5分钟级定时刷新 | APScheduler 后台定时，数据稳定更新 |
-| RESTful API | JSON格式输出，支持分页/排序/筛选/搜索 |
-
-## 数据源（全部免费·无需Key·无需翻墙）
-
-- **沪市LOF 实时价格**: `push2delay.eastmoney.com`（东方财富行情延迟API，`m:1+t:9`）
-- **深市LOF 实时价格**: `qt.gtimg.cn`（腾讯行情，支持沪深全量基金代码）
-- **基金净值/估算净值**: `fundgz.1234567.com.cn`（天天基金网）
+| 基金代码 + 名称 | 沪深两市全部场内LOF |
+| 实时价格 | 东方财富/腾讯行情推送 |
+| 估算净值 | 天天基金盘后估算（15:30前）/ 正式净值（15:30后） |
+| 溢价率 | `(现价 - 净值) / 净值 × 100%` |
+| 成交额 | 当日场内成交金额 |
 
 ---
 
-## 📦 Windows 安装包
+## 二、技术架构
 
-现已支持 Windows 10 一键安装！
-
-### 下载地址
-- **ZIP便携版**: `dist/LOF基金服务_v1.0.0_Windows.zip` (~18.6MB)
-- **专业安装包**: 需先安装 [Inno Setup 6](https://jrsoftware.org/isdownload.php)，然后运行 `installer/setup.iss`
-
-### 安装方法
-1. 解压ZIP文件到任意目录
-2. 双击 `启动服务.bat`
-3. 浏览器自动打开前端页面
-
-详见 [installer/README.md](installer/README.md)
-
----
-
-## 快速启动
-
-### 1. 安装依赖
-
-```bash
-pip install flask requests apscheduler flask-cors
-```
-
-> 如果 `pip` 命令不可用，使用：
-> ```bash
-> py -3 -m pip install flask requests apscheduler flask-cors
-> ```
-
-### 2. 启动服务
-
-```bash
-cd lof-fund-service
-python app.py
-```
-
-首次启动会自动拉取全量数据（约需1-2分钟），之后服务立即可用。
-
-### 3. 访问地址
+### 当前架构（本地开发模式）
 
 ```
-服务地址:   http://localhost:5000
-健康检查:   http://localhost:5000/health
-全量列表:   http://localhost:5000/api/funds
-单只详情:   http://localhost:5000/api/funds/166009
-溢价排行:   http://localhost:5000/api/rankings
+┌─────────────────────────────────────────────────────────┐
+│                     用户浏览器                          │
+│              https://xxx.railway.app                    │
+└─────────────────────┬───────────────────────────────────┘
+                      │ HTTPS
+┌─────────────────────▼───────────────────────────────────┐
+│                    Railway 后端                         │
+│              Python Flask + Gunicorn                    │
+│                  端口: $PORT                            │
+└─────────────────────┬───────────────────────────────────┘
+                      │ HTTP
+        ┌─────────────┼──────────────┐
+        ▼             ▼              ▼
+  东方财富API   腾讯行情API   天天基金API
+   (价格)        (价格)       (净值)
 ```
 
----
+**懒更新逻辑**：Railway 免费版闲置30分钟休眠，首次访问时自动唤醒并刷新全量数据（~30-60秒），后续访问直接返回缓存，5分钟内不重复刷新。
 
-## 接口文档
+### 部署目标架构（待完成）
 
-### 接口1: 获取全量LOF基金列表
-
-```
-GET /api/funds
-```
-
-**请求参数**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `page` | int | 1 | 页码 |
-| `page_size` | int | 100 | 每页数量（最大500） |
-| `sort` | string | amount | 排序字段：`amount`/`change_pct`/`premium_rate`/`price`/`code`/`name` |
-| `order` | string | desc | 排序方向：`asc`/`desc` |
-| `search` | string | - | 按基金代码或名称模糊搜索 |
-| `filter` | string | all | 筛选条件：`all`/`premium`/`discount` |
-
-**示例请求**
-
-```bash
-# 获取溢价率最高的20只基金
-curl "http://localhost:5000/api/funds?sort=premium_rate&order=desc&page_size=20"
-
-# 搜索名称含"中概"的基金
-curl "http://localhost:5000/api/funds?search=中概&page_size=50"
-
-# 获取折价基金（第2页，每页50条）
-curl "http://localhost:5000/api/funds?filter=discount&sort=premium_rate&order=asc&page=2&page_size=50"
-```
-
-**响应示例**
-
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": [
-    {
-      "code": "166009",
-      "name": "中欧盛世成长混合(LOF)",
-      "price": 1.856,
-      "change_pct": 2.31,
-      "volume": 2847391,
-      "amount": 5238741.65,
-      "nav": 1.8234,
-      "nav_date": "2024-01-15 15:30",
-      "is_formal_nav": true,
-      "premium_rate": 1.789,
-      "premium_status": "溢价",
-      "change_amount": 0.0421
-    }
-  ],
-  "meta": {
-    "page": 1,
-    "page_size": 100,
-    "total": 486,
-    "total_pages": 5,
-    "last_fetch": "2024-01-15T14:32:10.123456",
-    "data_source": "东方财富 + 天天基金网"
-  }
-}
-```
-
----
-
-### 接口2: 单只基金详情
-
-```
-GET /api/funds/<code>
-```
-
-**路径参数**
-
-| 参数 | 类型 | 说明 |
+| 层级 | 平台 | 状态 |
 |------|------|------|
-| `code` | string | 6位基金代码，如 `166009` |
+| 前端（Web界面） | Cloudflare Pages | 待部署 |
+| 后端（API服务） | Railway | 待部署 |
+| 数据源 | 天天基金/东方财富/腾讯 | ✅ 稳定 |
 
-**示例请求**
+---
 
-```bash
-curl "http://localhost:5000/api/funds/166009"
+## 三、项目结构
+
 ```
-
-**响应示例**
-
-```json
-{
-  "code": 0,
-  "message": "success",
-  "data": {
-    "code": "166009",
-    "name": "中欧盛世成长混合(LOF)",
-    "price": 1.856,
-    "change_pct": 2.31,
-    "volume": 2847391,
-    "amount": 5238741.65,
-    "volume_w": 28.47,
-    "amount_w": 523.87,
-    "nav": 1.8234,
-    "nav_date": "2024-01-15 15:30",
-    "is_formal_nav": true,
-    "premium_rate": 1.789,
-    "premium_status": "溢价",
-    "prev_nav": 1.7823,
-    "change_amount": 0.0421
-  }
-}
+lof-premium-tracker/
+├── app.py              # Flask 后端入口（懒更新逻辑）
+├── config.py           # 环境变量配置
+├── data_fetcher.py     # 数据采集模块（东方财富/腾讯/天天基金）
+├── requirements.txt    # Python 依赖
+├── railway.json        # Railway 部署配置
+├── sz_lof_codes.json   # 深市LOF代码缓存（自动生成）
+├── index.html          # Web 前端页面
+├── css/
+│   └── style.css       # 页面样式
+├── js/
+│   ├── config.js       # API 地址配置
+│   ├── api.js          # API 请求封装
+│   └── app.js          # 前端业务逻辑（表格渲染/筛选/轮询）
+├── _run.bat            # Windows 一键启动脚本
+└── miniprogram/        # 微信小程序源码（独立项目）
+    ├── app.js / app.json / app.wxss
+    ├── pages/
+    │   ├── index/       # 基金列表页（首页）
+    │   └── detail/      # 单只基金详情页
+    └── utils/
+        ├── config.js    # 小程序配置
+        ├── request.js   # 请求封装
+        └── format.js    # 格式化工具
 ```
 
 ---
 
-### 接口3: 溢价率排行榜
+## 四、API 接口
 
-```
-GET /api/rankings
-```
-
-**请求参数**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `type` | string | premium | 榜单类型：`premium`=溢价排行 / `discount`=折价排行 |
-| `limit` | int | 20 | 返回数量（最大100） |
-
-**示例请求**
-
-```bash
-# 溢价率Top10
-curl "http://localhost:5000/api/rankings?type=premium&limit=10"
-
-# 折价率Top10
-curl "http://localhost:5000/api/rankings?type=discount&limit=10"
-```
-
----
-
-### 接口4: 健康检查
-
-```
-GET /health
-```
-
-返回服务状态、缓存数量、最后更新时间、错误信息。
-
-### 接口5: 手动触发刷新
-
-```
-POST /refresh
-```
-
-> ⚠️ 频繁调用可能导致数据源限流，建议通过定时任务自动刷新。
-
----
-
-## 核心字段说明
-
-| 字段 | 类型 | 说明 |
+| 接口 | 方法 | 说明 |
 |------|------|------|
-| `code` | string | 6位基金代码 |
-| `name` | string | 基金名称 |
-| `price` | float | 最新成交价（元） |
-| `change_pct` | float | 涨跌幅（%），正数红色，负数绿色 |
-| `volume` | int | 成交量（股） |
-| `amount` | float | 成交额（元） |
-| `nav` | float | 当前净值（估算净值或盘后正式净值） |
-| `nav_date` | string | 净值日期/估算时间 |
-| `is_formal_nav` | bool | 是否为盘后正式净值（15:30后为true） |
-| `premium_rate` | float | 溢价率（%），正=溢价，负=折价 |
-| `premium_status` | string | 溢价状态：`溢价`/`折价`/`平价` |
-| `change_amount` | float | 涨跌额（元） |
+| `/api/funds` | GET | 全量基金列表，支持分页、排序、筛选 |
+| `/api/funds/<code>` | GET | 单只基金详情 |
+| `/api/rankings` | GET | 溢价率排行榜 |
+| `/api/stats` | GET | 全局统计（总数、有NAV数、有溢价率数） |
+| `/api/refresh` | POST | 手动触发数据刷新（Railway冷启动用） |
+| `/api/health` | GET | 健康检查 |
 
----
-
-## 溢价率计算公式
+### 请求参数示例
 
 ```
-溢价率 = (现价 - 净值) / 净值 × 100%
-
-示例：
-  现价 = 1.856元，净值 = 1.8234元
-  溢价率 = (1.856 - 1.8234) / 1.8234 × 100% = +1.789%
-  → 溢价状态：溢价
-
-  现价 = 1.800元，净值 = 1.8234元
-  溢价率 = (1.800 - 1.8234) / 1.8234 × 100% = -1.283%
-  → 溢价状态：折价
+GET /api/funds?page=1&page_size=20&sort=premium_rate&order=desc&has_nav=1&exchange=sh
 ```
 
 ---
 
-## 定时刷新说明
+## 五、快速部署
 
-- 默认刷新间隔：**300秒（5分钟）**
-- 修改方法：设置环境变量 `REFRESH_INTERVAL`
-  ```bash
-  # 设为3分钟（180秒）
-  set REFRESH_INTERVAL=180
-  python app.py
-  ```
-- 数据新鲜度：
-  - **交易时段（9:30-15:00）**：价格实时，净值为上一交易日收盘净值+估算涨跌幅
-  - **盘后（15:00-15:30）**：价格实时，净值更新为当日正式净值
-  - **非交易时段**：价格停止更新，净值数据为最新可用
+### 方式一：Railway + Cloudflare Pages（推荐）
 
----
+**Step 1: 部署后端**
+1. 访问 https://railway.app 并登录
+2. 点击 **New Project** → **Deploy from GitHub repo**
+3. 选择仓库 `woredasdnmv/lof-premium-tracker`
+4. Railway 自动检测 Python，构建完成后给出 URL（形如 `xxx.railway.app`）
 
-## 错误码
+**Step 2: 更新前端 API 地址**
+1. 拿到 Railway URL 后，修改 `js/config.js`：
+   ```js
+   const API_BASE_URL = 'https://xxx.railway.app';
+   ```
+2. 提交并推送到 GitHub
 
-| code | 说明 |
-|------|------|
-| 0 | 成功 |
-| 1 | 通用错误 |
-| 2 | 数据刷新失败 |
-| 3 | 数据未就绪（服务启动中） |
-| 4 | 参数错误（分页参数） |
-| 5 | 参数错误（sort字段不合法） |
-| 6 | 参数错误（order字段不合法） |
-| 7 | 基金代码不存在 |
-| 8 | 参数错误（limit字段不合法） |
+**Step 3: 部署前端**
+1. 访问 https://pages.cloudflare.com 并登录
+2. 点击 **Create a project** → **Connect to Git**
+3. 选择仓库 `woredasdnmv/lof-premium-tracker`
+4. **Build settings** 留空（纯静态），**Output directory** 填 `/`
+5. 部署完成，获得 Cloudflare Pages URL
 
 ---
 
-## 部署方式
+### 方式二：本地运行
 
-### 方式1：直接运行（开发/测试）
+**环境要求**
+- Python 3.9+
+- Windows/macOS/Linux
+
+**安装依赖**
+```bash
+pip install flask flask-cors requests apscheduler gunicorn
+```
+
+**启动服务**
 ```bash
 python app.py
 ```
 
-### 方式2：生产环境（Gunicorn）
+或双击运行：
 ```bash
-pip install gunicorn
-gunicorn -w 2 -b 0.0.0.0:5000 app:app
+_run.bat
 ```
 
-### 方式3：Docker 部署
-```dockerfile
-FROM python:3.11-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt --no-cache-dir
-COPY . .
-CMD ["python", "app.py"]
-```
-
-### 方式4：Windows 计划任务（定时启动）
-```powershell
-# 创建启动脚本 run.bat
-@echo off
-cd /d "%~dp0"
-py -3 app.py
-```
+然后浏览器打开 http://localhost:5000
 
 ---
 
-## 项目结构
+## 六、微信小程序
 
-```
-lof-fund-service/
-├── app.py            # Flask应用 + API路由 + 定时调度
-├── data_fetcher.py   # 数据采集模块（东方财富 + 天天基金网）
-├── config.py         # 配置文件（URL、超时、间隔等）
-├── requirements.txt  # Python依赖
-└── README.md         # 本文档
-```
+`miniprogram/` 目录下是配套的微信小程序源码，可导入微信开发者工具独立调试。
+
+**主要页面：**
+- **首页**：基金列表，支持按溢价率/成交额排序、关键词搜索
+- **详情页**：单只基金的完整数据（价格/净值/溢价率/换手率）
+
+> ⚠️ 小程序上线需在 `utils/config.js` 中将 `ENV` 改为 `prod` 并配置真实后端地址。
 
 ---
 
-## 注意事项
+## 七、数据说明
 
-1. **首次启动慢**：全量拉取约需1-2分钟，接口返回503是正常的，稍后重试即可
-2. **数据源限流**：东方财富API有频率限制，不要频繁手动调用 `/refresh`
-3. **非交易时段**：价格停止更新，但净值/估值数据持续可用
-4. **数据准确性**：估算净值仅供参考，正式净值以基金公司披露为准
-5. **无防火墙拦截**：东方财富和天天基金网API无需认证，无CORS限制
+- **数据来源**：东方财富（沪市价格）、腾讯行情（深市价格）、天天基金网（净值/估算净值）
+- **全部免费**：无 API Key 要求，无频率限制
+- **更新频率**：懒更新模式，首次访问时刷新，5分钟内不重复刷新
+- **覆盖范围**：沪深两市全部场内LOF基金（约550只）
+- **净值缺失**：QDII原油/期货类基金（如501018、501300等）天天基金网不提供净值数据
+
+---
+
+## 八、技术细节
+
+### 数据采集流程
+
+```
+1. 读取 sz_lof_codes.json（深市LOF代码列表，缓存）
+2. 从东方财富获取沪市LOF全量数据（push2delay.eastmoney.com）
+3. 从腾讯行情获取深市LOF全量数据（qt.gtimg.cn）
+4. 并发抓取天天基金网净值数据（fundgz.1234567.com.cn，含重试）
+5. 合并计算溢价率，存入内存缓存
+```
+
+### 懒更新实现
+
+Railway 免费版闲置30分钟会自动休眠，冷启动时：
+1. Railway 唤醒进程 → 首次 API 请求触发懒更新
+2. 后台全量刷新数据（30-60秒）
+3. 返回最新数据给用户
+4. 后续请求直接读缓存，5分钟内不重复刷新
+
+---
+
+## 九、常见问题
+
+**Q: Railway 冷启动慢怎么办？**
+A: 懒更新模式下冷启动约30-60秒属正常现象。Railway 付费版无休眠，可解决此问题。
+
+**Q: 溢价率数据为什么不准确？**
+A: 估算净值是天天基金根据持仓估算，盘后正式净值通常在15:30-20:00更新。套利操作请以正式净值为准。
+
+**Q: 如何添加新的LOF基金？**
+A: 深市LOF代码需手动更新 `sz_lof_codes.json`（腾讯API返回全量），沪市由东方财富自动覆盖。
+
+---
+
+## 十、License
+
+MIT License · 柯涵 · 2026
