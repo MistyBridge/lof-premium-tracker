@@ -96,8 +96,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .search-box { flex: 1; max-width: 400px; position: relative; }
 .search-box input { width: 100%; padding: 10px 45px 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; transition: border-color 0.3s; }
 .search-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
-.btn-settings { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: transparent; color: var(--text2); border: none; padding: 4px 8px; border-radius: 4px; font-size: 1.1rem; cursor: pointer; transition: all 0.2s; line-height: 1; }
-.btn-settings:hover { color: var(--primary); background: rgba(74,144,217,0.08); }
+.btn-settings { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; line-height: 1; white-space: nowrap; display: flex; align-items: center; gap: 3px; }
+.btn-settings:hover { background: #357abd; }
 .pagination-info { font-size: 0.9rem; color: var(--text2); }
 
 /* Settings Modal */
