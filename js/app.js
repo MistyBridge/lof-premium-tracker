@@ -150,11 +150,10 @@ class LofFundMonitor {
             container.innerHTML = funds.slice(0, 5).map((fund, index) => `
                 <div class="ranking-item">
                     <span class="rank-num rank-${index + 1}">${index + 1}</span>
-                    <div class="rank-info">
+                    <div class="rank-card">
                         <span class="rank-code">${fund.code}</span>
-                        <span class="rank-name">${this.truncateName(fund.name, 10)}</span>
+                        <span class="rank-premium premium-high">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
                     </div>
-                    <span class="rank-premium premium-high">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
                 </div>
             `).join('');
         }
@@ -179,11 +178,10 @@ class LofFundMonitor {
             discountContainer.innerHTML = sorted.slice(0, 5).map((fund, index) => `
                 <div class="ranking-item">
                     <span class="rank-num rank-${index + 1}">${index + 1}</span>
-                    <div class="rank-info">
+                    <div class="rank-card">
                         <span class="rank-code">${fund.code}</span>
-                        <span class="rank-name">${this.truncateName(fund.name, 10)}</span>
+                        <span class="rank-premium rank-discount">${fund.premium_rate != null ? fund.premium_rate.toFixed(2) + '%' : '--'}</span>
                     </div>
-                    <span class="rank-premium rank-discount">${fund.premium_rate != null ? fund.premium_rate.toFixed(2) + '%' : '--'}</span>
                 </div>
             `).join('');
         }
