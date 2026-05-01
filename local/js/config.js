@@ -6,9 +6,11 @@
 (function() {
     // 自动检测当前部署环境
     const hostname = window.location.hostname;
+    const protocol = window.location.protocol;
     
-    // 本地开发环境
-    const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+    // 本地开发环境（包括 file:// 协议直接打开）
+    const isFileProtocol = protocol === 'file:';
+    const isLocalDev = isFileProtocol || hostname === 'localhost' || hostname === '127.0.0.1';
     
     // 默认配置 - 使用CF Pages同源API代理
     // CF Pages Functions代理：浏览器 → CF Pages（同源）→ Railway后端
@@ -16,10 +18,11 @@
     const DEFAULT_CONFIG = {
         // 后端API地址
         // 生产：使用CF Pages同源代理（无需CORS，无跨域）
+        // 本地：使用 localhost:5000
         // 可通过URL参数临时切换：?api=https://xxx
         API_BASE_URL: isLocalDev 
             ? 'http://localhost:5000' 
-            : window.location.origin,  // 同源，无跨域问题
+            : window.location.origin,
         
         // 数据刷新间隔（毫秒）- 前端1.5分钟轮询
         REFRESH_INTERVAL: 90 * 1000,
