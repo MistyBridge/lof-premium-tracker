@@ -288,7 +288,7 @@ class LofFundMonitor {
                 <span class="mb-item"><span class="mb-label">现价</span><span class="mb-val">${priceText}</span></span>
                 <span class="mb-item"><span class="mb-label">净值</span><span class="mb-val">${navText}</span></span>
                 <span class="mb-item"><span class="mb-label">涨跌</span><span class="mb-val ${changeClass}">${changeText}</span></span>
-                <span class="mb-item"><span class="mb-label">三日均</span><span class="mb-val ${avgPremiumClass}">${avgPremiumText}</span></span>
+                <span class="mb-item"><span class="mb-label">三日均溢</span><span class="mb-val ${avgPremiumClass}">${avgPremiumText}</span></span>
                 <span class="mb-item"><span class="mb-label">成交</span><span class="mb-val">${amountText}</span></span>
             </div>
         </div>`;

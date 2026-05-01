@@ -10,13 +10,16 @@
     // 本地开发环境
     const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    // 默认配置 - 使用已部署的Railway后端
-    // 如需更换后端地址，可通过URL参数：index.html?api=https://your-api.com
+    // 默认配置 - 使用CF Pages同源API代理
+    // CF Pages Functions代理：浏览器 → CF Pages（同源）→ Railway后端
+    // 解决中国网络访问Railway美国节点被阻断的问题
     const DEFAULT_CONFIG = {
-        // 后端API地址 - Railway部署（正确域名：lof-premium-tracker）
+        // 后端API地址
+        // 生产：使用CF Pages同源代理（无需CORS，无跨域）
+        // 可通过URL参数临时切换：?api=https://xxx
         API_BASE_URL: isLocalDev 
             ? 'http://localhost:5000' 
-            : 'https://lof-premium-tracker-production.up.railway.app',
+            : window.location.origin,  // 同源，无跨域问题
         
         // 数据刷新间隔（毫秒）- 前端1.5分钟轮询
         REFRESH_INTERVAL: 90 * 1000,
@@ -33,8 +36,8 @@
         PRICE_DECIMALS: 3,
         PREMIUM_DECIMALS: 2,
 
-        // 请求配置（加大超时和重试，应对Railway冷启动）
-        REQUEST_TIMEOUT: 30000,    // 30秒超时（Railway冷启动可能需要20秒+）
+        // 请求配置
+        REQUEST_TIMEOUT: 30000,    // 30秒超时
         RETRY_COUNT: 3,            // 重试3次
         RETRY_INTERVAL: 3000,     // 重试间隔3秒
     };
@@ -58,5 +61,5 @@
     window.LOF_CONFIG = CONFIG;
     
     // 调试信息
-    console.log('[LOF配置] API地址:', CONFIG.API_BASE_URL, '| 环境:', isLocalDev ? '本地开发' : '生产部署');
+    console.log('[LOF配置] API地址:', CONFIG.API_BASE_URL, '| 环境:', isLocalDev ? '本地开发' : '生产部署(CF代理)');
 })();
