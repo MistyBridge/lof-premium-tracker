@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOF基金折溢价监控</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📈 LOF基金折溢价监控系统</h1>
+            <div class="header-info">
+                <span id="statusText" class="status-text">加载中...</span>
+                <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
+                    <span class="taiji"><span class="taiji-inner"></span></span>
+                </button>
+            </div>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item"><span class="status-label">基金总数</span><span id="totalFunds" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">缓存数据</span><span id="cacheCount" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
+        </div>
+
+        <!-- 移动端排行条 -->
+        <div class="mobile-ranking-strip" id="mobileRankingStrip">
+            <div class="strip-header strip-header-pos">🔥 溢价TOP</div>
+            <div class="strip-scroll" id="mobileRankingScroll"><div class="loading-mini">加载中...</div></div>
+        </div>
+        <div class="mobile-ranking-strip mobile-ranking-strip-neg" id="mobileDiscountStrip">
+            <div class="strip-header strip-header-neg">🧊 折价TOP</div>
+            <div class="strip-scroll" id="mobileDiscountScroll"><div class="loading-mini">加载中...</div></div>
+        </div>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="panel ranking-panel">
+                    <div class="ranking-dual">
+                        <div class="ranking-col">
+                            <h3 class="panel-title">🔥 溢价 TOP5</h3>
+                            <div id="rankingsContainer" class="rankings-list"><div class="loading-mini">加载中...</div></div>
+                        </div>
+                        <div class="ranking-col">
+                            <h3 class="panel-title panel-title-neg">🧊 折价 TOP5</h3>
+                            <div id="discountContainer" class="rankings-list"><div class="loading-mini">加载中...</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel legend-panel">
+                    <h3 class="panel-title">📖 图例说明</h3>
+                    <div class="legend-items">
+                        <div class="legend-item"><span class="legend-color premium-positive"></span><span>溢价（价格 &gt; 净值）</span></div>
+                        <div class="legend-item"><span class="legend-color premium-negative"></span><span>折价（价格 &lt; 净值）</span></div>
+                        <div class="legend-item"><span class="legend-color premium-zero"></span><span>平价（价格 ≈ 净值）</span></div>
+                        <div class="legend-item"><span class="nav-badge">正式</span><span>= 收盘后净值</span></div>
+                        <div class="legend-item"><span class="nav-badge">估算</span><span>= 盘中估算净值</span></div>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="content">
+                <div class="toolbar">
+                    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 搜索基金代码或名称..."><button id="settingsBtn" class="btn-settings" title="设置筛选阈值">⚙️ 设置</button></div>
+                    <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
+                </div>
+                <!-- PC端表格 -->
+                <div class="table-container">
+                    <table class="fund-table">
+                        <thead>
+                            <tr>
+                                <th class="sortable" data-field="code">代码 ↕</th>
+                                <th class="sortable" data-field="name">名称 ↕</th>
+                                <th class="sortable" data-field="price">现价 ↕</th>
+                                <th class="sortable" data-field="nav">净值 ↕</th>
+                                <th class="sortable" data-field="change_pct">涨跌幅 ↕</th>
+                                <th class="sortable active" data-field="premium_rate">溢价率 ↕</th>
+                                <th class="sortable" data-field="avg_premium_3d">三日均溢 ↕</th>
+                                <th class="sortable" data-field="amount_w">成交额 ↕</th>
+                                <th>状态</th>
+                                <th>净值时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fundTableBody">
+                            <tr><td colspan="10" class="empty-state"><i class="icon">⏳</i><p>正在加载数据...</p></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 移动端卡片 -->
+                <div id="mobileCardList" class="mobile-card-list">
+                    <div class="mobile-empty"><i class="icon">⏳</i><p>正在加载数据...</p></div>
+                </div>
+                <div id="paginationBar" class="pagination-bar">
+                    <button id="firstPageBtn" class="page-btn" onclick="lofMonitor.goToPage(1)">首页</button>
+                    <button id="prevPageBtn" class="page-btn" onclick="lofMonitor.changePage(-1)">上一页</button>
+                    <span id="pageInfo" class="page-info">第 1 页 / 共 1 页</span>
+                    <button id="nextPageBtn" class="page-btn" onclick="lofMonitor.changePage(1)">下一页</button>
+                    <button id="lastPageBtn" class="page-btn" onclick="lofMonitor.goToLastPage()">末页</button>
+                    <select id="pageSizeSelect" class="page-size-select" onchange="lofMonitor.changePageSize(this.value)">
+                        <option value="50" selected>50条/页</option>
+                        <option value="100">100条/页</option>
+                        <option value="200">200条/页</option>
+                    </select>
+                </div>
+            </main>
+        </div>
+
+        <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在加载...</p></div></div>
+        <div id="errorContainer" class="error-container" style="display: none;">
+            <div class="error-content"><div class="error-icon">⚠️</div><p id="errorMessage">加载失败</p><button id="retryBtn" class="btn-retry">重试</button></div>
+        </div>
+
+        <!-- 设置弹窗 -->
+        <div id="settingsModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>⚙️ 筛选设置</h3>
+                    <button id="closeSettingsBtn" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>溢价率/折价率绝对值阈值</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="thresholdInput" min="0" max="50" step="0.1" value="5">
+                            <span class="unit">%</span>
+                        </div>
+                        <p class="form-hint">只显示绝对值 ≥ 此值的基金（0 = 不过滤）</p>
+                    </div>
+                    <div class="form-group">
+                        <label>三日平均溢价率绝对值阈值</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="avgThresholdInput" min="0" max="50" step="0.1" value="0">
+                            <span class="unit">%</span>
+                        </div>
+                        <p class="form-hint">只显示三日均溢绝对值 ≥ 此值的基金（0 = 不过滤）</p>
+                    </div>
+                    <div class="form-group">
+                        <label>最小成交额阈值</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="minAmountInput" min="0" max="10000" step="10" value="0">
+                            <span class="unit">万</span>
+                        </div>
+                        <p class="form-hint">只显示成交额 ≥ 此值的基金（0 = 不过滤）</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="resetSettingsBtn" class="btn-secondary">重置</button>
+                    <button id="applySettingsBtn" class="btn-primary">应用</button>
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            <p>数据来源：东方财富 | 刷新频率：每5分钟自动更新</p>
+            <p class="tip">💡 提示：溢价率超过50%或低于-30%的数据已自动过滤（停牌基金价格异常）</p>
+            <p class="credit" style="text-align:right; font-size:12px; color:#999; margin-top:8px;">@hangogo</p>
+        </footer>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
