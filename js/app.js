@@ -26,28 +26,31 @@ class LofFundMonitor {
         this.updateStatus('正在连接服务...');
         let retries = 0;
         const maxRetries = 5;
-        const retryDelay = 5000; // 5秒重试间隔
+        const retryDelay = 8000; // 8秒重试间隔（Railway冷启动需要时间）
         while (retries < maxRetries) {
             try {
+                this.updateStatus(retries === 0 ? '正在连接服务...' : `连接失败，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
                 await this.checkHealth();
                 await this.loadRankings();
                 await this.loadFunds();
                 this.startAutoRefresh();
                 this.showError(false);
+                this.showLoading(false);
                 this.updateStatus('数据已加载');
                 return; // 成功则退出
             } catch (error) {
                 retries++;
+                console.error(`[LOF] 初始化失败(${retries}/${maxRetries}):`, error.message);
                 if (retries < maxRetries) {
                     this.updateStatus(`服务初始化中，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
                     await new Promise(r => setTimeout(r, retryDelay));
                 } else {
-                    this.updateStatus('连接失败，请稍后刷新页面');
-                    this.showError(true, error.message);
+                    this.updateStatus('连接失败，请检查网络后刷新页面');
+                    this.showError(true, '无法连接到数据服务：' + error.message + '\n\n可能原因：\n1. 服务正在冷启动，请等待1分钟后刷新\n2. 网络不稳定，请稍后重试');
+                    this.showLoading(false);
                 }
             }
         }
-        this.showLoading(false);
     }
 
     async checkHealth() {
@@ -92,7 +95,7 @@ class LofFundMonitor {
             // Check if data is from history (market closed)
             const firstFund = result.data[0];
             if (firstFund && firstFund.data_date) {
-                this.updateStatus('Historical data · ' + firstFund.data_date);
+                this.updateStatus('历史数据 · ' + firstFund.data_date);
             }
         } catch (error) {
             throw new Error(`基金列表加载失败: ${error.message}`);

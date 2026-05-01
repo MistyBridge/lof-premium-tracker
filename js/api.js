@@ -8,9 +8,9 @@ class LofApiService {
         // 使用全局配置
         this.config = window.LOF_CONFIG || { 
             API_BASE_URL: 'http://localhost:5000',
-            REQUEST_TIMEOUT: 15000,
-            RETRY_COUNT: 2,
-            RETRY_INTERVAL: 2000,
+            REQUEST_TIMEOUT: 30000,
+            RETRY_COUNT: 3,
+            RETRY_INTERVAL: 3000,
             DEFAULT_PAGE_SIZE: 50,
             RANKING_LIMIT: 20,
             PREMIUM_THRESHOLD: 50,
@@ -34,6 +34,7 @@ class LofApiService {
             const response = await fetch(url, {
                 ...options,
                 signal: controller.signal,
+                mode: 'cors',
                 headers: {
                     'Content-Type': 'application/json',
                     ...options.headers
@@ -67,11 +68,12 @@ class LofApiService {
      * 带重试的请求
      */
     async requestWithRetry(path, options = {}, retries) {
-        retries = retries || this.config.RETRY_COUNT;
+        retries = retries !== undefined ? retries : this.config.RETRY_COUNT;
         try {
             return await this.request(path, options);
         } catch (error) {
             if (retries > 0) {
+                console.warn(`[LOF API] 请求失败，${this.config.RETRY_INTERVAL/1000}秒后重试(剩余${retries}次):`, error.message);
                 await new Promise(resolve => setTimeout(resolve, this.config.RETRY_INTERVAL));
                 return this.requestWithRetry(path, options, retries - 1);
             }

@@ -429,8 +429,28 @@ class LOFDataFetcher:
                         "溢价" if prem > 0 else "折价" if prem < 0 else "平价"
                     )
                 else:
-                    fund["premium_rate"]   = None
-                    fund["premium_status"] = None
+                    # 实时NAV获取失败（如海外基金fundgz无数据），
+                    # 保留缓存中已有的NAV和溢价率
+                    code = fund.get("code", "")
+                    with self._lock:
+                        cached = self._cache.get(code)
+                    if cached and cached.get("nav") and cached.get("premium_rate") is not None:
+                        fund["nav"] = cached["nav"]
+                        fund["nav_date"] = cached.get("nav_date")
+                        fund["is_formal_nav"] = cached.get("is_formal_nav", True)
+                        fund["premium_rate"] = cached["premium_rate"]
+                        fund["premium_status"] = cached["premium_status"]
+                        # 用新价格重新计算溢价率（如果价格有变化）
+                        old_nav = cached["nav"]
+                        if price > 0 and old_nav > 0:
+                            new_prem = round((price - old_nav) / old_nav * 100, 3)
+                            fund["premium_rate"] = new_prem
+                            fund["premium_status"] = (
+                                "溢价" if new_prem > 0 else "折价" if new_prem < 0 else "平价"
+                            )
+                    else:
+                        fund["premium_rate"]   = None
+                        fund["premium_status"] = None
 
             # Step 6: Update cache atomically
             with self._lock:

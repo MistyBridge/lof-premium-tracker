@@ -36,7 +36,7 @@ logger = logging.getLogger("lof-api")
 # Flask 应用
 # ─────────────────────────────────────────────
 app = Flask(__name__)
-CORS(app)  # 允许跨域，方便前端直接调用
+CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"], "allow_headers": ["Content-Type"]}})  # 允许跨域，支持预检请求
 
 
 # ══════════════════════════════════════════════════════════════════

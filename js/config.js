@@ -13,7 +13,7 @@
     // 默认配置 - 使用已部署的Railway后端
     // 如需更换后端地址，可通过URL参数：index.html?api=https://your-api.com
     const DEFAULT_CONFIG = {
-        // 后端API地址 - Railway部署
+        // 后端API地址 - Railway部署（正确域名：lof-premium-tracker）
         API_BASE_URL: isLocalDev 
             ? 'http://localhost:5000' 
             : 'https://lof-premium-tracker-production.up.railway.app',
@@ -33,10 +33,10 @@
         PRICE_DECIMALS: 3,
         PREMIUM_DECIMALS: 2,
 
-        // 请求配置
-        REQUEST_TIMEOUT: 15000,
-        RETRY_COUNT: 2,
-        RETRY_INTERVAL: 2000,
+        // 请求配置（加大超时和重试，应对Railway冷启动）
+        REQUEST_TIMEOUT: 30000,    // 30秒超时（Railway冷启动可能需要20秒+）
+        RETRY_COUNT: 3,            // 重试3次
+        RETRY_INTERVAL: 3000,     // 重试间隔3秒
     };
 
     // 从URL参数读取自定义配置（优先级最高）
