@@ -17,6 +17,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* Header */
 .header { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); }
 .header h1 { font-size: 1.8rem; font-weight: 600; }
+.brand-title { display: flex; align-items: center; gap: 10px; }
+.brand-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .header-info { display: flex; align-items: center; gap: 15px; }
 .status-text { font-size: 0.9rem; opacity: 0.9; }
 .btn-manual-refresh { background: transparent; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s; }
@@ -189,6 +191,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     /* Header - 紧凑 */
     .header { border-radius: 0; padding: 14px 16px; margin-bottom: 0; }
     .header h1 { font-size: 1.15rem; }
+.brand-title { display: flex; align-items: center; gap: 8px; }
+.brand-logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
     .status-text { font-size: 0.75rem; }
     .taiji { width: 24px; height: 24px; }
     .taiji::before, .taiji::after { width: 12px; height: 12px; }
