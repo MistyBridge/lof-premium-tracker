@@ -30,7 +30,10 @@ class LofFundMonitor {
         while (retries < maxRetries) {
             try {
                 this.updateStatus(retries === 0 ? '正在连接服务...' : `连接失败，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
-                await this.checkHealth();
+                const healthResult = await this.checkHealth();
+                if (!healthResult.data.data_ready) {
+                    throw new Error('数据未就绪，后端正在初始化中，请稍后重试');
+                }
                 await this.loadRankings();
                 await this.loadFunds();
                 this.startAutoRefresh();
@@ -79,11 +82,10 @@ class LofFundMonitor {
             const result = await api.getFunds(1, 600);
             // 保存原始数据总数（过滤前）
             const totalFromApi = result.data.length;
-            // 过滤停牌和无溢价率数据的基金
+            // 过滤停牌和无溢价率数据的基金（不再过滤极端溢价率，全部显示）
             this.funds = result.data.filter(fund => {
                 if (fund.is_suspended) return false;
                 if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
-                if (fund.premium_rate > 50 || fund.premium_rate < -30) return false;
                 return true;
             });
             this.applyFilters();
@@ -101,6 +103,10 @@ class LofFundMonitor {
             throw new Error(`基金列表加载失败: ${error.message}`);
         } finally {
             this.isLoading = false;
+        }
+        // Show empty only if loadFunds succeeded but returned 0 items
+        if (this.funds.length === 0) {
+            this.updateStatus('暂无数据');
         }
     }
 

@@ -177,9 +177,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .page-size-select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; color: var(--text); background: white; cursor: pointer; margin-left: 10px; }
 
 /* Footer */
-.footer { margin-top: 30px; text-align: center; color: var(--text2); font-size: 0.85rem; }
-.footer p { margin: 5px 0; }
-.footer .tip { color: #f39c12; }
+.footer { margin-top: 30px; text-align: center; color: var(--text2); font-size: 0.85rem; padding: 20px 16px; }
+.footer p { margin: 6px 0; }
+.footer-sources { font-size: 0.8rem; }
+.footer-refresh { font-size: 0.8rem; }
+.footer-risk { color: var(--text2); font-size: 0.8rem; margin: 12px 0 8px !important; }
+.footer-links { margin: 8px 0 12px !important; }
+.footer-links a { color: var(--primary); text-decoration: none; }
+.footer-links a:hover { text-decoration: underline; }
+.footer-credit { font-size: 0.75rem; color: #999; margin-top: 10px !important; }
 
 /* Responsive */
 @media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } .sidebar { flex-direction: row; } .sidebar .panel { flex: 1; } }
