@@ -109,6 +109,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         "avg_premium_3d": fund.get("avg_premium_3d"),  # 三日平均溢价率（%）
         # ── 状态 ──
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
+        "can_purchase": fund.get("can_purchase"),  # 是否可申购（None=未知）
         "data_date": fund.get("_history_date"),     # 数据日期（历史回填时有值）
         # ── 推导字段 ──
         "change_amount": round(change_pct / 100 * nav, 4) if (nav and nav > 0) else None,
@@ -262,11 +263,17 @@ def list_funds():
         all_data = {k: v for k, v in all_data.items()
                     if (v.get("premium_rate") or 0) < 0}
 
-    # ── 停牌筛选 ──
+    # ── 停牌 & 申购状态筛选 ──
     show_suspended = request.args.get("suspended", "0")
+    show_unpurchasable = request.args.get("unpurchasable", "0")
     if show_suspended != "1":
         all_data = {k: v for k, v in all_data.items()
                     if not _is_suspended(v)}
+    if show_unpurchasable != "1":
+        # 过滤掉暂停申购的基金（can_purchase=False）
+        # can_purchase=None 表示未知状态，保留显示
+        all_data = {k: v for k, v in all_data.items()
+                    if v.get("can_purchase") is not False}
 
     # ── 排序 ──
     items = list(all_data.values())
@@ -349,7 +356,9 @@ def rankings():
         return err_resp("limit 必须为正整数", code=8, status=400)
 
     valid = [v for v in all_data.values()
-             if v.get("premium_rate") is not None and not _is_suspended(v)]
+             if v.get("premium_rate") is not None
+             and not _is_suspended(v)
+             and v.get("can_purchase") is not False]
 
     if rank_type == "premium":
         sorted_funds = sorted(valid, key=lambda x: x["premium_rate"], reverse=True)

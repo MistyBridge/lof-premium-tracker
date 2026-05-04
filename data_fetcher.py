@@ -452,7 +452,17 @@ class LOFDataFetcher:
                         fund["premium_rate"]   = None
                         fund["premium_status"] = None
 
-            # Step 6: Update cache atomically
+            # Step 6: Fetch purchase status in batch
+            purchase_map = self._fetch_purchase_status_batch(list(enriched.keys()))
+            for code, can_purchase in purchase_map.items():
+                if code in enriched:
+                    enriched[code]["can_purchase"] = can_purchase
+            # For funds not in purchase_map, default to None (unknown)
+            for code, fund in enriched.items():
+                if "can_purchase" not in fund:
+                    fund["can_purchase"] = None
+
+            # Step 7: Update cache atomically
             with self._lock:
                 self._cache = enriched
                 self._last_fetch_time = datetime.now()
@@ -711,27 +721,77 @@ class LOFDataFetcher:
             resp.encoding = "utf-8"
             data = resp.json()
             if data.get("ErrCode") != 0:
-                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+                return {"nav": None, "nav_date": None, "is_formal_nav": False, "can_purchase": None}
             lsjz_list = (data.get("Data") or {}).get("LSJZList") or []
             if not lsjz_list:
-                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+                return {"nav": None, "nav_date": None, "is_formal_nav": False, "can_purchase": None}
             latest = lsjz_list[0]
             nav_str = latest.get("DWJZ")
             date_str = latest.get("FSRQ")  # e.g. "2026-04-29"
+            sgzt = latest.get("SGZT", "")  # 申购状态: 开放申购/暂停申购/限制大额申购
+            can_purchase = "开放" in sgzt or "限制大额" in sgzt
             if not nav_str:
-                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+                return {"nav": None, "nav_date": None, "is_formal_nav": False, "can_purchase": can_purchase}
             nav = _safe_float(nav_str)
             if nav <= 0:
-                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+                return {"nav": None, "nav_date": None, "is_formal_nav": False, "can_purchase": can_purchase}
             return {
                 "nav":           round(nav, 4),
                 "prev_nav":      round(nav, 4),
                 "nav_date":      date_str or None,
                 "is_formal_nav": True,  # lsjz returns formal NAV
+                "can_purchase":  can_purchase,
             }
         except Exception as ex:
             logger.debug(f"lsjz fallback failed for {code}: {ex}")
-            return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            return {"nav": None, "nav_date": None, "is_formal_nav": False, "can_purchase": None}
+
+    def _fetch_purchase_status_batch(self, codes: List[str]) -> Dict[str, bool]:
+        """
+        Batch fetch purchase status (申购状态) from lsjz API.
+        Returns: {code: can_purchase} where True=可申购, False=暂停申购
+        """
+        result: Dict[str, bool] = {}
+        lock = threading.Lock()
+        sem = threading.Semaphore(15)  # 控制并发
+
+        def fetch_one(code: str) -> None:
+            with sem:
+                try:
+                    url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={code}&pageIndex=1&pageSize=1"
+                    headers = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                      "Chrome/120.0.0.0 Safari/537.36",
+                        "Referer": "https://fundf10.eastmoney.com/",
+                    }
+                    resp = self._sess().get(url, headers=headers, timeout=10)
+                    resp.encoding = "utf-8"
+                    data = resp.json()
+                    if data.get("ErrCode") == 0:
+                        lsjz_list = (data.get("Data") or {}).get("LSJZList") or []
+                        if lsjz_list:
+                            sgzt = lsjz_list[0].get("SGZT", "")
+                            can = "开放" in sgzt or "限制大额" in sgzt
+                            with lock:
+                                result[code] = can
+                except Exception:
+                    pass
+
+        threads: List[threading.Thread] = []
+        for code in codes:
+            t = threading.Thread(target=fetch_one, args=(code,))
+            t.start()
+            threads.append(t)
+            if len(threads) >= 50:
+                for tt in threads:
+                    tt.join()
+                threads = []
+        for tt in threads:
+            tt.join()
+
+        logger.info(f"Purchase status fetched: {len(result)}/{len(codes)}")
+        return result
 
 
 # ── Singleton ─────────────────────────────────────
