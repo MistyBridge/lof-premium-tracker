@@ -39,7 +39,7 @@ class LofFundMonitor {
                 this.startAutoRefresh();
                 this.showError(false);
                 this.showLoading(false);
-                this.updateStatus('数据已加载');
+                this.updateStatus('');
                 return; // 成功则退出
             } catch (error) {
                 retries++;
@@ -97,7 +97,7 @@ class LofFundMonitor {
             // Check if data is from history (market closed)
             const firstFund = result.data[0];
             if (firstFund && firstFund.data_date) {
-                this.updateStatus('历史数据 · ' + firstFund.data_date);
+                this.updateStatus('');
             }
         } catch (error) {
             throw new Error(`基金列表加载失败: ${error.message}`);
@@ -106,7 +106,7 @@ class LofFundMonitor {
         }
         // Show empty only if loadFunds succeeded but returned 0 items
         if (this.funds.length === 0) {
-            this.updateStatus('暂无数据');
+            this.updateStatus('');
         }
     }
 
@@ -406,11 +406,9 @@ class LofFundMonitor {
                     await this.checkHealth();
                     await this.loadRankings();
                     await this.loadFunds();
-                    this.updateStatus('自动刷新成功');
                     this.showError(false);
                 } catch (error) {
                     console.warn('自动刷新失败:', error.message);
-                    this.updateStatus('自动刷新失败，下次继续重试');
                 }
             }
         }, window.LOF_CONFIG?.REFRESH_INTERVAL || 90000);
@@ -421,8 +419,11 @@ class LofFundMonitor {
     }
 
     updateStatus(message) {
+        // 状态文字现在只用于初始加载等场景，刷新状态由 refreshStatus 元素单独显示
         const el = document.getElementById('statusText');
-        if (el) el.textContent = message;
+        if (el && el.textContent !== message) {
+            el.textContent = message;
+        }
     }
 
     updateStatusInfo(data) {
@@ -502,17 +503,45 @@ class LofFundMonitor {
 
     async handleManualRefresh() {
         const btn = document.getElementById('manualRefreshBtn');
-        if (btn) { btn.disabled = true; btn.querySelector('.refresh-icon').classList.add('spinning'); }
+        const icon = btn?.querySelector('.refresh-icon');
+        const statusEl = document.getElementById('refreshStatus');
+
+        if (btn) { btn.disabled = true; }
+        if (icon) {
+            icon.classList.remove('bouncing');
+            void icon.offsetWidth;
+            icon.classList.add('bouncing');
+        }
+
+        // 显示“刷新中...”
+        if (statusEl) {
+            statusEl.textContent = '刷新中...';
+            statusEl.classList.add('show');
+        }
+
         try {
             await this.checkHealth();
             await this.loadRankings();
             await this.loadFunds();
-            this.updateStatus('刷新成功');
+
+            // 显示“✓”成功
+            if (statusEl) {
+                statusEl.textContent = '✓';
+            }
         } catch (error) {
-            this.updateStatus('刷新失败');
+            if (statusEl) {
+                statusEl.textContent = '✗';
+            }
             this.showToast('刷新失败: ' + error.message);
         } finally {
-            if (btn) { btn.disabled = false; btn.querySelector('.refresh-icon').classList.remove('spinning'); }
+            if (btn) { btn.disabled = false; }
+
+            // 2秒后隐藏状态
+            setTimeout(() => {
+                if (statusEl) {
+                    statusEl.classList.remove('show');
+                }
+            }, 2000);
         }
     }
 
