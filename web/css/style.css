@@ -134,11 +134,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .fund-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .fund-table thead { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
 .fund-table th { padding: 12px 10px; text-align: left; font-weight: 600; color: var(--text2); border-bottom: 2px solid var(--border); user-select: none; }
-.fund-table th.sortable { cursor: pointer; }
+.fund-table th.sortable { cursor: pointer; position: relative; padding-right: 18px; }
 .fund-table th.sortable:hover { color: var(--primary); }
 .fund-table th.active { color: var(--primary); }
-.fund-table th.sort-asc::after { content: '▲'; margin-left: 5px; opacity: 1; }
-.fund-table th.sort-desc::after { content: '▼'; margin-left: 5px; opacity: 1; }
+.fund-table th.sort-asc::after, .fund-table th.sort-desc::after { content: ''; position: absolute; right: 6px; top: 50%; transform: translateY(-50%); opacity: 0.6; font-size: 10px; }
+.fund-table th.sort-asc::after { content: '▲'; opacity: 1; }
+.fund-table th.sort-desc::after { content: '▼'; opacity: 1; }
 .fund-table td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
 .fund-row { transition: background-color 0.2s; }
 .fund-row:hover { background-color: #f8f9fa; }
