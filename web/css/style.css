@@ -133,7 +133,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .table-container { overflow-x: auto; }
 .fund-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
 .fund-table thead { background: #f8f9fa; position: sticky; top: 0; z-index: 10; }
-.fund-table th { padding: 12px 10px; text-align: left; font-weight: 600; color: var(--text2); border-bottom: 2px solid var(--border); user-select: none; }
+.fund-table th { padding: 12px 10px; text-align: left; font-weight: 600; color: var(--text2); border-bottom: 2px solid var(--border); user-select: none; white-space: nowrap; }
 .fund-table th.sortable { cursor: pointer; position: relative; padding-right: 18px; }
 .fund-table th.sortable:hover { color: var(--primary); }
 .fund-table th.active { color: var(--primary); }
