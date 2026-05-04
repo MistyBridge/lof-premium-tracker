@@ -31,7 +31,10 @@ class LofFundMonitor {
             try {
                 this.updateStatus(retries === 0 ? '正在连接服务...' : `连接失败，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
                 const healthResult = await this.checkHealth();
-                if (!healthResult.data.data_ready) {
+                const data = healthResult.data;
+                // data_ready 字段可能不存在（旧版后端兼容），用 cache_count > 0 兜底
+                const isReady = data.data_ready !== undefined ? data.data_ready : (data.cache_count > 0);
+                if (!isReady) {
                     throw new Error('数据未就绪，后端正在初始化中，请稍后重试');
                 }
                 await this.loadRankings();

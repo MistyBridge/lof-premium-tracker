@@ -157,9 +157,12 @@ def health():
     f = get_fetcher()
     hdb = get_history_db()
     available_dates = hdb.get_available_dates()
+    cache_count = len(f.get_all())
     return ok({
         "status": "running",
-        "cache_count": len(f.get_all()),
+        "data_ready": cache_count > 0,
+        "total": cache_count,
+        "cache_count": cache_count,
         "last_fetch": f.last_fetch_time.isoformat() if f.last_fetch_time else None,
         "error": f.fetch_error,
         "refresh_interval_sec": Config.REFRESH_INTERVAL_SECONDS,

@@ -654,6 +654,7 @@ class LOFDataFetcher:
         """
         Fetch NAV/Estimated NAV from 天天基金网 fundgz API.
         URL: https://fundgz.1234567.com.cn/js/{code}.js
+        Falls back to lsjz API for funds without real-time estimate (e.g., QDII).
         Returns: { nav, prev_nav, nav_date, is_formal_nav }
         """
         url  = Config.FUND_NAV_URL.format(code=code)
@@ -663,19 +664,20 @@ class LOFDataFetcher:
 
         m = re.search(r"\((.+)\)\s*;?\s*$", text, re.DOTALL)
         if not m:
-            return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            # fundgz returned empty (typical for QDII/overseas funds), try lsjz fallback
+            return self._fetch_nav_from_lsjz(code)
 
         try:
             data = json.loads(m.group(1).strip().rstrip(";").rstrip(")"))
         except json.JSONDecodeError:
-            return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            return self._fetch_nav_from_lsjz(code)
 
         nav_str  = data.get("dwjz")   # current unit NAV (estimated during trading)
         prev_str = data.get("jjjz")    # previous trading day NAV
         gztime   = data.get("gztime") # estimated NAV update time
 
         if not nav_str:
-            return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            return self._fetch_nav_from_lsjz(code)
 
         nav  = _safe_float(nav_str)
         prev = _safe_float(prev_str, nav)
@@ -689,6 +691,47 @@ class LOFDataFetcher:
             "nav_date":      gztime_str or None,
             "is_formal_nav": is_formal,
         }
+
+    def _fetch_nav_from_lsjz(self, code: str) -> Dict[str, Any]:
+        """
+        Fallback: Fetch latest formal NAV from 东方财富历史净值 API.
+        Used when fundgz has no estimate data (QDII/overseas funds).
+        URL: https://api.fund.eastmoney.com/f10/lsjz?fundCode={code}&pageIndex=1&pageSize=1
+        """
+        url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={code}&pageIndex=1&pageSize=1"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/120.0.0.0 Safari/537.36",
+            "Referer": "https://fundf10.eastmoney.com/",
+            "Accept": "*/*",
+        }
+        try:
+            resp = self._sess().get(url, headers=headers, timeout=Config.REQUEST_TIMEOUT)
+            resp.encoding = "utf-8"
+            data = resp.json()
+            if data.get("ErrCode") != 0:
+                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            lsjz_list = (data.get("Data") or {}).get("LSJZList") or []
+            if not lsjz_list:
+                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            latest = lsjz_list[0]
+            nav_str = latest.get("DWJZ")
+            date_str = latest.get("FSRQ")  # e.g. "2026-04-29"
+            if not nav_str:
+                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            nav = _safe_float(nav_str)
+            if nav <= 0:
+                return {"nav": None, "nav_date": None, "is_formal_nav": False}
+            return {
+                "nav":           round(nav, 4),
+                "prev_nav":      round(nav, 4),
+                "nav_date":      date_str or None,
+                "is_formal_nav": True,  # lsjz returns formal NAV
+            }
+        except Exception as ex:
+            logger.debug(f"lsjz fallback failed for {code}: {ex}")
+            return {"nav": None, "nav_date": None, "is_formal_nav": False}
 
 
 # ── Singleton ─────────────────────────────────────
