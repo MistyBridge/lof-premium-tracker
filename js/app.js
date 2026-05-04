@@ -14,14 +14,18 @@ class LofFundMonitor {
         this.refreshTimer = null;
         this.searchTimeout = null;
         this.isLoading = false;
-        this.threshold = 0;
-        this.avgThreshold = 0;
-        this.minAmount = 0;
+        // 筛选参数（从 localStorage 恢复或用默认值）
+        this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
+        this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
+        this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 0;
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
         this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;        // 元
+        // 深色模式（从 localStorage 恢复，默认跟随系统）
+        this.darkMode = localStorage.getItem('lof_darkMode') || '';
         this.bindEvents();
+        this.applyDarkMode(false); // 不保存，仅应用
         this.init();
     }
 
@@ -53,6 +57,8 @@ class LofFundMonitor {
                 console.error(`[LOF] 初始化失败(${retries}/${maxRetries}):`, error.message);
                 if (retries < maxRetries) {
                     this.updateStatus(`服务初始化中，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
+                    // 更新 loader 文字提示重试进度
+                    this.updateLoaderText(`连接中... (${retries}/${maxRetries})`);
                     await new Promise(r => setTimeout(r, retryDelay));
                 } else {
                     this.updateStatus('连接失败，请检查网络后刷新页面');
@@ -340,7 +346,7 @@ class LofFundMonitor {
         const tbody = document.getElementById('fundTableBody');
         const cardList = document.getElementById('mobileCardList');
         if (this.filteredFunds.length === 0) {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><i class="icon">📭</i><p>暂无数据</p></td></tr>`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="empty-state"><i class="icon">📭</i><p>暂无数据</p><p class="loading-hint">尝试调整筛选条件</p></td></tr>`;
             if (cardList) cardList.innerHTML = `<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>`;
             return;
         }
@@ -522,6 +528,48 @@ class LofFundMonitor {
         if (settingsModal) settingsModal.addEventListener('click', e => { if (e.target === settingsModal) this.closeSettingsModal(); });
         if (applySettingsBtn) applySettingsBtn.addEventListener('click', () => this.applySettings());
         if (resetSettingsBtn) resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+        // 深色模式按钮
+        const darkModeBtn = document.getElementById('darkModeBtn');
+        if (darkModeBtn) darkModeBtn.addEventListener('click', () => this.toggleDarkMode());
+    }
+
+    // ===== 深色模式 =====
+    toggleDarkMode() {
+        // 循环切换: '' -> 'dark' -> 'light' -> ''
+        if (this.darkMode === '') {
+            this.darkMode = 'dark';
+        } else if (this.darkMode === 'dark') {
+            this.darkMode = 'light';
+        } else {
+            this.darkMode = '';
+        }
+        localStorage.setItem('lof_darkMode', this.darkMode);
+        this.applyDarkMode(true); // 应用并保存
+    }
+
+    applyDarkMode(save) {
+        const btn = document.getElementById('darkModeBtn');
+        const root = document.documentElement;
+
+        // 清除之前的类
+        root.classList.remove('dark-mode', 'light-mode');
+
+        if (this.darkMode === 'dark') {
+            root.classList.add('dark-mode');
+            if (btn) btn.textContent = '☀️';
+            if (btn) btn.title = '当前：深色模式（点击切换浅色）';
+        } else if (this.darkMode === 'light') {
+            root.classList.add('light-mode');
+            if (btn) btn.textContent = '🌙';
+            if (btn) btn.title = '当前：浅色模式（点击跟随系统）';
+        } else {
+            // 跟随系统
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                root.classList.add('dark-mode');
+            }
+            if (btn) btn.textContent = '🌗';
+            if (btn) btn.title = '当前：跟随系统（点击切换深色）';
+        }
     }
 
     openSettingsModal() {
@@ -559,7 +607,10 @@ class LofFundMonitor {
         this.commissionRate = parseFloat(commissionRateInput?.value) || 1.5;
         this.commissionMin = parseFloat(commissionMinInput?.value) || 5;
         this.maxCapital = parseFloat(maxCapitalInput?.value) || 1000;
-        // 保存到 localStorage
+        // 保存所有设置到 localStorage（扩展记忆功能）
+        localStorage.setItem('lof_threshold', this.threshold);
+        localStorage.setItem('lof_avgThreshold', this.avgThreshold);
+        localStorage.setItem('lof_minAmount', this.minAmount);
         localStorage.setItem('lof_commissionRate', this.commissionRate);
         localStorage.setItem('lof_commissionMin', this.commissionMin);
         localStorage.setItem('lof_maxCapital', this.maxCapital);
@@ -644,6 +695,11 @@ class LofFundMonitor {
         if (el && el.textContent !== message) {
             el.textContent = message;
         }
+    }
+
+    updateLoaderText(text) {
+        const loaderText = document.querySelector('.loader-content p');
+        if (loaderText) loaderText.textContent = text;
     }
 
     updateStatusInfo(data) {
@@ -733,7 +789,7 @@ class LofFundMonitor {
             icon.classList.add('bouncing');
         }
 
-        // 显示“刷新中...”
+        // 显示"刷新中..."
         if (statusEl) {
             statusEl.textContent = '刷新中...';
             statusEl.classList.add('show');
@@ -744,7 +800,7 @@ class LofFundMonitor {
             await this.loadRankings();
             await this.loadFunds();
 
-            // 显示“✓”成功
+            // 显示"✓"成功
             if (statusEl) {
                 statusEl.textContent = '✓';
             }

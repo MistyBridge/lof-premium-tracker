@@ -11,7 +11,7 @@
     --neg: #27ae60;
     --zero: #333;
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; min-height: 100vh; transition: background-color 0.3s ease, color 0.3s ease; }
 .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
 
 /* Header */
@@ -24,6 +24,28 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .auto-refresh-label { font-size: 0.85rem; opacity: 0.9; }
 .refresh-status { font-size: 0.85rem; opacity: 0; transition: opacity 0.3s ease; min-width: 60px; }
 .refresh-status.show { opacity: 1; }
+
+/* 深色模式按钮 */
+.btn-dark-mode {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    line-height: 1;
+    min-width: 36px;
+    height: 32px;
+}
+.btn-dark-mode:hover {
+    background: rgba(255,255,255,0.25);
+    transform: scale(1.05);
+}
+.btn-dark-mode:active { transform: scale(0.95); }
 
 /* 刷新按钮 */
 .btn-manual-refresh {
@@ -56,14 +78,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* Status Bar */
 .status-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
-.status-item { background: var(--card); padding: 15px 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.status-item { background: var(--card); padding: 15px 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); transition: background 0.3s ease, box-shadow 0.3s ease; }
 .status-label { display: block; font-size: 0.85rem; color: var(--text2); margin-bottom: 5px; }
 .status-value { display: block; font-size: 1.3rem; font-weight: 600; color: var(--primary); }
 
 /* Main Content */
 .main-content { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
 .sidebar { display: flex; flex-direction: column; gap: 20px; }
-.panel { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.panel { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: background 0.3s ease, box-shadow 0.3s ease; }
 .panel-title { font-size: 1rem; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--border); }
 .ranking-panel .panel-title { color: var(--pos); font-size: 0.9rem; margin-bottom: 8px; }
 .ranking-panel .panel-title-neg { color: var(--neg); }
@@ -99,10 +121,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .legend-color.premium-zero { background: var(--zero); }
 
 /* Content */
-.content { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.content { background: var(--card); border-radius: 12px; padding: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: background 0.3s ease, box-shadow 0.3s ease; }
 .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 15px; }
 .search-box { flex: 1; max-width: 400px; position: relative; }
-.search-box input { width: 100%; padding: 10px 45px 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; transition: border-color 0.3s; }
+.search-box input { width: 100%; padding: 10px 45px 10px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; transition: border-color 0.3s; background: var(--card); color: var(--text); }
 .search-box input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
 .btn-settings { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: var(--primary); color: white; border: none; padding: 5px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; line-height: 1; white-space: nowrap; display: flex; align-items: center; gap: 3px; }
 .btn-settings:hover { background: #357abd; }
@@ -119,8 +141,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px; }
 .input-with-unit { display: flex; align-items: center; gap: 8px; }
-.input-with-unit input { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; }
-.input-with-unit input:focus { outline: none; border-color: var(--primary); }
+.input-with-unit input { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; background: var(--bg); color: var(--text); transition: border-color 0.3s, background 0.3s, color 0.3s; }
+.input-with-unit input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
 .input-with-unit .unit { color: var(--text2); font-size: 0.9rem; }
 .form-hint { font-size: 0.8rem; color: var(--text2); margin-top: 6px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid var(--border); }
@@ -162,12 +184,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .status-badge.平价 { background: #f5f5f5; color: var(--zero); }
 .empty-state { text-align: center; padding: 60px 20px !important; color: var(--text2); }
 .empty-state .icon { font-size: 3rem; display: block; margin-bottom: 10px; }
+.loading-hint { font-size: 0.85rem; color: var(--text2); margin-top: 8px; opacity: 0.7; }
+.loading-spinner-icon { animation: spin-slow 2s linear infinite; display: block; }
+@keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 /* Loader */
-.loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.loader-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: background 0.3s ease; }
 .loader-content { text-align: center; }
 .spinner { width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.loader-hint { font-size: 0.85rem; color: #999; margin-top: 8px; }
 
 /* Error */
 .error-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.98); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -430,4 +456,127 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     color: #999;
     text-align: center;
     margin-top: 8px;
+}
+
+/* ========== 深色模式样式 ========== */
+.dark-mode {
+    --bg: #1a1a2e;
+    --card: #16213e;
+    --text: #e0e0e0;
+    --text2: #8899aa;
+    --border: #2a2a4a;
+    --pos: #ff6b6b;
+    --neg: #51cf66;
+    --zero: #aaa;
+    --primary: #5c9eff;
+}
+.dark-mode body { background: var(--bg); color: var(--text); }
+.dark-mode .header {
+    background: linear-gradient(135deg, #1a1a40 0%, #2d1b69 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.dark-mode .btn-dark-mode {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+}
+.dark-mode .btn-dark-mode:hover { background: rgba(255,255,255,0.2); }
+.dark-mode .status-bar { background: var(--bg); }
+.dark-mode .status-item {
+    background: var(--card);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.dark-mode .panel {
+    background: var(--card);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.dark-mode .content {
+    background: var(--card);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+}
+.dark-mode .ranking-item { background: #1e2a4a; }
+.dark-mode .ranking-item:hover { background: #253358; }
+.dark-mode .fund-table thead { background: #1a1a38; }
+.dark-mode .fund-table td { border-bottom-color: var(--border); }
+.dark-mode .fund-table th { border-bottom-color: var(--border); color: var(--text2); }
+.dark-mode .fund-row:hover { background-color: #1e2a4a; }
+.dark-mode .search-box input {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+}
+.dark-mode .input-with-unit input {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--border);
+}
+.dark-mode .modal-content { background: var(--card); color: var(--text); }
+.dark-mode .modal-header { border-bottom-color: var(--border); }
+.dark-mode .modal-footer { border-top-color: var(--border); }
+.dark-mode .btn-secondary { background: #2a2a4a; color: var(--text); }
+.dark-mode .btn-secondary:hover { background: #3a3a5a; }
+.dark-mode .page-btn {
+    background: var(--card);
+    color: var(--text);
+    border-color: var(--border);
+}
+.dark-mode .page-btn:hover:not(:disabled) { background: var(--primary); color: white; }
+.dark-mode .page-size-select {
+    background: var(--card);
+    color: var(--text);
+    border-color: var(--border);
+}
+.dark-mode .nav-badge { background: #1a3a5c; color: var(--primary); }
+.dark-mode .status-badge.溢价 { background: #3d1a1a; color: var(--pos); }
+.dark-mode .status-badge.折价 { background: #1a3d22; color: var(--neg); }
+.dark-mode .status-badge.平价 { background: #2a2a2a; color: var(--zero); }
+.dark-mode .empty-state { color: var(--text2); }
+.dark-mode .mobile-card { background: var(--card); border-bottom-color: var(--border); }
+.dark-mode .mobile-card:active { background: #1e2a4a; }
+.dark-mode .mobile-ranking-strip { background: var(--card); border-bottom-color: var(--border); }
+.dark-mode .strip-item { background: #2d1520; }
+.dark-mode .mobile-ranking-strip-neg .strip-item { background: #152d22; }
+.dark-mode .mobile-empty { color: var(--text2); }
+.dark-mode .toolbar { background: transparent; }
+.dark-mode .pagination-bar { border-top-color: var(--border); }
+.dark-mode .settings-divider { border-top-color: var(--border); }
+.dark-mode .profit-popover-card { background: var(--card); color: var(--text); }
+.dark-mode .profit-popover-close { background: #2a2a4a; color: var(--text2); }
+.dark-mode .profit-popover-close:hover { background: #3a3a5a; }
+.dark-mode .profit-detail { color: var(--text); }
+.dark-mode .profit-detail-section { background: #1a1a38; }
+.dark-mode .profit-detail-subtitle { color: var(--text2); }
+.dark-mode .profit-detail-row { color: var(--text2); }
+.dark-mode .profit-detail-row.highlight { background: #1a2a48; color: var(--text); }
+.dark-mode .profit-detail-row.total { border-top-color: var(--border); color: var(--text); }
+.dark-mode .profit-detail-footer { color: var(--text2); }
+.dark-mode .btn-profit-info {
+    border-color: #555;
+    color: #888;
+}
+.dark-mode .btn-profit-info:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #1a2a48;
+}
+.dark-mode .legend-color.premium-zero { background: var(--zero); }
+.dark-mode .loader-overlay { background: rgba(26, 26, 46, 0.95); }
+.dark-mode .error-container { background: rgba(26, 26, 46, 0.98); }
+.dark-mode .spinner { border-color: #2a2a4a; border-top-color: var(--primary); }
+.dark-mode .loader-hint { color: #666; }
+.dark-mode .footer { color: var(--text2); }
+.dark-mode .footer .legal-links a { color: var(--primary); }
+.dark-mode .form-hint { color: var(--text2); }
+.dark-mode .loading-hint { color: var(--text2); }
+
+/* 强制浅色模式（用户选择浅色时覆盖系统偏好） */
+.light-mode {
+    --bg: #f5f7fa;
+    --card: #ffffff;
+    --text: #2c3e50;
+    --text2: #7f8c8d;
+    --border: #e1e8ed;
+    --pos: #e74c3c;
+    --neg: #27ae60;
+    --zero: #333;
+    --primary: #4a90d9;
 }

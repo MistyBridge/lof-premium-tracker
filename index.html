@@ -14,6 +14,7 @@
                 <h1>金快查</h1>
             </div>
             <div class="header-info">
+                <button id="darkModeBtn" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
                 <span id="statusText" class="status-text">加载中...</span>
                 <span class="auto-refresh-label">自动刷新</span>
                 <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
@@ -114,13 +115,13 @@
                             </tr>
                         </thead>
                         <tbody id="fundTableBody">
-                            <tr><td colspan="10" class="empty-state"><i class="icon">⏳</i><p>正在加载数据...</p></td></tr>
+                            <tr><td colspan="12" class="empty-state"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p><p class="loading-hint">首次连接可能需要 10-30 秒</p></td></tr>
                         </tbody>
                     </table>
                 </div>
                 <!-- 移动端卡片 -->
                 <div id="mobileCardList" class="mobile-card-list">
-                    <div class="mobile-empty"><i class="icon">⏳</i><p>正在加载数据...</p></div>
+                    <div class="mobile-empty"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p></div>
                 </div>
                 <div id="paginationBar" class="pagination-bar">
                     <button id="firstPageBtn" class="page-btn" onclick="lofMonitor.goToPage(1)">首页</button>
@@ -137,7 +138,7 @@
             </main>
         </div>
 
-        <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在加载...</p></div></div>
+        <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在连接服务器...</p><p class="loader-hint">首次加载可能需要 10-30 秒，请耐心等待</p></div></div>
         <div id="errorContainer" class="error-container" style="display: none;">
             <div class="error-content"><div class="error-icon">⚠️</div><p id="errorMessage">加载失败</p><button id="retryBtn" class="btn-retry">重试</button></div>
         </div>
