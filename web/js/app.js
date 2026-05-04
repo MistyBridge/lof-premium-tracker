@@ -379,6 +379,7 @@ class LofFundMonitor {
         let estProfitRateClass = 'premium-zero';
         let estProfitAmountText = '--';
         let estProfitAmountClass = 'premium-zero';
+        let estProfitInfoBtn = '';
         if (estProfit) {
             const sign = estProfit.rate > 0 ? '+' : '';
             estProfitRateText = sign + estProfit.rate.toFixed(2) + '%';
@@ -391,6 +392,7 @@ class LofFundMonitor {
             const amtSign = estProfit.amount > 0 ? '+' : '';
             estProfitAmountText = amtSign + estProfitAmountText;
             estProfitAmountClass = estProfit.amount > 0 ? 'premium-positive' : estProfit.amount < 0 ? 'premium-negative' : 'premium-zero';
+            estProfitInfoBtn = `<button class="btn-profit-info" onclick="lofMonitor.showProfitDetail('${fund.code}')" title="查看收益构成">?</button>`;
         }
         return `<tr class="fund-row" data-code="${fund.code}">
             <td class="col-code">${fund.code}</td>
@@ -401,8 +403,8 @@ class LofFundMonitor {
             <td class="col-premium ${premiumClass}">${premiumText}</td>
             <td class="col-avg-premium ${avgPremiumClass}">${avgPremiumText}</td>
             <td class="col-amount">${amountText}</td>
-            <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}<button class="btn-profit-info" onclick="lofMonitor.showProfitDetail('${fund.code}')" title="查看收益构成">?</button></td>
-            <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}<button class="btn-profit-info" onclick="lofMonitor.showProfitDetail('${fund.code}')" title="查看收益构成">?</button></td>
+            <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}${estProfitInfoBtn}</td>
+            <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}${estProfitInfoBtn}</td>
             <td class="col-status"><span class="status-badge ${fund.premium_status || ''}">${fund.premium_status || '未知'}</span></td>
             <td class="col-time">${fund.nav_date || '-'}</td>
         </tr>`;
