@@ -502,7 +502,7 @@ class LofFundMonitor {
 
     async handleManualRefresh() {
         const btn = document.getElementById('manualRefreshBtn');
-        if (btn) { btn.disabled = true; btn.querySelector('.taiji').classList.add('spinning'); }
+        if (btn) { btn.disabled = true; btn.querySelector('.refresh-icon').classList.add('spinning'); }
         try {
             await this.checkHealth();
             await this.loadRankings();
@@ -512,7 +512,7 @@ class LofFundMonitor {
             this.updateStatus('刷新失败');
             this.showToast('刷新失败: ' + error.message);
         } finally {
-            if (btn) { btn.disabled = false; btn.querySelector('.taiji').classList.remove('spinning'); }
+            if (btn) { btn.disabled = false; btn.querySelector('.refresh-icon').classList.remove('spinning'); }
         }
     }
 
