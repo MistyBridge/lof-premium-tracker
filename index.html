@@ -9,12 +9,40 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1 class="brand-title"><img src="img/logo.jpg" alt="金快查" class="brand-logo"> 金快查</h1>
+            <div class="header-brand">
+                <img src="icon.jpg" alt="金快查" class="brand-icon">
+                <h1>金快查</h1>
+            </div>
             <div class="header-info">
                 <span id="statusText" class="status-text">加载中...</span>
+                <span class="auto-refresh-label">自动刷新</span>
                 <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
-                    <span class="taiji"><span class="taiji-inner"></span></span>
+                    <svg class="refresh-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 元宝主体 -->
+                        <ellipse cx="16" cy="20" rx="12" ry="8" fill="url(#goldGradient)"/>
+                        <ellipse cx="16" cy="18" rx="10" ry="6" fill="url(#goldLight)"/>
+                        <!-- 元宝顶部凸起 -->
+                        <ellipse cx="16" cy="14" rx="6" ry="4" fill="url(#goldGradient)"/>
+                        <ellipse cx="16" cy="13" rx="4" ry="2.5" fill="url(#goldHighlight)"/>
+                        <!-- 渐变定义 -->
+                        <defs>
+                            <linearGradient id="goldGradient" x1="8" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#FFD700"/>
+                                <stop offset="50%" stop-color="#FFA500"/>
+                                <stop offset="100%" stop-color="#FF8C00"/>
+                            </linearGradient>
+                            <linearGradient id="goldLight" x1="10" y1="14" x2="22" y2="24" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#FFEC8B"/>
+                                <stop offset="100%" stop-color="#FFD700"/>
+                            </linearGradient>
+                            <linearGradient id="goldHighlight" x1="12" y1="11" x2="20" y2="15" gradientUnits="userSpaceOnUse">
+                                <stop offset="0%" stop-color="#FFF8DC"/>
+                                <stop offset="100%" stop-color="#FFEC8B"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
                 </button>
+                <span id="refreshStatus" class="refresh-status"></span>
             </div>
         </header>
 
@@ -153,11 +181,14 @@
         </div>
 
         <footer class="footer">
-            <p class="footer-sources">数据来源：基金代码与净值 - 东方财富 | 实时价格 - 深交所/上交所 | 溢价率计算 - 本地计算</p>
-            <p class="footer-refresh">刷新频率：每5分钟自动更新</p>
-            <p class="footer-risk">投资有风险，入市需谨慎。本工具仅供参考，不构成任何投资建议。</p>
-            <p class="footer-links"><a href="agreement.html">用户协议</a> | <a href="disclaimer.html">免责声明</a></p>
-            <p class="footer-credit">© 2026 金快查 | @hangogo</p>
+            <p>数据来源：东方财富、天天基金、上交所、深交所</p>
+            <p class="risk-warning">投资有风险，入市需谨慎</p>
+            <p class="legal-links">
+                <a href="agreement.html">用户协议</a>
+                <span class="divider">|</span>
+                <a href="privacy.html">隐私政策</a>
+            </p>
+            <p class="credit" style="text-align:right; font-size:12px; color:#999; margin-top:8px;">@金快查 2026 | @HanK</p>
         </footer>
     </div>
     <script src="js/config.js"></script>
