@@ -599,8 +599,8 @@ class LofFundMonitor {
             this.sortOrder = 'desc';
         }
         document.querySelectorAll('.sortable').forEach(th => {
-            th.classList.remove('sort-asc', 'sort-desc');
-            if (th.dataset.field === field) th.classList.add(`sort-${this.sortOrder}`);
+            th.classList.remove('sort-asc', 'sort-desc', 'active');
+            if (th.dataset.field === field) th.classList.add(`sort-${this.sortOrder}`, 'active');
         });
         this.applyFilters();
         this.renderTable();
