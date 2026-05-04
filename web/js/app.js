@@ -147,30 +147,138 @@ class LofFundMonitor {
 
         // 实际投入 = min(最大资金量, 申购上限)
         // purchase_limit: null=无限额, number=限额(元)
-        const purchaseLimit = fund.purchase_limit;  // null means no limit
+        const purchaseLimit = fund.purchase_limit;
         const capital = purchaseLimit ? Math.min(this.maxCapital, purchaseLimit) : this.maxCapital;
 
         // 佣金计算
-        const commissionRatePct = this.commissionRate / 10000;  // 万X → 小数
+        const commissionRatePct = this.commissionRate / 10000;
         const rawCommission = capital * commissionRatePct;
         const actualCommission = Math.max(rawCommission, this.commissionMin);
-        const actualCommissionRate = (actualCommission / capital) * 100;  // → 百分比
+        const actualCommissionRate = (actualCommission / capital) * 100;
+        const isMinCommission = rawCommission < this.commissionMin;
 
         if (premium > 0) {
             // 溢价套利: 申购→场内卖出
-            const purchaseFeeRate = fund.purchase_fee_rate ?? 0;  // 申购优惠费率(%)
-            const sellCommissionRate = actualCommissionRate;       // 卖出佣金率(%)
+            const purchaseFeeRate = fund.purchase_fee_rate ?? 0;
+            const purchaseFeeAmount = capital * purchaseFeeRate / 100;
+            const sellCommissionRate = actualCommissionRate;
+            const sellCommissionAmount = actualCommission;
             const profitRate = premium - purchaseFeeRate - sellCommissionRate;
             const profitAmount = capital * profitRate / 100;
-            return { rate: profitRate, amount: profitAmount, capital };
+            return {
+                rate: profitRate, amount: profitAmount, capital,
+                direction: '溢价套利',
+                breakdown: {
+                    premiumRate: premium,
+                    purchaseFeeRate, purchaseFeeAmount,
+                    sellCommissionRate, sellCommissionAmount,
+                    commissionRatePct: this.commissionRate,
+                    rawCommission, actualCommission, isMinCommission,
+                    purchaseLimit, maxCapital: this.maxCapital,
+                }
+            };
         } else {
             // 折价套利: 场内买入→赎回
-            const buyCommissionRate = actualCommissionRate;             // 买入佣金率(%)
-            const redemptionFeeRate = fund.redemption_fee_rate ?? 1.5; // 赎回费率最短档(%), 默认1.5%
+            const buyCommissionRate = actualCommissionRate;
+            const buyCommissionAmount = actualCommission;
+            const redemptionFeeRate = fund.redemption_fee_rate ?? 1.5;
+            const redemptionFeeAmount = capital * redemptionFeeRate / 100;
             const profitRate = Math.abs(premium) - buyCommissionRate - redemptionFeeRate;
             const profitAmount = capital * profitRate / 100;
-            return { rate: profitRate, amount: profitAmount, capital };
+            return {
+                rate: profitRate, amount: profitAmount, capital,
+                direction: '折价套利',
+                breakdown: {
+                    discountRate: Math.abs(premium),
+                    buyCommissionRate, buyCommissionAmount,
+                    redemptionFeeRate, redemptionFeeAmount,
+                    commissionRatePct: this.commissionRate,
+                    rawCommission, actualCommission, isMinCommission,
+                    purchaseLimit, maxCapital: this.maxCapital,
+                }
+            };
         }
+    }
+
+    /** 显示预计收益详细弹窗 */
+    showProfitDetail(fundCode) {
+        const fund = this.funds.find(f => f.code === fundCode);
+        if (!fund) return;
+        const est = this.calcEstimatedProfit(fund);
+        if (!est) return;
+        const bd = est.breakdown;
+
+        // 构建弹窗内容
+        let lines = [];
+        lines.push(`<div class="profit-detail">`);
+        lines.push(`<div class="profit-detail-title">${est.direction} · ${fund.code} ${fund.name}</div>`);
+        lines.push(`<div class="profit-detail-section">`);
+        lines.push(`<div class="profit-detail-subtitle">💰 投入金额</div>`);
+        lines.push(`<div class="profit-detail-row"><span>最大资金量设定</span><span>${bd.maxCapital.toLocaleString()}元</span></div>`);
+        if (bd.purchaseLimit) {
+            lines.push(`<div class="profit-detail-row"><span>基金申购限额</span><span>${bd.purchaseLimit.toLocaleString()}元</span></div>`);
+            lines.push(`<div class="profit-detail-row highlight"><span>实际投入</span><span>${est.capital.toLocaleString()}元</span></div>`);
+        } else {
+            lines.push(`<div class="profit-detail-row highlight"><span>实际投入</span><span>${est.capital.toLocaleString()}元（无限额）</span></div>`);
+        }
+        lines.push(`</div>`);
+
+        // 收益率分解
+        lines.push(`<div class="profit-detail-section">`);
+        lines.push(`<div class="profit-detail-subtitle">📊 收益率构成</div>`);
+        if (est.rate >= 0 && bd.premiumRate !== undefined) {
+            // 溢价套利
+            lines.push(`<div class="profit-detail-row plus"><span>溢价率</span><span>+${bd.premiumRate.toFixed(2)}%</span></div>`);
+            lines.push(`<div class="profit-detail-row minus"><span>申购费率（天天基金优惠）</span><span>−${bd.purchaseFeeRate.toFixed(2)}%</span></div>`);
+            lines.push(`<div class="profit-detail-row minus"><span>卖出佣金率${bd.isMinCommission ? '（按最低收费）' : ''}</span><span>−${bd.sellCommissionRate.toFixed(4)}%</span></div>`);
+        } else if (bd.discountRate !== undefined) {
+            // 折价套利
+            lines.push(`<div class="profit-detail-row plus"><span>折价率</span><span>+${bd.discountRate.toFixed(2)}%</span></div>`);
+            lines.push(`<div class="profit-detail-row minus"><span>买入佣金率${bd.isMinCommission ? '（按最低收费）' : ''}</span><span>−${bd.buyCommissionRate.toFixed(4)}%</span></div>`);
+            lines.push(`<div class="profit-detail-row minus"><span>赎回费率（≤6天）</span><span>−${bd.redemptionFeeRate.toFixed(2)}%</span></div>`);
+        }
+        const rateClass = est.rate > 0 ? 'plus' : est.rate < 0 ? 'minus' : '';
+        lines.push(`<div class="profit-detail-row ${rateClass} total"><span>预计收益率</span><span>${est.rate > 0 ? '+' : ''}${est.rate.toFixed(2)}%</span></div>`);
+        lines.push(`</div>`);
+
+        // 收益额分解
+        lines.push(`<div class="profit-detail-section">`);
+        lines.push(`<div class="profit-detail-subtitle">💵 收益额构成</div>`);
+        if (est.rate >= 0 && bd.purchaseFeeAmount !== undefined) {
+            lines.push(`<div class="profit-detail-row"><span>申购费</span><span>${bd.purchaseFeeAmount.toFixed(2)}元</span></div>`);
+            lines.push(`<div class="profit-detail-row"><span>卖出佣金</span><span>${bd.sellCommissionAmount.toFixed(2)}元</span></div>`);
+            lines.push(`<div class="profit-detail-row hint"><span>佣金费率万${bd.commissionRatePct}${bd.isMinCommission ? '，实际<最低收费' + this.commissionMin + '元' : ''}</span><span></span></div>`);
+        } else if (bd.buyCommissionAmount !== undefined) {
+            lines.push(`<div class="profit-detail-row"><span>买入佣金</span><span>${bd.buyCommissionAmount.toFixed(2)}元</span></div>`);
+            lines.push(`<div class="profit-detail-row"><span>赎回费</span><span>${bd.redemptionFeeAmount.toFixed(2)}元</span></div>`);
+            lines.push(`<div class="profit-detail-row hint"><span>佣金费率万${bd.commissionRatePct}${bd.isMinCommission ? '，实际<最低收费' + this.commissionMin + '元' : ''}</span><span></span></div>`);
+        }
+        const amtClass = est.amount > 0 ? 'plus' : est.amount < 0 ? 'minus' : '';
+        lines.push(`<div class="profit-detail-row ${amtClass} total"><span>预计收益额</span><span>${est.amount > 0 ? '+' : ''}${est.amount.toFixed(2)}元</span></div>`);
+        lines.push(`</div>`);
+
+        lines.push(`<div class="profit-detail-footer">⚠️ 套利按最短时间估算，忽略T+N价格波动风险</div>`);
+        lines.push(`</div>`);
+
+        // 使用现有的 toast 机制或自定义弹窗
+        this._showProfitPopover(lines.join(''), fundCode);
+    }
+
+    _showProfitPopover(html, fundCode) {
+        // 移除已有弹窗
+        const existing = document.getElementById('profitPopover');
+        if (existing) existing.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'profitPopover';
+        overlay.className = 'profit-popover-overlay';
+        overlay.innerHTML = `<div class="profit-popover-card"><div class="profit-popover-close" id="profitPopoverClose">✕</div>${html}</div>`;
+        document.body.appendChild(overlay);
+
+        // 关闭事件
+        const close = () => { overlay.remove(); };
+        document.getElementById('profitPopoverClose').addEventListener('click', close);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
     }
 
     applyFilters() {
@@ -293,8 +401,8 @@ class LofFundMonitor {
             <td class="col-premium ${premiumClass}">${premiumText}</td>
             <td class="col-avg-premium ${avgPremiumClass}">${avgPremiumText}</td>
             <td class="col-amount">${amountText}</td>
-            <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}</td>
-            <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}</td>
+            <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}<button class="btn-profit-info" onclick="lofMonitor.showProfitDetail('${fund.code}')" title="查看收益构成">?</button></td>
+            <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}<button class="btn-profit-info" onclick="lofMonitor.showProfitDetail('${fund.code}')" title="查看收益构成">?</button></td>
             <td class="col-status"><span class="status-badge ${fund.premium_status || ''}">${fund.premium_status || '未知'}</span></td>
             <td class="col-time">${fund.nav_date || '-'}</td>
         </tr>`;

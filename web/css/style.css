@@ -301,3 +301,132 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     .mobile-ranking-strip { display: none; }
     .mobile-card-list { display: none; }
 }
+
+/* ===== 预计收益详情弹窗 ===== */
+.btn-profit-info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid #aaa;
+    background: transparent;
+    color: #888;
+    font-size: 11px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 4px;
+    vertical-align: middle;
+    line-height: 1;
+    padding: 0;
+    transition: all 0.15s;
+}
+.btn-profit-info:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #f0f4ff;
+}
+
+.profit-popover-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.profit-popover-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    max-width: 380px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    padding: 20px;
+    animation: slideUp 0.2s ease;
+}
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.profit-popover-close {
+    position: absolute;
+    top: 12px; right: 14px;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: #f0f0f0;
+    color: #666;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.profit-popover-close:hover { background: #e0e0e0; }
+
+.profit-detail { font-size: 14px; color: #333; }
+.profit-detail-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 14px;
+    padding-right: 24px;
+}
+.profit-detail-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+.profit-detail-subtitle {
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+}
+.profit-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 13px;
+    color: #666;
+}
+.profit-detail-row span:last-child {
+    font-family: 'Menlo', 'Consolas', monospace;
+    font-size: 13px;
+}
+.profit-detail-row.plus span:last-child { color: var(--pos); font-weight: 500; }
+.profit-detail-row.minus span:last-child { color: var(--neg); font-weight: 500; }
+.profit-detail-row.highlight {
+    background: #e8f4f8;
+    border-radius: 4px;
+    padding: 4px 6px;
+    margin: 2px -6px;
+    font-weight: 500;
+    color: #333;
+}
+.profit-detail-row.total {
+    border-top: 1px solid #e0e0e0;
+    margin-top: 4px;
+    padding-top: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #333;
+}
+.profit-detail-row.hint {
+    font-size: 11px;
+    color: #999;
+}
+.profit-detail-footer {
+    font-size: 11px;
+    color: #999;
+    text-align: center;
+    margin-top: 8px;
+}
