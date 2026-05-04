@@ -20,7 +20,7 @@ class LofFundMonitor {
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
-        this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 50000;        // 元
+        this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;        // 元
         this.bindEvents();
         this.init();
     }
@@ -558,7 +558,7 @@ class LofFundMonitor {
         this.minAmount = parseFloat(minAmountInput?.value) || 0;
         this.commissionRate = parseFloat(commissionRateInput?.value) || 1.5;
         this.commissionMin = parseFloat(commissionMinInput?.value) || 5;
-        this.maxCapital = parseFloat(maxCapitalInput?.value) || 50000;
+        this.maxCapital = parseFloat(maxCapitalInput?.value) || 1000;
         // 保存到 localStorage
         localStorage.setItem('lof_commissionRate', this.commissionRate);
         localStorage.setItem('lof_commissionMin', this.commissionMin);
@@ -588,7 +588,7 @@ class LofFundMonitor {
         if (minAmountInput) minAmountInput.value = 0;
         if (commissionRateInput) commissionRateInput.value = 1.5;
         if (commissionMinInput) commissionMinInput.value = 5;
-        if (maxCapitalInput) maxCapitalInput.value = 50000;
+        if (maxCapitalInput) maxCapitalInput.value = 1000;
     }
 
     handleSort(field) {
