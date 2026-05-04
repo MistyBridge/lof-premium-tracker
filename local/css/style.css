@@ -296,3 +296,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     .mobile-ranking-strip { display: none; }
     .mobile-card-list { display: none; }
 }
+
+/* 右下角固定署名 */
+.footer-credit-fixed {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    font-size: 0.8rem;
+    color: #9ca3af;
+    z-index: 100;
+}
