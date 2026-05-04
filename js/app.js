@@ -17,6 +17,10 @@ class LofFundMonitor {
         this.threshold = 0;
         this.avgThreshold = 0;
         this.minAmount = 0;
+        // 预计收益计算参数（从 localStorage 恢复或用默认值）
+        this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
+        this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
+        this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 50000;        // 元
         this.bindEvents();
         this.init();
     }
@@ -121,6 +125,54 @@ class LofFundMonitor {
         return fund?.avg_premium_3d ?? null;
     }
 
+    // ===== 预计收益计算 =====
+    /**
+     * 计算单只基金的预计套利收益
+     * 溢价时：溢价套利（申购→场内卖出）
+     *   收益率 = 溢价率 - 申购费率 - 卖出佣金率
+     * 折价时：折价套利（场内买入→赎回）
+     *   收益率 = |折价率| - 买入佣金率 - 赎回费率(最短档)
+     * 实际投入 = min(用户最大资金量, 基金申购上限)
+     * 实际佣金 = max(投入 × 佣金费率, 佣金最低收费)
+     * 实际佣金率 = 实际佣金 / 投入
+     * 预计收益额 = 投入 × 预计收益率
+     */
+    calcEstimatedProfit(fund) {
+        const premium = fund.premium_rate;
+        if (premium === null || premium === undefined) return null;
+
+        const nav = fund.nav;
+        const price = fund.price;
+        if (!nav || !price) return null;
+
+        // 实际投入 = min(最大资金量, 申购上限)
+        // purchase_limit: null=无限额, number=限额(元)
+        const purchaseLimit = fund.purchase_limit;  // null means no limit
+        const capital = purchaseLimit ? Math.min(this.maxCapital, purchaseLimit) : this.maxCapital;
+
+        // 佣金计算
+        const commissionRatePct = this.commissionRate / 10000;  // 万X → 小数
+        const rawCommission = capital * commissionRatePct;
+        const actualCommission = Math.max(rawCommission, this.commissionMin);
+        const actualCommissionRate = (actualCommission / capital) * 100;  // → 百分比
+
+        if (premium > 0) {
+            // 溢价套利: 申购→场内卖出
+            const purchaseFeeRate = fund.purchase_fee_rate ?? 0;  // 申购优惠费率(%)
+            const sellCommissionRate = actualCommissionRate;       // 卖出佣金率(%)
+            const profitRate = premium - purchaseFeeRate - sellCommissionRate;
+            const profitAmount = capital * profitRate / 100;
+            return { rate: profitRate, amount: profitAmount, capital };
+        } else {
+            // 折价套利: 场内买入→赎回
+            const buyCommissionRate = actualCommissionRate;             // 买入佣金率(%)
+            const redemptionFeeRate = fund.redemption_fee_rate ?? 1.5; // 赎回费率最短档(%), 默认1.5%
+            const profitRate = Math.abs(premium) - buyCommissionRate - redemptionFeeRate;
+            const profitAmount = capital * profitRate / 100;
+            return { rate: profitRate, amount: profitAmount, capital };
+        }
+    }
+
     applyFilters() {
         let filtered = [...this.funds];
         // 搜索关键词筛选
@@ -157,6 +209,16 @@ class LofFundMonitor {
             if (this.sortField === 'amount_w') {
                 valA = (a.amount ?? 0) / 10000;
                 valB = (b.amount ?? 0) / 10000;
+            } else if (this.sortField === 'est_profit_rate') {
+                const estA = this.calcEstimatedProfit(a);
+                const estB = this.calcEstimatedProfit(b);
+                valA = estA ? estA.rate : -9999;
+                valB = estB ? estB.rate : -9999;
+            } else if (this.sortField === 'est_profit_amount') {
+                const estA = this.calcEstimatedProfit(a);
+                const estB = this.calcEstimatedProfit(b);
+                valA = estA ? estA.amount : -9999;
+                valB = estB ? estB.amount : -9999;
             } else {
                 valA = a[this.sortField] ?? 0;
                 valB = b[this.sortField] ?? 0;
@@ -203,6 +265,25 @@ class LofFundMonitor {
             const amountWan = fund.amount / 10000;
             amountText = amountWan >= 10000 ? (amountWan / 10000).toFixed(2) + '亿' : amountWan.toFixed(2) + '万';
         }
+        // 预计收益计算
+        const estProfit = this.calcEstimatedProfit(fund);
+        let estProfitRateText = '--';
+        let estProfitRateClass = 'premium-zero';
+        let estProfitAmountText = '--';
+        let estProfitAmountClass = 'premium-zero';
+        if (estProfit) {
+            const sign = estProfit.rate > 0 ? '+' : '';
+            estProfitRateText = sign + estProfit.rate.toFixed(2) + '%';
+            estProfitRateClass = estProfit.rate > 0 ? 'premium-positive' : estProfit.rate < 0 ? 'premium-negative' : 'premium-zero';
+            if (estProfit.amount >= 10000) {
+                estProfitAmountText = (estProfit.amount / 10000).toFixed(2) + '万';
+            } else {
+                estProfitAmountText = estProfit.amount.toFixed(2) + '元';
+            }
+            const amtSign = estProfit.amount > 0 ? '+' : '';
+            estProfitAmountText = amtSign + estProfitAmountText;
+            estProfitAmountClass = estProfit.amount > 0 ? 'premium-positive' : estProfit.amount < 0 ? 'premium-negative' : 'premium-zero';
+        }
         return `<tr class="fund-row" data-code="${fund.code}">
             <td class="col-code">${fund.code}</td>
             <td class="col-name" title="${fund.name}">${this.truncateName(fund.name)}</td>
@@ -212,6 +293,8 @@ class LofFundMonitor {
             <td class="col-premium ${premiumClass}">${premiumText}</td>
             <td class="col-avg-premium ${avgPremiumClass}">${avgPremiumText}</td>
             <td class="col-amount">${amountText}</td>
+            <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}</td>
+            <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}</td>
             <td class="col-status"><span class="status-badge ${fund.premium_status || ''}">${fund.premium_status || '未知'}</span></td>
             <td class="col-time">${fund.nav_date || '-'}</td>
         </tr>`;
@@ -336,9 +419,15 @@ class LofFundMonitor {
         const thresholdInput = document.getElementById('thresholdInput');
         const avgThresholdInput = document.getElementById('avgThresholdInput');
         const minAmountInput = document.getElementById('minAmountInput');
+        const commissionRateInput = document.getElementById('commissionRateInput');
+        const commissionMinInput = document.getElementById('commissionMinInput');
+        const maxCapitalInput = document.getElementById('maxCapitalInput');
         if (thresholdInput) thresholdInput.value = this.threshold || 0;
         if (avgThresholdInput) avgThresholdInput.value = this.avgThreshold || 0;
         if (minAmountInput) minAmountInput.value = this.minAmount || 0;
+        if (commissionRateInput) commissionRateInput.value = this.commissionRate;
+        if (commissionMinInput) commissionMinInput.value = this.commissionMin;
+        if (maxCapitalInput) maxCapitalInput.value = this.maxCapital;
         if (modal) modal.style.display = 'flex';
     }
 
@@ -351,9 +440,19 @@ class LofFundMonitor {
         const thresholdInput = document.getElementById('thresholdInput');
         const avgThresholdInput = document.getElementById('avgThresholdInput');
         const minAmountInput = document.getElementById('minAmountInput');
+        const commissionRateInput = document.getElementById('commissionRateInput');
+        const commissionMinInput = document.getElementById('commissionMinInput');
+        const maxCapitalInput = document.getElementById('maxCapitalInput');
         this.threshold = parseFloat(thresholdInput?.value) || 0;
         this.avgThreshold = parseFloat(avgThresholdInput?.value) || 0;
         this.minAmount = parseFloat(minAmountInput?.value) || 0;
+        this.commissionRate = parseFloat(commissionRateInput?.value) || 1.5;
+        this.commissionMin = parseFloat(commissionMinInput?.value) || 5;
+        this.maxCapital = parseFloat(maxCapitalInput?.value) || 50000;
+        // 保存到 localStorage
+        localStorage.setItem('lof_commissionRate', this.commissionRate);
+        localStorage.setItem('lof_commissionMin', this.commissionMin);
+        localStorage.setItem('lof_maxCapital', this.maxCapital);
         this.currentPage = 1;
         this.applyFilters();
         this.renderTable();
@@ -363,16 +462,23 @@ class LofFundMonitor {
         if (this.threshold > 0) parts.push(`溢价率≥${this.threshold}%`);
         if (this.avgThreshold > 0) parts.push(`三日均溢≥${this.avgThreshold}%`);
         if (this.minAmount > 0) parts.push(`成交额≥${this.minAmount}万`);
-        this.showToast(parts.length ? '筛选已应用：' + parts.join('，') : '筛选已重置');
+        parts.push(`佣金万${this.commissionRate} 最低${this.commissionMin}元 最大投入${this.maxCapital}元`);
+        this.showToast(parts.length ? '设置已应用：' + parts.join('，') : '设置已重置');
     }
 
     resetSettings() {
         const thresholdInput = document.getElementById('thresholdInput');
         const avgThresholdInput = document.getElementById('avgThresholdInput');
         const minAmountInput = document.getElementById('minAmountInput');
+        const commissionRateInput = document.getElementById('commissionRateInput');
+        const commissionMinInput = document.getElementById('commissionMinInput');
+        const maxCapitalInput = document.getElementById('maxCapitalInput');
         if (thresholdInput) thresholdInput.value = 0;
         if (avgThresholdInput) avgThresholdInput.value = 0;
         if (minAmountInput) minAmountInput.value = 0;
+        if (commissionRateInput) commissionRateInput.value = 1.5;
+        if (commissionMinInput) commissionMinInput.value = 5;
+        if (maxCapitalInput) maxCapitalInput.value = 50000;
     }
 
     handleSort(field) {

@@ -107,6 +107,8 @@
                                 <th class="sortable active" data-field="premium_rate">溢价率 ↕</th>
                                 <th class="sortable" data-field="avg_premium_3d">三日均溢 ↕</th>
                                 <th class="sortable" data-field="amount_w">成交额 ↕</th>
+                                <th class="sortable" data-field="est_profit_rate">预计收益率 ↕</th>
+                                <th class="sortable" data-field="est_profit_amount">预计收益额 ↕</th>
                                 <th>状态</th>
                                 <th>净值时间</th>
                             </tr>
@@ -171,6 +173,35 @@
                             <span class="unit">万</span>
                         </div>
                         <p class="form-hint">只显示成交额 ≥ 此值的基金（0 = 不过滤）</p>
+                    </div>
+                    <hr class="settings-divider">
+                    <div class="form-group">
+                        <label>💰 预计收益计算参数</label>
+                        <p class="form-hint" style="margin-bottom:12px;">申购费率、赎回费率由 API 自动获取，以下参数需自行设定</p>
+                    </div>
+                    <div class="form-group">
+                        <label>券商佣金费率</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="commissionRateInput" min="0" max="100" step="0.1" value="1.5">
+                            <span class="unit">万</span>
+                        </div>
+                        <p class="form-hint">场内买卖佣金费率，如万1.5输入1.5</p>
+                    </div>
+                    <div class="form-group">
+                        <label>佣金最低收费</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="commissionMinInput" min="0" max="100" step="0.5" value="5">
+                            <span class="unit">元</span>
+                        </div>
+                        <p class="form-hint">佣金计算不足此金额时按此金额收取</p>
+                    </div>
+                    <div class="form-group">
+                        <label>单次最大投入金额</label>
+                        <div class="input-with-unit">
+                            <input type="number" id="maxCapitalInput" min="0" max="10000000" step="1000" value="50000">
+                            <span class="unit">元</span>
+                        </div>
+                        <p class="form-hint">实际投入 = min(最大投入, 基金申购上限)</p>
                     </div>
                 </div>
                 <div class="modal-footer">

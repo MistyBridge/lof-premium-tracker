@@ -20,6 +20,7 @@ from urllib3.util.retry import Retry
 
 from config import Config
 from history_db import get_history_db
+from fee_fetcher import fetch_fees_batch, load_fee_cache, save_fee_cache
 
 logger = logging.getLogger(__name__)
 
@@ -461,6 +462,34 @@ class LOFDataFetcher:
             for code, fund in enriched.items():
                 if "can_purchase" not in fund:
                     fund["can_purchase"] = None
+
+            # Step 7: Fetch fee data (purchase rate, redemption rate, purchase limit)
+            # Fee data changes rarely, so we cache aggressively and only refresh
+            # when cache is empty or older than 24 hours.
+            fee_cache = load_fee_cache()
+            cache_is_fresh = False
+            if fee_cache:
+                # Check if cache has data for most funds
+                cached_count = len(set(fee_cache.keys()) & set(enriched.keys()))
+                if cached_count >= len(enriched) * 0.8:
+                    cache_is_fresh = True
+                    logger.info(f"Using fee cache: {cached_count}/{len(enriched)} funds")
+
+            if not cache_is_fresh:
+                try:
+                    fee_data = fetch_fees_batch(list(enriched.keys()), concurrency=10)
+                    # Merge with existing cache
+                    fee_cache.update(fee_data)
+                    save_fee_cache(fee_cache)
+                except Exception as ex:
+                    logger.warning(f"Fee batch fetch failed: {ex}")
+
+            # Apply fee data to enriched funds
+            for code, fund in enriched.items():
+                fee = fee_cache.get(code, {})
+                fund["purchase_fee_rate"] = fee.get("purchase_fee_rate")
+                fund["redemption_fee_rate"] = fee.get("redemption_fee_rate")
+                fund["purchase_limit"] = fee.get("purchase_limit")
 
             # Step 7: Update cache atomically
             with self._lock:
