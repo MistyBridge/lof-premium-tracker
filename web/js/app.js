@@ -85,10 +85,11 @@ class LofFundMonitor {
             const result = await api.getFunds(1, 600);
             // 保存原始数据总数（过滤前）
             const totalFromApi = result.data.length;
-            // 过滤停牌和无溢价率数据的基金（不再过滤极端溢价率，全部显示）
+            // 过滤停牌、无溢价率、暂停申购的基金
             this.funds = result.data.filter(fund => {
                 if (fund.is_suspended) return false;
                 if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
+                if (fund.can_purchase === false) return false;  // 暂停申购
                 return true;
             });
             this.applyFilters();
