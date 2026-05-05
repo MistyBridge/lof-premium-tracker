@@ -13,19 +13,14 @@
                 <img src="icon.jpg" alt="金快查" class="brand-icon">
                 <h1>金快查</h1>
             </div>
-            <div class="header-info">
-                <button id="darkModeBtn" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
-                <span id="statusText" class="status-text">加载中...</span>
-                <span class="auto-refresh-label">自动刷新</span>
+            <div class="header-actions">
+                <button id="darkModeBtn" class="btn-dark-mode" title="浅色模式（点击切换深色）">🌙</button>
                 <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
-                    <svg class="refresh-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- 元宝主体 -->
+                    <svg class="refresh-icon" width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <ellipse cx="16" cy="20" rx="12" ry="8" fill="url(#goldGradient)"/>
                         <ellipse cx="16" cy="18" rx="10" ry="6" fill="url(#goldLight)"/>
-                        <!-- 元宝顶部凸起 -->
                         <ellipse cx="16" cy="14" rx="6" ry="4" fill="url(#goldGradient)"/>
                         <ellipse cx="16" cy="13" rx="4" ry="2.5" fill="url(#goldHighlight)"/>
-                        <!-- 渐变定义 -->
                         <defs>
                             <linearGradient id="goldGradient" x1="8" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
                                 <stop offset="0%" stop-color="#FFD700"/>
@@ -43,8 +38,9 @@
                         </defs>
                     </svg>
                 </button>
-                <span id="refreshStatus" class="refresh-status"></span>
             </div>
+            <span id="statusText" class="status-text pc-only">加载中...</span>
+            <span id="refreshStatus" class="refresh-status"></span>
         </header>
 
         <div class="status-bar">
@@ -52,16 +48,6 @@
             <div class="status-item"><span class="status-label">缓存数据</span><span id="cacheCount" class="status-value">-</span></div>
             <div class="status-item"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
             <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
-        </div>
-
-        <!-- 移动端排行条 -->
-        <div class="mobile-ranking-strip" id="mobileRankingStrip">
-            <div class="strip-header strip-header-pos">🔥 溢价TOP</div>
-            <div class="strip-scroll" id="mobileRankingScroll"><div class="loading-mini">加载中...</div></div>
-        </div>
-        <div class="mobile-ranking-strip mobile-ranking-strip-neg" id="mobileDiscountStrip">
-            <div class="strip-header strip-header-neg">🧊 折价TOP</div>
-            <div class="strip-scroll" id="mobileDiscountScroll"><div class="loading-mini">加载中...</div></div>
         </div>
 
         <div class="main-content">
@@ -92,8 +78,12 @@
 
             <main class="content">
                 <div class="toolbar">
-                    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 搜索基金代码或名称..."><button id="settingsBtn" class="btn-settings" title="设置筛选阈值">⚙️ 设置</button></div>
+                    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 代码/名称"><button id="settingsBtn" class="btn-settings" title="设置筛选阈值">⚙️</button></div>
                     <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
+                </div>
+                <div class="mode-switch-bar">
+                    <button id="premiumModeBtn" class="mode-btn active" title="溢价从高到低排列">🔥 溢价模式</button>
+                    <button id="discountModeBtn" class="mode-btn" title="溢价从低到高排列">🧊 折价模式</button>
                 </div>
                 <!-- PC端表格 -->
                 <div class="table-container">
@@ -212,6 +202,34 @@
             </div>
         </div>
 
+        <!-- 基金详情弹窗 -->
+        <div id="fundDetailModal" class="modal-overlay fund-detail-modal" style="display: none;">
+            <div class="modal-content fund-detail-content">
+                <div class="modal-header">
+                    <h3 id="fundDetailTitle">基金详情</h3>
+                    <button id="closeFundDetailBtn" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body fund-detail-body">
+                    <div class="fund-detail-info">
+                        <div class="fd-row"><span class="fd-label">代码</span><span id="fdCode" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">名称</span><span id="fdName" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">现价</span><span id="fdPrice" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">净值</span><span id="fdNav" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">溢价率</span><span id="fdPremiumRate" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">成交额</span><span id="fdAmount" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">预计收益率</span><span id="fdEstProfitRate" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">预计收益额</span><span id="fdEstProfitAmount" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">状态</span><span id="fdStatus" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">净值时间</span><span id="fdNavDate" class="fd-value"></span></div>
+                    </div>
+                    <div class="fund-detail-chart">
+                        <h4>📊 七日价格 & 溢价率走势</h4>
+                        <canvas id="fdChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <footer class="footer">
             <p>数据来源：东方财富、天天基金、上交所、深交所</p>
             <p class="risk-warning">投资有风险，入市需谨慎</p>
@@ -223,6 +241,7 @@
             <p class="credit" style="text-align:right; font-size:12px; color:#999; margin-top:8px;">@金快查 2026 | @HanK</p>
         </footer>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>

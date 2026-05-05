@@ -15,36 +15,93 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
 
 /* Header */
-.header { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px 30px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); }
-.header-brand { display: flex; align-items: center; gap: 12px; }
-.brand-icon { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
-.header h1 { font-size: 1.8rem; font-weight: 600; }
-.header-info { display: flex; align-items: center; gap: 10px; }
-.status-text { font-size: 0.9rem; opacity: 0.9; }
+.header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%); 
+    color: white; 
+    padding: env(safe-area-inset-top, 12px) 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px; 
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); 
+    position: relative;
+    min-height: 56px;
+}
+.header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 16px;
+    right: 16px;
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+}
+.header-brand { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    flex: 1; 
+}
+.brand-icon { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
+.header h1 { 
+    font-size: 18px; 
+    font-weight: 600; 
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'SF Pro Display', sans-serif;
+}
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* 浅色模式顶栏 */
+.light-mode .header {
+    background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
+    color: #1a1a2e;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+.light-mode .header::after {
+    background: rgba(0, 0, 0, 0.06);
+}
+.light-mode .header h1 {
+    color: #1a1a2e;
+}
+
+/* 浅色模式按钮 */
+.light-mode .btn-dark-mode {
+    color: #1a1a2e;
+    background: rgba(0, 0, 0, 0.05);
+}
+.light-mode .btn-dark-mode:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+.light-mode .btn-manual-refresh {
+    filter: drop-shadow(0 0 3px rgba(255, 215, 0, 0.6));
+}
+.status-text { font-size: 0.8rem; opacity: 0.7; }
 .auto-refresh-label { font-size: 0.85rem; opacity: 0.9; }
+.pc-only { display: inline; }
 .refresh-status { font-size: 0.85rem; opacity: 0; transition: opacity 0.3s ease; min-width: 60px; }
 .refresh-status.show { opacity: 1; }
 
 /* 深色模式按钮 */
 .btn-dark-mode {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.25);
-    cursor: pointer;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 1.1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
-    line-height: 1;
-    min-width: 36px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 20px;
 }
 .btn-dark-mode:hover {
-    background: rgba(255,255,255,0.25);
-    transform: scale(1.05);
-}
+    background: rgba(255,255,255,0.1);
+}}
 .btn-dark-mode:active { transform: scale(0.95); }
 
 /* 刷新按钮 */
@@ -130,6 +187,43 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .btn-settings:hover { background: #357abd; }
 .pagination-info { font-size: 0.9rem; color: var(--text2); }
 
+/* Mode Switch Bar */
+.mode-switch-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--border);
+    padding: 3px;
+}
+.mode-btn {
+    flex: 1;
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 6px;
+    color: var(--text2);
+}
+.mode-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+.mode-btn.active {
+    background: var(--card);
+    color: var(--text);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.mode-btn:first-child.active {
+    color: var(--pos);
+}
+.mode-btn:last-child.active {
+    color: var(--neg);
+}
+
 /* Settings Modal */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: var(--card); border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
@@ -137,7 +231,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .modal-header h3 { font-size: 1.1rem; margin: 0; }
 .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text2); cursor: pointer; }
 .modal-close:hover { color: var(--text); }
-.modal-body { padding: 20px; }
+.modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; -webkit-overflow-scrolling: touch; flex: 1; }
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px; }
 .input-with-unit { display: flex; align-items: center; gap: 8px; }
@@ -226,19 +320,39 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 @media (max-width: 768px) {
     .container { padding: 0; }
 
-    /* Header - 紧凑 */
-    .header { border-radius: 0; padding: 14px 16px; margin-bottom: 0; }
-    .header h1 { font-size: 1.15rem; }
-.brand-title { display: flex; align-items: center; gap: 8px; }
-.brand-logo { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
-    .status-text { font-size: 0.75rem; }
-    .taiji { width: 24px; height: 24px; }
-    .taiji::before, .taiji::after { width: 12px; height: 12px; }
-    .taiji::before { box-shadow: inset 0 0 0 2.5px #333, inset 0 0 0 4.5px #fff; }
-    .taiji::after { box-shadow: inset 0 0 0 2.5px #fff, inset 0 0 0 4.5px #333; }
+    /* Header - iOS风格顶栏 */
+    .header { 
+        border-radius: 0; 
+        padding: 14px 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px; 
+        margin-bottom: 0; 
+        flex-wrap: nowrap;
+        gap: 12px;
+        min-height: 56px;
+    }
+    .header::after {
+        left: 16px;
+        right: 16px;
+    }
+    .header-brand { display: flex; align-items: center; gap: 8px; }
+    .header h1 { font-size: 18px; font-weight: 600; }
+    .brand-icon { width: 32px; height: 32px; }
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-left: auto;
+    }
+    .btn-dark-mode { width: 32px; height: 32px; font-size: 18px; }
+    .btn-manual-refresh { width: 36px; height: 36px; }
+    .refresh-icon { width: 24px; height: 24px; }
+    .pc-only { display: none; }
+    .status-text { display: none; }
+
+    /* 顶栏与内容区间距 */
+    .status-bar { margin-top: 8px; }
 
     /* Status Bar - 2列紧凑 */
-    .status-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 12px; margin-bottom: 0; background: var(--bg); }
+    .status-bar { grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px 12px; margin-bottom: 0; }
     .status-item { padding: 10px 12px; border-radius: 8px; }
     .status-label { font-size: 0.75rem; }
     .status-value { font-size: 1.05rem; }
@@ -274,33 +388,72 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     /* 显示移动端卡片 */
     .mobile-card-list { display: flex; flex-direction: column; gap: 0; }
     .mobile-card {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-rows: auto auto;
-        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        padding: 14px 16px;
         border-bottom: 1px solid var(--border);
         background: var(--card);
         transition: background 0.15s;
-        gap: 4px 12px;
+        gap: 10px;
     }
     .mobile-card:active { background: #f0f2f5; }
-    .mc-left { grid-column: 1; grid-row: 1; display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-    .mc-code { font-size: 0.85rem; font-weight: 700; color: var(--text); }
-    .mc-name { font-size: 0.8rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .mc-right { grid-column: 2; grid-row: 1 / 3; display: flex; align-items: center; justify-content: flex-end; }
-    .mc-premium { font-size: 1.3rem; font-weight: 700; }
-    .mc-premium.mc-pos { color: var(--pos); }
-    .mc-premium.mc-neg { color: var(--neg); }
-    .mc-premium.mc-zero { color: var(--zero); }
-    .mc-bottom { grid-column: 1; grid-row: 2; display: flex; gap: 12px; font-size: 0.75rem; color: var(--text2); flex-wrap: wrap; }
-    .mc-bottom .mb-item { display: flex; align-items: center; gap: 2px; }
-    .mb-label { color: var(--text2); }
-    .mb-val { color: var(--text); font-weight: 500; }
+
+    /* 设置弹窗移动端适配 */
+    .modal-content { max-width: 95%; max-height: 85vh; display: flex; flex-direction: column; }
+    .modal-footer { flex-wrap: wrap; gap: 6px; padding: 12px 15px; }
+    .modal-footer .btn-primary, .modal-footer .btn-secondary { flex: 1; min-width: 90px; padding: 8px 10px; font-size: 0.8rem; }
+    
+    /* 移动端卡片新布局：左侧三行 + 右侧溢价率+千元可赚 */
+    .mobile-card {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: stretch;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        background: var(--card);
+        transition: background 0.15s;
+        gap: 12px;
+    }
+    .mobile-card:active { background: #f0f2f5; }
+    
+    /* 左侧：代码/名称/现价净值 */
+    .mc-left { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+    .mc-row { display: flex; align-items: center; }
+    .mc-row .mc-code { font-size: 1.05rem; font-weight: 700; }
+    .mc-row .mc-name { font-size: 0.88rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mc-row3 { gap: 12px; font-size: 0.82rem; }
+    .mc-row3 .mb-item { display: flex; gap: 3px; }
+    .mc-row3 .mb-label { color: var(--text2); font-size: 0.75rem; }
+    .mc-row3 .mb-val { font-weight: 500; }
+    
+    /* 右侧：溢价率+千元可赚 */
+    .mc-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; min-width: 80px; }
+    .mc-premium-wrap { display: flex; align-items: center; flex: 1; }
+    .mc-premium { font-size: 1.35rem; font-weight: 700; line-height: 1.2; }
+    .mc-profit-row { display: flex; align-items: center; }
+    .mc-profit-row .mb-profit { display: flex; align-items: center; }
+    .mc-profit-row .mb-val { font-size: 0.9rem; font-weight: 600; }
+    .mc-profit-row .mb-val.low-liquidity { color: #999; }
+    .mc-profit-row .mb-val.suspended { text-decoration: line-through; color: #999; }
     .mb-val.up { color: var(--pos); }
     .mb-val.down { color: var(--neg); }
     .mc-status-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 3px; }
     .mobile-empty { text-align: center; padding: 60px 20px; color: var(--text2); }
     .mobile-empty .icon { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+    
+    /* 百元可赚样式 */
+    .mb-profit { display: flex; align-items: center; gap: 2px; }
+    .mb-profit .mb-label { color: var(--text2); }
+    .mb-profit .mb-val { font-size: 0.875rem; font-weight: 600; }
+    .mb-profit .mb-val.low-liquidity { color: #999; }
+    .mb-profit .mb-val.suspended { text-decoration: line-through; color: #999; }
+    
+    /* 流动性差卡片 */
+    .mobile-card.mc-low-liquidity { opacity: 0.8; }
+    
+    /* 暂停申购卡片 */
+    .mobile-card.mc-suspended { opacity: 0.5; }
 
     /* Toolbar */
     .toolbar { flex-direction: row; padding: 10px 12px; gap: 8px; }
@@ -580,3 +733,48 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     --zero: #333;
     --primary: #4a90d9;
 }
+
+/* ===== 点击复制 toast ===== */
+.copy-toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 10000;
+    pointer-events: none;
+}
+.copy-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+.dark-mode .copy-toast { background: rgba(255,255,255,0.9); color: #333; }
+
+/* ===== 可点击复制样式 ===== */
+.click-copy { cursor: pointer; }
+.click-copy:hover { color: var(--primary); }
+
+/* ===== 基金详情弹窗 ===== */
+.fund-detail-modal { z-index: 10001; }
+.fund-detail-content { max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto; }
+.fund-detail-body { padding: 16px; }
+.fund-detail-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+.fd-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg); border-radius: 8px; }
+.fd-label { font-size: 0.85rem; color: var(--text2); }
+.fd-value { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+.fd-value.fd-pos { color: var(--pos); }
+.fd-value.fd-neg { color: var(--neg); }
+.fund-detail-chart { margin-top: 20px; }
+.fund-detail-chart h4 { margin-bottom: 12px; font-size: 1rem; color: var(--text); }
+#fdChart { max-height: 300px; }
+
+.dark-mode .fd-row { background: #1a2a48; }
+.dark-mode .fd-label { color: var(--text2); }
+.dark-mode .fd-value { color: var(--text); }
+.dark-mode .fund-detail-chart h4 { color: var(--text); }
