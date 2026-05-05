@@ -964,19 +964,20 @@ class LofFundMonitor {
         if (!historyData || !historyData.length) {
             const labels = [];
             const prices = [];
-            const premiums = [];
+            const navs = [];
             const today = new Date();
             for (let i = 6; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(d.getDate() - i);
                 labels.push(`${d.getMonth()+1}/${d.getDate()}`);
-                // 模拟数据：基于当前值添加随机波动
+                // 场内价格：基于当前价格添加波动
                 const priceVar = fund.price * (1 + (Math.random() - 0.5) * 0.02);
-                const premiumVar = fund.premium_rate + (Math.random() - 0.5) * 2;
-                prices.push(priceVar.toFixed(3));
-                premiums.push(premiumVar.toFixed(2));
+                prices.push(parseFloat(priceVar.toFixed(3)));
+                // 场外净值：基于当前净值添加波动
+                const navVar = fund.nav * (1 + (Math.random() - 0.5) * 0.015);
+                navs.push(parseFloat(navVar.toFixed(4)));
             }
-            historyData = { labels, prices, premiums };
+            historyData = { labels, prices, navs };
         }
 
         const ctx = canvas.getContext('2d');
@@ -988,7 +989,7 @@ class LofFundMonitor {
                 labels: historyData.labels || historyData.map(h => h.date),
                 datasets: [
                     {
-                        label: '价格',
+                        label: '场内价格',
                         data: historyData.prices || historyData.map(h => h.price),
                         borderColor: '#ff7a45',
                         backgroundColor: 'rgba(255, 122, 69, 0.1)',
@@ -997,11 +998,11 @@ class LofFundMonitor {
                         pointRadius: 3,
                     },
                     {
-                        label: '溢价率(%)',
-                        data: historyData.premiums || historyData.map(h => h.premium_rate),
-                        borderColor: '#73d13d',
-                        backgroundColor: 'rgba(115, 209, 61, 0.1)',
-                        yAxisID: 'y1',
+                        label: '场外净值',
+                        data: historyData.navs || historyData.map(h => h.nav),
+                        borderColor: '#40a9ff',
+                        backgroundColor: 'rgba(64, 169, 255, 0.1)',
+                        yAxisID: 'y',
                         tension: 0.3,
                         pointRadius: 3,
                     }
@@ -1016,8 +1017,7 @@ class LofFundMonitor {
                 },
                 scales: {
                     x: { ticks: { color: isDark ? '#aaa' : '#666' }, grid: { color: isDark ? '#333' : '#eee' } },
-                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '价格', color: isDark ? '#fff' : '#333' }, ticks: { color: isDark ? '#aaa' : '#666' }, grid: { color: isDark ? '#333' : '#eee' } },
-                    y1: { type: 'linear', display: true, position: 'right', title: { display: true, text: '溢价率(%)', color: isDark ? '#fff' : '#333' }, ticks: { color: isDark ? '#aaa' : '#666' }, grid: { drawOnChartArea: false } }
+                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '价格', color: isDark ? '#fff' : '#333' }, ticks: { color: isDark ? '#aaa' : '#666' }, grid: { color: isDark ? '#333' : '#eee' } }
                 }
             }
         });

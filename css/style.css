@@ -21,12 +21,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     align-items: center; 
     background: linear-gradient(180deg, #1A1A2E 0%, #16213E 100%); 
     color: white; 
-    padding: env(safe-area-inset-top, 12px) 16px calc(12px + env(safe-area-inset-bottom, 0px)) 16px; 
+    padding: env(safe-area-inset-top, 18px) 24px calc(18px + env(safe-area-inset-bottom, 0px)) 24px; 
     border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); 
     position: relative;
-    min-height: 56px;
+    min-height: 88px;
 }
 .header::after {
     content: '';
@@ -40,13 +40,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header-brand { 
     display: flex; 
     align-items: center; 
-    gap: 8px; 
+    gap: 16px; 
     flex: 1; 
 }
-.brand-icon { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; }
-.header h1 { 
-    font-size: 18px; 
-    font-weight: 600; 
+.brand-icon { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; }
+.header h1 {
+    font-size: 36px;
+    font-weight: 700;
     font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'SF Pro Display', sans-serif;
 }
 .header-actions {
@@ -90,14 +90,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     background: transparent;
     border: none;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-size: 20px;
+    font-size: 26px;
 }
 .btn-dark-mode:hover {
     background: rgba(255,255,255,0.1);
@@ -110,8 +110,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     border: none;
     cursor: pointer;
     padding: 0;
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -121,7 +121,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .btn-manual-refresh:hover { transform: scale(1.1); }
 .btn-manual-refresh:active { transform: scale(0.95); }
 .btn-manual-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
-.refresh-icon { width: 32px; height: 32px; display: block; }
+.refresh-icon { width: 40px; height: 40px; display: block; }
 .refresh-icon.bouncing { animation: ingot-bounce 0.5s ease; }
 @keyframes ingot-bounce {
     0%, 100% { transform: translateY(0) scale(1) rotate(0deg); }
@@ -333,9 +333,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         left: 16px;
         right: 16px;
     }
-    .header-brand { display: flex; align-items: center; gap: 8px; }
-    .header h1 { font-size: 18px; font-weight: 600; }
-    .brand-icon { width: 32px; height: 32px; }
+    .header-brand { display: flex; align-items: center; gap: 10px; }
+    .header h1 { font-size: 22px; font-weight: 600; }
+    .brand-icon { width: 40px; height: 40px; }
     .header-actions {
         display: flex;
         align-items: center;

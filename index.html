@@ -46,8 +46,8 @@
         <div class="status-bar">
             <div class="status-item"><span class="status-label">基金总数</span><span id="totalFunds" class="status-value">-</span></div>
             <div class="status-item"><span class="status-label">缓存数据</span><span id="cacheCount" class="status-value">-</span></div>
-            <div class="status-item"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
-            <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
+            <div class="status-item pc-only"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
+            <div class="status-item pc-only"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
         </div>
 
         <div class="main-content">
@@ -215,7 +215,7 @@
                         <div class="fd-row"><span class="fd-label">名称</span><span id="fdName" class="fd-value"></span></div>
                         <div class="fd-row"><span class="fd-label">现价</span><span id="fdPrice" class="fd-value"></span></div>
                         <div class="fd-row"><span class="fd-label">净值</span><span id="fdNav" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">溢价率</span><span id="fdPremiumRate" class="fd-value"></span></div>
+                        <div class="fd-row"><span class="fd-label">三日平均溢价</span><span id="fdAvgPremium" class="fd-value"></span></div>
                         <div class="fd-row"><span class="fd-label">成交额</span><span id="fdAmount" class="fd-value"></span></div>
                         <div class="fd-row"><span class="fd-label">预计收益率</span><span id="fdEstProfitRate" class="fd-value"></span></div>
                         <div class="fd-row"><span class="fd-label">预计收益额</span><span id="fdEstProfitAmount" class="fd-value"></span></div>
@@ -223,7 +223,7 @@
                         <div class="fd-row"><span class="fd-label">净值时间</span><span id="fdNavDate" class="fd-value"></span></div>
                     </div>
                     <div class="fund-detail-chart">
-                        <h4>📊 七日价格 & 溢价率走势</h4>
+                        <h4>📊 七日场内价格 & 场外净值走势</h4>
                         <canvas id="fdChart"></canvas>
                     </div>
                 </div>
