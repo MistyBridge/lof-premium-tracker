@@ -77,7 +77,7 @@ lof-premium-tracker/
 │   ├── fee_fetcher.py         # 基金费率爬虫（申购/赎回费率）
 │   ├── history_fetcher.py     # 历史 K 线 + 净值数据抓取
 │   ├── history_db.py          # PostgreSQL 历史数据读写 + 自动清理
-│   ├── datasource/            # 数据源适配层（东方财富/天天基金/akshare）
+│   ├── datasource/            # 分级数据源适配层（AKShare 主源 + 东方财富/天天基金/腾讯后备）
 │   ├── sz_lof_codes.json      # 深市 LOF 代码缓存（每周自动刷新）
 │   └── requirements.txt       # Python 后端依赖
 ├── miniprogram/               # 微信小程序源码
@@ -105,7 +105,9 @@ lof-premium-tracker/
                             └──→ Railway (Flask + Gunicorn)
                                      │
                                      ├──→ PostgreSQL (历史快照存储)
-                                     └──→ 数据源 (东方财富 / 天天基金 / 腾讯行情)
+                                     └──→ 分级数据源
+                                           ├── AKShare（主）: fund_lof_spot_em / fund_lof_hist_em
+                                           └── Legacy（备）: 东方财富 push2delay + 腾讯 qt + 天天基金 fundgz
 ```
 
 | 层级 | 平台 | 技术栈 | 职责 |
@@ -114,7 +116,36 @@ lof-premium-tracker/
 | 代理 | Cloudflare Functions | JavaScript (Service Worker) | 同源 API 代理，解决跨境网络访问 |
 | 后端 | Railway | Python Flask + Gunicorn | 数据聚合、缓存、API 服务 |
 | 数据库 | Railway PostgreSQL | PostgreSQL | 历史净值/价格快照，21 天滚动保留 |
-| 数据源 | 东方财富 / 天天基金 | push2delay / fundgz / qt | 实时行情、净值估算、基金元数据 |
+| 数据源(主) | AKShare | akshare Python 库 | 全量 LOF 行情、日K线、历史净值 |
+| 数据源(备) | 东方财富 / 腾讯 / 天天基金 | push2delay / qt / fundgz / lsjz | 主源故障时整体降级，NAV 缺失时逐基金补缺 |
+
+### 分级数据源策略
+
+系统采用 **主备双源 + 逐基金降级** 的数据获取策略，保障数据可用性：
+
+```
+AKShare (主数据源)
+  ├── fund_lof_spot_em()     → 全市场 LOF 实时行情（价格/涨跌幅/成交额）
+  ├── fund_lof_hist_em()     → 日K线历史数据
+  ├── fund_open_fund_info_em() → 历史单位净值走势
+  └── fundgz API (天天基金)    → 盘中估算净值 & 盘后正式净值
+
+         ↓ 主源整体失败 / 返回空 ↓
+
+Legacy (后备数据源)
+  ├── 东方财富 push2delay     → SSE 沪市 LOF 行情 + SZ 深市代码扫描
+  ├── 腾讯 qt.gtimg.cn        → SZ 深市 LOF 实时行情
+  ├── 天天基金 fundgz         → 估算净值（逐基金补缺）
+  └── 东方财富 lsjz           → 历史净值兜底
+```
+
+| 降级策略 | 触发条件 | 行为 |
+|----------|----------|------|
+| 价格行情整体降级 | AKShare 抛异常或返回空 DataFrame | 全量切换至 Legacy，沪市走 push2delay + 深市走腾讯 QT |
+| NAV 逐基金降级 | AKShare 的 fundgz 对某只基金返回空 | 对缺失 NAV 的基金逐个调用后备源 fundgz → lsjz 补缺 |
+| K线/历史净值整体降级 | AKShare 对应接口失败 | 整体切换至 Legacy 的东方财富 push2his / lsjz |
+
+> **设计意图**：AKShare 提供一站式全量数据，简化日常抓取流程；Legacy 直连东方财富/腾讯/天天基金 API，在主源不可用时保障核心数据不中断。NAV 采用逐基金降级而非整体切换，最大化保留主源有效数据，仅对缺失项精准补缺。
 
 ---
 
