@@ -88,6 +88,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
     """
     premium = fund.get("premium_rate")
     nav = fund.get("nav")
+    price = fund.get("price", 0) or 0
     change_pct = fund.get("change_pct", 0)
 
     result = {
