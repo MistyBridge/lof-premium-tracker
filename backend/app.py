@@ -14,7 +14,7 @@ except Exception:
     pass
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
@@ -476,7 +476,7 @@ def _trigger_lazy_refresh():
 
     # 检查是否需要刷新
     if not cache_empty and f.last_fetch_time is not None:
-        age = (datetime.now() - f.last_fetch_time).total_seconds()
+        age = (datetime.now(timezone.utc) - f.last_fetch_time).total_seconds()
         if age < Config.REFRESH_INTERVAL_SECONDS:
             return  # 数据还新鲜，不用刷新
 
