@@ -93,6 +93,10 @@ class LofFundMonitor {
         this.isLoading = true;
         try {
             const result = await api.getFunds(1, 600);
+            // 记录服务端数据时间戳，用于刷新按钮时间对齐
+            if (result.meta?.last_fetch) {
+                this._lastServerFetch = result.meta.last_fetch;
+            }
             // 保存原始数据总数（过滤前）
             const totalFromApi = result.data.length;
             // 过滤停牌、无溢价率、暂停申购的基金
@@ -889,6 +893,7 @@ class LofFundMonitor {
         const statusEl = document.getElementById('refreshStatus');
 
         if (btn) { btn.disabled = true; }
+        // 立即播放动画，不管数据是否更新
         if (icon) {
             icon.classList.remove('bouncing');
             icon.addEventListener('animationend', () => icon.classList.remove('bouncing'), { once: true });
@@ -905,7 +910,22 @@ class LofFundMonitor {
         }
 
         try {
-            await this.checkHealth();
+            // 先查健康检查，获取中心服务器的 last_fetch 时间
+            const healthResult = await this.checkHealth();
+            const serverLastFetch = healthResult.data?.last_fetch;
+
+            // 对齐时间：与本地缓存的 last_fetch 比较
+            if (serverLastFetch && this._lastServerFetch === serverLastFetch) {
+                // 时间相同 → 中心服务器数据未更新，只执行动画
+                if (statusEl) statusEl.textContent = '✓';
+                setTimeout(() => {
+                    if (statusEl) statusEl.classList.remove('show');
+                }, 1500);
+                return;
+            }
+
+            // 时间不同 → 从中心服务器分发数据到网页
+            this._lastServerFetch = serverLastFetch;
             await this.loadRankings();
             await this.loadFunds();
             if (statusEl) statusEl.textContent = '✓';

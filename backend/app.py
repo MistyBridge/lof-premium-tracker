@@ -181,15 +181,18 @@ def health():
     })
 
 
-# ── 手动刷新（慎用） ──
+# ── 手动刷新（仅返回当前缓存，不触发外部API调用） ──
+# 外部API调用仅由中心服务器每5分钟自动发起的懒更新机制触发
 @app.route("/refresh", methods=["POST"])
 def refresh():
-    """手动触发全量数据刷新"""
+    """返回当前内存缓存状态，不触发新的数据抓取"""
     f = get_fetcher()
-    success = f.fetch_all()
-    if success:
-        return ok({"triggered": True, "count": len(f.get_all())})
-    return err_resp("刷新失败，请检查网络或稍后重试", code=2, status=500)
+    return ok({
+        "triggered": False,
+        "note": "数据由服务端每5分钟自动刷新，此接口仅返回当前缓存",
+        "count": len(f.get_all()),
+        "last_fetch": f.last_fetch_time.isoformat() if f.last_fetch_time else None,
+    })
 
 
 # ── 手动补填历史数据 ──
