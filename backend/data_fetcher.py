@@ -10,7 +10,7 @@ import logging
 import os
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
 import requests
@@ -114,7 +114,7 @@ class LOFDataFetcher:
             with self._lock:
                 if not self._cache:
                     self._cache = cache
-                    self._last_fetch_time = datetime.strptime(latest_date, "%Y-%m-%d")
+                    self._last_fetch_time = datetime.now(timezone.utc)
                     self._fetch_error = None
 
             logger.info("Loaded %d funds from history (%s)", len(cache), latest_date)
@@ -253,7 +253,7 @@ class LOFDataFetcher:
             # 更新缓存
             with self._lock:
                 self._cache = enriched
-                self._last_fetch_time = datetime.now()
+                self._last_fetch_time = datetime.now(timezone.utc)
                 self._fetch_error = None
 
             elapsed = time.time() - t0

@@ -1202,7 +1202,12 @@ grid: { color: gridColor },
 
     formatTime(isoString) {
         if (!isoString) return '-';
-        return new Date(isoString).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        // 服务端返回 UTC 时间（含 +00:00 时区标记），JS 自动转本地时间
+        return new Date(isoString).toLocaleString('zh-CN', {
+            month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit',
+            timeZone: 'Asia/Shanghai',
+        });
     }
 }
 
