@@ -90,11 +90,12 @@ class LOFDataFetcher:
             cache = {}
             for r in rows:
                 code = r["code"]
-                premium = r["premium_rate"]
-                price = r["price"] or 0
-                nav = r["nav"] or 0
+                # float() 转换 PostgreSQL NUMERIC → Decimal，避免与 float 混合运算报错
+                premium = float(r["premium_rate"]) if r["premium_rate"] is not None else None
+                price = float(r["price"] or 0)
+                nav = float(r["nav"] or 0)
                 db_amount = r["amount"]
-                amount = db_amount if db_amount and db_amount > 0 else None
+                amount = float(db_amount) if db_amount and float(db_amount) > 0 else None
                 db_name = r.get("name", "")
                 name = db_name or name_map.get(code, code)
 

@@ -74,8 +74,9 @@ def _is_suspended(fund: dict) -> bool:
     if amt is not None and amt == 0:
         return True
     # SZ 数据可能缺少 volume/amount，但 price≈1.0 且无波动 → 停牌基金典型特征
-    price = fund.get("price", 0) or 0
-    pct = fund.get("change_pct", 0) or 0
+    # 使用 float() 兼容 PostgreSQL NUMERIC → Decimal 类型
+    price = float(fund.get("price", 0) or 0)
+    pct = float(fund.get("change_pct", 0) or 0)
     if abs(price - 1.0) < 0.001 and pct == 0 and (vol is None or vol == 0):
         return True
     return False
@@ -86,10 +87,11 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
     统一格式化输出字段
     所有溢价率/溢价状态已在 data_fetcher 中计算完毕
     """
+    # float() 兼容 PostgreSQL NUMERIC → Python Decimal 类型
     premium = fund.get("premium_rate")
     nav = fund.get("nav")
-    price = fund.get("price", 0) or 0
-    change_pct = fund.get("change_pct", 0)
+    price = float(fund.get("price", 0) or 0)
+    change_pct = float(fund.get("change_pct", 0) or 0)
 
     result = {
         # ── 基础信息 ──
