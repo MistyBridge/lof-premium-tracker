@@ -3,24 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>金快查 - LOF基金折溢价监控</title>
+    <title>金快查 — 全市场 LOF 基金实时折溢价监控系统</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container">
         <header class="header">
             <div class="header-brand">
-                <img src="icon.jpg" alt="金快查" class="brand-icon">
+                <img src="assets/icon.jpg" alt="金快查" class="brand-icon">
                 <h1>金快查</h1>
             </div>
-            <div class="header-actions">
-                <button id="darkModeBtn" class="btn-dark-mode" title="浅色模式（点击切换深色）">🌙</button>
+            <div class="header-info">
+                <button id="darkModeBtn" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
+                <span id="statusText" class="status-text">加载中...</span>
                 <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
-                    <svg class="refresh-icon" width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg class="refresh-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- 元宝主体 -->
                         <ellipse cx="16" cy="20" rx="12" ry="8" fill="url(#goldGradient)"/>
                         <ellipse cx="16" cy="18" rx="10" ry="6" fill="url(#goldLight)"/>
+                        <!-- 元宝顶部凸起 -->
                         <ellipse cx="16" cy="14" rx="6" ry="4" fill="url(#goldGradient)"/>
                         <ellipse cx="16" cy="13" rx="4" ry="2.5" fill="url(#goldHighlight)"/>
+                        <!-- 渐变定义 -->
                         <defs>
                             <linearGradient id="goldGradient" x1="8" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
                                 <stop offset="0%" stop-color="#FFD700"/>
@@ -38,16 +42,15 @@
                         </defs>
                     </svg>
                 </button>
+                <span id="refreshStatus" class="refresh-status"></span>
             </div>
-            <span id="statusText" class="status-text pc-only">加载中...</span>
-            <span id="refreshStatus" class="refresh-status"></span>
         </header>
 
         <div class="status-bar">
             <div class="status-item"><span class="status-label">基金总数</span><span id="totalFunds" class="status-value">-</span></div>
             <div class="status-item"><span class="status-label">缓存数据</span><span id="cacheCount" class="status-value">-</span></div>
-            <div class="status-item pc-only"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
-            <div class="status-item pc-only"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
+            <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
         </div>
 
         <div class="main-content">
@@ -78,12 +81,18 @@
 
             <main class="content">
                 <div class="toolbar">
-                    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 代码/名称"><button id="settingsBtn" class="btn-settings" title="设置筛选阈值">⚙️</button></div>
+                    <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 代码/名称"><button id="settingsBtn" class="btn-settings" title="设置筛选阈值">⚙️ 设置</button></div>
+                    <div class="mobile-sort-btns">
+                        <div class="sort-btn-row">
+                            <button id="premiumModeBtn" class="btn-sort-mode active" data-mode="premium">溢价模式</button>
+                            <button class="btn-arb-help" data-type="premium" title="溢价套利流程">?</button>
+                        </div>
+                        <div class="sort-btn-row">
+                            <button id="discountModeBtn" class="btn-sort-mode" data-mode="discount">折价模式</button>
+                            <button class="btn-arb-help" data-type="discount" title="折价套利流程">?</button>
+                        </div>
+                    </div>
                     <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
-                </div>
-                <div class="mode-switch-bar">
-                    <button id="premiumModeBtn" class="mode-btn active" title="溢价从高到低排列">🔥 溢价模式</button>
-                    <button id="discountModeBtn" class="mode-btn" title="溢价从低到高排列">🧊 折价模式</button>
                 </div>
                 <!-- PC端表格 -->
                 <div class="table-container">
@@ -114,12 +123,12 @@
                     <div class="mobile-empty"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p></div>
                 </div>
                 <div id="paginationBar" class="pagination-bar">
-                    <button id="firstPageBtn" class="page-btn" onclick="lofMonitor.goToPage(1)">首页</button>
-                    <button id="prevPageBtn" class="page-btn" onclick="lofMonitor.changePage(-1)">上一页</button>
+                    <button id="firstPageBtn" class="page-btn">首页</button>
+                    <button id="prevPageBtn" class="page-btn">上一页</button>
                     <span id="pageInfo" class="page-info">第 1 页 / 共 1 页</span>
-                    <button id="nextPageBtn" class="page-btn" onclick="lofMonitor.changePage(1)">下一页</button>
-                    <button id="lastPageBtn" class="page-btn" onclick="lofMonitor.goToLastPage()">末页</button>
-                    <select id="pageSizeSelect" class="page-size-select" onchange="lofMonitor.changePageSize(this.value)">
+                    <button id="nextPageBtn" class="page-btn">下一页</button>
+                    <button id="lastPageBtn" class="page-btn">末页</button>
+                    <select id="pageSizeSelect" class="page-size-select">
                         <option value="50" selected>50条/页</option>
                         <option value="100">100条/页</option>
                         <option value="200">200条/页</option>
@@ -129,12 +138,12 @@
         </div>
 
         <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在连接服务器...</p><p class="loader-hint">首次加载可能需要 10-30 秒，请耐心等待</p></div></div>
-        <div id="errorContainer" class="error-container" style="display: none;">
+        <div id="errorContainer" class="error-container" style="display:none">
             <div class="error-content"><div class="error-icon">⚠️</div><p id="errorMessage">加载失败</p><button id="retryBtn" class="btn-retry">重试</button></div>
         </div>
 
         <!-- 设置弹窗 -->
-        <div id="settingsModal" class="modal-overlay" style="display: none;">
+        <div id="settingsModal" class="modal-overlay" style="display:none">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3>⚙️ 筛选设置</h3>
@@ -168,7 +177,7 @@
                     <hr class="settings-divider">
                     <div class="form-group">
                         <label>💰 预计收益计算参数</label>
-                        <p class="form-hint" style="margin-bottom:12px;">申购费率、赎回费率由 API 自动获取，以下参数需自行设定</p>
+                        <p class="form-hint form-hint--margin">申购费率、赎回费率由 API 自动获取，以下参数需自行设定</p>
                     </div>
                     <div class="form-group">
                         <label>券商佣金费率</label>
@@ -202,47 +211,82 @@
             </div>
         </div>
 
-        <!-- 基金详情弹窗 -->
-        <div id="fundDetailModal" class="modal-overlay fund-detail-modal" style="display: none;">
-            <div class="modal-content fund-detail-content">
-                <div class="modal-header">
-                    <h3 id="fundDetailTitle">基金详情</h3>
-                    <button id="closeFundDetailBtn" class="modal-close">&times;</button>
-                </div>
-                <div class="modal-body fund-detail-body">
-                    <div class="fund-detail-info">
-                        <div class="fd-row"><span class="fd-label">代码</span><span id="fdCode" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">名称</span><span id="fdName" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">现价</span><span id="fdPrice" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">净值</span><span id="fdNav" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">三日平均溢价</span><span id="fdAvgPremium" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">成交额</span><span id="fdAmount" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">预计收益率</span><span id="fdEstProfitRate" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">预计收益额</span><span id="fdEstProfitAmount" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">状态</span><span id="fdStatus" class="fd-value"></span></div>
-                        <div class="fd-row"><span class="fd-label">净值时间</span><span id="fdNavDate" class="fd-value"></span></div>
-                    </div>
-                    <div class="fund-detail-chart">
-                        <h4>📊 七日场内价格 & 场外净值走势</h4>
-                        <canvas id="fdChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <footer class="footer">
             <p>数据来源：东方财富、天天基金、上交所、深交所</p>
             <p class="risk-warning">投资有风险，入市需谨慎</p>
             <p class="legal-links">
-                <a href="agreement.html">用户协议</a>
+                <a href="pages/agreement.html">用户协议</a>
                 <span class="divider">|</span>
-                <a href="privacy.html">隐私政策</a>
+                <a href="pages/privacy.html">隐私政策</a>
             </p>
-            <p class="credit" style="text-align:right; font-size:12px; color:#999; margin-top:8px;">@金快查 2026 | @HanK</p>
+            <p class="footer-credit">@金快查 2026 | @MistyBridge</p>
         </footer>
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- 基金详情弹窗 -->
+    <div id="fundDetailModal" class="fund-detail-overlay" style="display:none">
+        <div class="fund-detail-modal">
+            <div class="fd-header">
+                <h3 id="fundDetailTitle">基金详情</h3>
+                <button id="fdCloseBtn" class="fd-close" title="关闭">&times;</button>
+            </div>
+            <div id="fdSkeleton" class="fd-skeleton show">
+                <div class="fd-skeleton-kpi"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+                <div class="fd-skeleton-grid"></div>
+            </div>
+            <div id="fdPhase1" class="fd-phase hidden">
+                <div class="fd-kpi-grid">
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">代码</span><span class="fd-kpi-value fd-code-name" id="fdCode" data-copy>--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">名称</span><span class="fd-kpi-value fd-code-name" id="fdName" data-copy>--</span></div>
+                    <div class="fd-kpi-item fd-mobile-hide"><span class="fd-kpi-label">现价</span><span class="fd-kpi-value" id="fdPrice">--</span></div>
+                    <div class="fd-kpi-item fd-mobile-hide"><span class="fd-kpi-label">净值</span><span class="fd-kpi-value" id="fdNav">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">涨跌幅</span><span class="fd-kpi-value" id="fdChangePct">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">溢价率</span><span class="fd-kpi-value" id="fdPremiumRate">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">三日均溢</span><span class="fd-kpi-value" id="fdAvgPremium">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">成交额</span><span class="fd-kpi-value" id="fdAmount">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">预计收益率</span><span class="fd-kpi-value" id="fdEstProfitRate">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">预计收益额</span><span class="fd-kpi-value" id="fdEstProfitAmount">--</span></div>
+                    <div class="fd-kpi-item fd-mobile-hide"><span class="fd-kpi-label">状态</span><span class="fd-kpi-value" id="fdStatus">--</span></div>
+                    <div class="fd-kpi-item fd-mobile-span"><span class="fd-kpi-label">净值日期</span><span class="fd-kpi-value" id="fdNavDate">--</span></div>
+                </div>
+                <div class="fd-profit-section">
+                    <div class="fd-profit-header">
+                        <span class="fd-profit-title">预计收益额</span>
+                        <span class="fd-profit-val" id="fdEstProfit">--</span>
+                        <button class="fd-profit-help" id="fdProfitHelp" title="查看详细计算">?</button>
+                    </div>
+                    <div id="fdFeeBreakdown" class="fd-fee-breakdown"></div>
+                </div>
+            </div>
+            <div id="fdPhase2" class="fd-phase">
+                <div class="fd-chart-legend">
+                    <span class="fd-legend-item">
+                        <span class="fd-legend-dot fd-legend-dot--price"></span> 场内价格
+                        <button class="fd-info-icon" data-tip="price" title="了解场内价格">?</button>
+                    </span>
+                    <span class="fd-legend-item">
+                        <span class="fd-legend-dot fd-legend-dot--nav"></span> 场外净值
+                        <button class="fd-info-icon" data-tip="nav" title="了解场外净值">?</button>
+                    </span>
+                </div>
+                <div class="fd-chart-container"><canvas id="fdChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 套利流程帮助弹窗 -->
+    <div id="arbHelpOverlay" class="arb-help-overlay" style="display:none">
+        <div class="arb-help-popup">
+            <div class="arb-help-header">
+                <h3 id="arbHelpTitle">套利流程</h3>
+                <button id="arbHelpClose" class="arb-help-close">&times;</button>
+            </div>
+            <div class="arb-help-body" id="arbHelpBody"></div>
+        </div>
+    </div>
+
     <script src="js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/app.js"></script>
 </body>

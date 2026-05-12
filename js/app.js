@@ -22,14 +22,10 @@ class LofFundMonitor {
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
         this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;        // 元
-        // 深色模式（只记录 dark 或 light，不跟随系统）
+        // 深色模式（从 localStorage 恢复，默认浅色）
         this.darkMode = localStorage.getItem('lof_darkMode') || 'light';
-        // 显示模式：premium=溢价模式（从高到低），discount=折价模式（从低到高）
-        this.displayMode = localStorage.getItem('lof_displayMode') || 'premium';
-        this.detailChart = null; // 详情图表实例
         this.bindEvents();
         this.applyDarkMode(false); // 不保存，仅应用
-        this.applyDisplayMode(); // 应用显示模式按钮状态
         this.init();
     }
 
@@ -130,24 +126,12 @@ class LofFundMonitor {
 
     // ===== 三日平均溢价率（从后端API获取，字段 avg_premium_3d）=====
     getAvgPremium3d(code) {
-        // 从 this.funds 中查找
         const fund = this.funds.find(f => f.code === code);
         return fund?.avg_premium_3d ?? null;
     }
 
     // ===== 预计收益计算 =====
-    /**
-     * 计算单只基金的预计套利收益
-     * 溢价时：溢价套利（申购→场内卖出）
-     *   收益率 = 溢价率 - 申购费率 - 卖出佣金率
-     * 折价时：折价套利（场内买入→赎回）
-     *   收益率 = |折价率| - 买入佣金率 - 赎回费率(最短档)
-     * 实际投入 = min(用户最大资金量, 基金申购上限)
-     * 实际佣金 = max(投入 × 佣金费率, 佣金最低收费)
-     * 实际佣金率 = 实际佣金 / 投入
-     * 预计收益额 = 投入 × 预计收益率
-     */
-    calcEstimatedProfit(fund, fixedCapital = null) {
+    calcEstimatedProfit(fund, overrideCapital = null) {
         const premium = fund.premium_rate;
         if (premium === null || premium === undefined) return null;
 
@@ -155,12 +139,10 @@ class LofFundMonitor {
         const price = fund.price;
         if (!nav || !price) return null;
 
-        // 实际投入 = fixedCapital 或 min(最大资金量, 申购上限)
-        // purchase_limit: null=无限额, number=限额(元)
         const purchaseLimit = fund.purchase_limit;
-        const capital = fixedCapital !== null ? fixedCapital : (purchaseLimit ? Math.min(this.maxCapital, purchaseLimit) : this.maxCapital);
+        const maxCap = overrideCapital !== null ? overrideCapital : this.maxCapital;
+        const capital = purchaseLimit ? Math.min(maxCap, purchaseLimit) : maxCap;
 
-        // 佣金计算
         const commissionRatePct = this.commissionRate / 10000;
         const rawCommission = capital * commissionRatePct;
         const actualCommission = Math.max(rawCommission, this.commissionMin);
@@ -168,7 +150,6 @@ class LofFundMonitor {
         const isMinCommission = rawCommission < this.commissionMin;
 
         if (premium > 0) {
-            // 溢价套利: 申购→场内卖出
             const purchaseFeeRate = fund.purchase_fee_rate ?? 0;
             const purchaseFeeAmount = capital * purchaseFeeRate / 100;
             const sellCommissionRate = actualCommissionRate;
@@ -184,11 +165,10 @@ class LofFundMonitor {
                     sellCommissionRate, sellCommissionAmount,
                     commissionRatePct: this.commissionRate,
                     rawCommission, actualCommission, isMinCommission,
-                    purchaseLimit, maxCapital: this.maxCapital,
+                    purchaseLimit, maxCapital: maxCap,
                 }
             };
         } else {
-            // 折价套利: 场内买入→赎回
             const buyCommissionRate = actualCommissionRate;
             const buyCommissionAmount = actualCommission;
             const redemptionFeeRate = fund.redemption_fee_rate ?? 1.5;
@@ -204,7 +184,7 @@ class LofFundMonitor {
                     redemptionFeeRate, redemptionFeeAmount,
                     commissionRatePct: this.commissionRate,
                     rawCommission, actualCommission, isMinCommission,
-                    purchaseLimit, maxCapital: this.maxCapital,
+                    purchaseLimit, maxCapital: maxCap,
                 }
             };
         }
@@ -218,7 +198,6 @@ class LofFundMonitor {
         if (!est) return;
         const bd = est.breakdown;
 
-        // 构建弹窗内容
         let lines = [];
         lines.push(`<div class="profit-detail">`);
         lines.push(`<div class="profit-detail-title">${est.direction} · ${fund.code} ${fund.name}</div>`);
@@ -233,16 +212,13 @@ class LofFundMonitor {
         }
         lines.push(`</div>`);
 
-        // 收益率分解
         lines.push(`<div class="profit-detail-section">`);
         lines.push(`<div class="profit-detail-subtitle">📊 收益率构成</div>`);
         if (est.rate >= 0 && bd.premiumRate !== undefined) {
-            // 溢价套利
             lines.push(`<div class="profit-detail-row plus"><span>溢价率</span><span>+${bd.premiumRate.toFixed(2)}%</span></div>`);
             lines.push(`<div class="profit-detail-row minus"><span>申购费率（天天基金优惠）</span><span>−${bd.purchaseFeeRate.toFixed(2)}%</span></div>`);
             lines.push(`<div class="profit-detail-row minus"><span>卖出佣金率${bd.isMinCommission ? '（按最低收费）' : ''}</span><span>−${bd.sellCommissionRate.toFixed(4)}%</span></div>`);
         } else if (bd.discountRate !== undefined) {
-            // 折价套利
             lines.push(`<div class="profit-detail-row plus"><span>折价率</span><span>+${bd.discountRate.toFixed(2)}%</span></div>`);
             lines.push(`<div class="profit-detail-row minus"><span>买入佣金率${bd.isMinCommission ? '（按最低收费）' : ''}</span><span>−${bd.buyCommissionRate.toFixed(4)}%</span></div>`);
             lines.push(`<div class="profit-detail-row minus"><span>赎回费率（≤6天）</span><span>−${bd.redemptionFeeRate.toFixed(2)}%</span></div>`);
@@ -251,7 +227,6 @@ class LofFundMonitor {
         lines.push(`<div class="profit-detail-row ${rateClass} total"><span>预计收益率</span><span>${est.rate > 0 ? '+' : ''}${est.rate.toFixed(2)}%</span></div>`);
         lines.push(`</div>`);
 
-        // 收益额分解
         lines.push(`<div class="profit-detail-section">`);
         lines.push(`<div class="profit-detail-subtitle">💵 收益额构成</div>`);
         if (est.rate >= 0 && bd.purchaseFeeAmount !== undefined) {
@@ -270,12 +245,10 @@ class LofFundMonitor {
         lines.push(`<div class="profit-detail-footer">⚠️ 套利按最短时间估算，忽略T+N价格波动风险</div>`);
         lines.push(`</div>`);
 
-        // 使用现有的 toast 机制或自定义弹窗
         this._showProfitPopover(lines.join(''), fundCode);
     }
 
     _showProfitPopover(html, fundCode) {
-        // 移除已有弹窗
         const existing = document.getElementById('profitPopover');
         if (existing) existing.remove();
 
@@ -285,7 +258,6 @@ class LofFundMonitor {
         overlay.innerHTML = `<div class="profit-popover-card"><div class="profit-popover-close" id="profitPopoverClose">✕</div>${html}</div>`;
         document.body.appendChild(overlay);
 
-        // 关闭事件
         const close = () => { overlay.remove(); };
         document.getElementById('profitPopoverClose').addEventListener('click', close);
         overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
@@ -293,58 +265,51 @@ class LofFundMonitor {
 
     applyFilters() {
         let filtered = [...this.funds];
-        // 搜索关键词筛选
         if (this.searchKeyword) {
             const keyword = this.searchKeyword.toLowerCase();
-            filtered = filtered.filter(fund => 
+            filtered = filtered.filter(fund =>
                 fund.code.toLowerCase().includes(keyword) ||
                 fund.name.toLowerCase().includes(keyword)
             );
         }
-        // 溢价率/折价率绝对值阈值筛选
         if (this.threshold > 0) {
             filtered = filtered.filter(fund => {
                 const absRate = Math.abs(fund.premium_rate ?? 0);
                 return absRate >= this.threshold;
             });
         }
-        // 最小成交额阈值筛选
         if (this.minAmount > 0) {
             filtered = filtered.filter(fund => {
                 const amountWan = (fund.amount ?? 0) / 10000;
                 return amountWan >= this.minAmount;
             });
         }
-        // 三日平均溢价率绝对值阈值筛选
         if (this.avgThreshold > 0) {
             filtered = filtered.filter(fund => {
                 const avg = this.getAvgPremium3d(fund.code);
                 return avg !== null && Math.abs(avg) >= this.avgThreshold;
             });
         }
-        // 根据 displayMode 决定默认排序
-        const effectiveSortField = this.sortField || 'premium_rate';
-        const effectiveSortOrder = this.sortField ? this.sortOrder : (this.displayMode === 'premium' ? 'desc' : 'asc');
         filtered.sort((a, b) => {
             let valA, valB;
-            if (effectiveSortField === 'amount_w') {
+            if (this.sortField === 'amount_w') {
                 valA = (a.amount ?? 0) / 10000;
                 valB = (b.amount ?? 0) / 10000;
-            } else if (effectiveSortField === 'est_profit_rate') {
+            } else if (this.sortField === 'est_profit_rate') {
                 const estA = this.calcEstimatedProfit(a);
                 const estB = this.calcEstimatedProfit(b);
                 valA = estA ? estA.rate : -9999;
                 valB = estB ? estB.rate : -9999;
-            } else if (effectiveSortField === 'est_profit_amount') {
+            } else if (this.sortField === 'est_profit_amount') {
                 const estA = this.calcEstimatedProfit(a);
                 const estB = this.calcEstimatedProfit(b);
                 valA = estA ? estA.amount : -9999;
                 valB = estB ? estB.amount : -9999;
             } else {
-                valA = a[effectiveSortField] ?? 0;
-                valB = b[effectiveSortField] ?? 0;
+                valA = a[this.sortField] ?? 0;
+                valB = b[this.sortField] ?? 0;
             }
-            return effectiveSortOrder === 'asc' ? valA - valB : valB - valA;
+            return this.sortOrder === 'asc' ? valA - valB : valB - valA;
         });
         this.filteredFunds = filtered;
     }
@@ -369,24 +334,26 @@ class LofFundMonitor {
         const premiumClass = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
         const premiumSign = pr > 0 ? '+' : '';
         const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
-        // 三日平均溢价率
+
         const avg3d = fund.avg_premium_3d;
         const avgPremiumClass = avg3d > 0 ? 'premium-positive' : avg3d < 0 ? 'premium-negative' : 'premium-zero';
         const avgPremiumSign = avg3d > 0 ? '+' : '';
         const avgPremiumText = avg3d !== null && avg3d !== undefined ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
+
         const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
         const changeSign = fund.change_pct >= 0 ? '+' : '';
         const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
+
         const navType = fund.is_formal_nav ? '正式' : '估算';
         const navText = fund.nav !== null && fund.nav !== undefined ? fund.nav.toFixed(3) : '--';
         const priceText = fund.price !== null && fund.price !== undefined ? fund.price.toFixed(3) : '--';
-        // amount 字段为元，转为万元/亿元显示
+
         let amountText = '--';
         if (fund.amount !== null && fund.amount !== undefined) {
             const amountWan = fund.amount / 10000;
             amountText = amountWan >= 10000 ? (amountWan / 10000).toFixed(2) + '亿' : amountWan.toFixed(2) + '万';
         }
-        // 预计收益计算
+
         const estProfit = this.calcEstimatedProfit(fund);
         let estProfitRateText = '--';
         let estProfitRateClass = 'premium-zero';
@@ -405,11 +372,11 @@ class LofFundMonitor {
             const amtSign = estProfit.amount > 0 ? '+' : '';
             estProfitAmountText = amtSign + estProfitAmountText;
             estProfitAmountClass = estProfit.amount > 0 ? 'premium-positive' : estProfit.amount < 0 ? 'premium-negative' : 'premium-zero';
-            estProfitInfoBtn = `<button class="btn-profit-info" onclick="lofMonitor.showProfitDetail('${fund.code}')" title="查看收益构成">?</button>`;
+            estProfitInfoBtn = `<button class="btn-profit-info" data-code="${fund.code}" title="查看收益构成">?</button>`;
         }
-        return `<tr class="fund-row" data-code="${fund.code}" onclick="lofMonitor.showFundDetail('${fund.code}')" style="cursor:pointer">
-            <td class="col-code click-copy" data-copy="${fund.code}" title="点击复制">${fund.code}</td>
-            <td class="col-name click-copy" data-copy="${fund.name}" title="点击复制">${this.truncateName(fund.name)}</td>
+        return `<tr class="fund-row" data-code="${fund.code}">
+            <td class="col-code">${fund.code}</td>
+            <td class="col-name" title="${fund.name}">${this.truncateName(fund.name)}</td>
             <td class="col-price">${priceText}</td>
             <td class="col-nav">${navText}${fund.nav ? '<span class="nav-badge">' + navType + '</span>' : ''}</td>
             <td class="col-change ${changeClass}">${changeText}</td>
@@ -436,7 +403,6 @@ class LofFundMonitor {
                 </div>
             `).join('');
         }
-        // 移动端溢价排行条
         const mobileScroll = document.getElementById('mobileRankingScroll');
         if (mobileScroll) {
             mobileScroll.innerHTML = funds.slice(0, 10).map(fund => `
@@ -451,7 +417,6 @@ class LofFundMonitor {
     renderDiscountRankings() {
         if (!this.funds.length) return;
         const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
-        // PC端折价排行榜
         const discountContainer = document.getElementById('discountContainer');
         if (discountContainer) {
             discountContainer.innerHTML = sorted.slice(0, 5).map((fund, index) => `
@@ -464,7 +429,6 @@ class LofFundMonitor {
                 </div>
             `).join('');
         }
-        // 移动端折价排行条
         const mobileDiscountScroll = document.getElementById('mobileDiscountScroll');
         if (mobileDiscountScroll) {
             mobileDiscountScroll.innerHTML = sorted.slice(0, 10).map(fund => `
@@ -481,52 +445,29 @@ class LofFundMonitor {
         const premiumClass = pr > 0 ? 'mc-pos' : pr < 0 ? 'mc-neg' : 'mc-zero';
         const premiumSign = pr > 0 ? '+' : '';
         const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
-        const navType = fund.is_formal_nav ? '正式' : '估算';
-        const navText = fund.nav !== null && fund.nav !== undefined ? navType + ' ' + fund.nav.toFixed(3) : '--';
-        const priceText = fund.price !== null && fund.price !== undefined ? fund.price.toFixed(3) : '--';
-        const statusHtml = fund.premium_status ? `<span class="mc-status-badge status-badge ${fund.premium_status}">${fund.premium_status}</span>` : '';
-        
-        // 计算千元可赚收益（固定1000元基准）
-        const est = this.calcEstimatedProfit(fund, 1000);
-        // 按固定1000元计算: profit = 1000 * rate / 100 = rate * 10
-        const per1000Profit = est && est.amount ? est.amount : 0;
-        const per1000Text = per1000Profit > 0 ? per1000Profit.toFixed(2) + '元' : '--';
-        
-        // 状态样式
-        let cardClass = 'mobile-card';
-        let profitColor = '';
-        if (pr > 0) {
-            profitColor = pr > 3 ? '#ff4d4f' : '#ff7a45';
-        } else if (pr < 0) {
-            profitColor = '#73d13d';
+        const statusText = fund.premium_status || '未知';
+        // 千元可赚
+        const est = this.calcEstimatedProfit(fund);
+        let profitText = '--', profitClass = '';
+        if (est) {
+            const scale = est.breakdown.maxCapital > 0 ? 1000 / est.breakdown.maxCapital : 0;
+            const profit1000 = est.amount * scale;
+            profitText = profit1000 > 0 ? '+' + profit1000.toFixed(2) : profit1000.toFixed(2);
+            profitClass = profit1000 > 0 ? 'mc-pos' : profit1000 < 0 ? 'mc-neg' : '';
         }
-        // 流动性差 (<10万成交额)
-        const amountWan = (fund.amount ?? 0) / 10000;
-        if (amountWan < 10) {
-            cardClass += ' mc-low-liquidity';
-        }
-        // 暂停申购
-        if (fund.premium_status === '暂停申购') {
-            cardClass += ' mc-suspended';
-        }
-        
-        return `<div class="${cardClass}" data-code="${fund.code}" onclick="lofMonitor.showFundDetail('${fund.code}')" style="cursor:pointer">
-            <div class="mc-left">
-                <div class="mc-row"><span class="mc-code">${fund.code}</span></div>
-                <div class="mc-row"><span class="mc-name">${fund.name}</span></div>
-                <div class="mc-row mc-row3">
-                    <span class="mb-item"><span class="mb-label">现价</span><span class="mb-val">${priceText}</span></span>
-                    <span class="mb-item"><span class="mb-label">净值</span><span class="mb-val">${navText}</span></span>
-                </div>
+        return `<div class="mobile-card" data-code="${fund.code}">
+            <div class="mc-top-row">
+                <span class="mc-code">${fund.code}</span>
+                <span class="mc-name">${this.truncateName(fund.name, 8)}</span>
+                <span class="mc-status-badge status-badge ${fund.premium_status || ''}">${statusText}</span>
             </div>
             <div class="mc-right">
-                <div class="mc-premium-wrap"><span class="mc-premium ${premiumClass}">${premiumText}</span></div>
-                <div class="mc-profit-row">
-                    <span class="mb-item mb-profit" style="${profitColor ? 'color:' + profitColor + ';' : ''}">
-                        <span class="mb-label">千元可赚</span>
-                        <span class="mb-val ${amountWan < 10 ? 'low-liquidity' : ''} ${fund.premium_status === '暂停申购' ? 'suspended' : ''}">${per1000Text}</span>
-                    </span>
-                </div>
+                <span class="mc-premium ${premiumClass}">${premiumText}</span>
+            </div>
+            <div class="mc-profit-row">
+                <span class="mc-profit-label">千元可赚</span>
+                <span class="mc-profit-val ${profitClass}">${profitText}</span>
+                <button class="mc-profit-help" data-code="${fund.code}" title="查看计算详情">?</button>
             </div>
         </div>`;
     }
@@ -545,7 +486,6 @@ class LofFundMonitor {
         if (retryBtn) retryBtn.addEventListener('click', () => this.init());
         const manualRefreshBtn = document.getElementById('manualRefreshBtn');
         if (manualRefreshBtn) manualRefreshBtn.addEventListener('click', () => this.handleManualRefresh());
-        // 设置弹窗事件
         const settingsBtn = document.getElementById('settingsBtn');
         const closeSettingsBtn = document.getElementById('closeSettingsBtn');
         const settingsModal = document.getElementById('settingsModal');
@@ -553,40 +493,113 @@ class LofFundMonitor {
         const resetSettingsBtn = document.getElementById('resetSettingsBtn');
         if (settingsBtn) settingsBtn.addEventListener('click', () => this.openSettingsModal());
         if (closeSettingsBtn) closeSettingsBtn.addEventListener('click', () => this.closeSettingsModal());
+        // 移动端溢价/折价模式按钮
+        const premiumModeBtn = document.getElementById('premiumModeBtn');
+        const discountModeBtn = document.getElementById('discountModeBtn');
+        if (premiumModeBtn) premiumModeBtn.addEventListener('click', () => this.setSortMode('premium'));
+        if (discountModeBtn) discountModeBtn.addEventListener('click', () => this.setSortMode('discount'));
+        // 套利流程帮助按钮
+        document.querySelectorAll('.btn-arb-help').forEach(btn => {
+            btn.addEventListener('click', () => this.showArbHelp(btn.dataset.type));
+        });
+        const arbHelpOverlay = document.getElementById('arbHelpOverlay');
+        const arbHelpClose = document.getElementById('arbHelpClose');
+        if (arbHelpOverlay) arbHelpOverlay.addEventListener('click', e => { if (e.target === arbHelpOverlay) this.closeArbHelp(); });
+        if (arbHelpClose) arbHelpClose.addEventListener('click', () => this.closeArbHelp());
         if (settingsModal) settingsModal.addEventListener('click', e => { if (e.target === settingsModal) this.closeSettingsModal(); });
         if (applySettingsBtn) applySettingsBtn.addEventListener('click', () => this.applySettings());
         if (resetSettingsBtn) resetSettingsBtn.addEventListener('click', () => this.resetSettings());
+        // 分页按钮（替代HTML内联onclick）
+        const firstPageBtn = document.getElementById("firstPageBtn");
+        const prevPageBtn = document.getElementById("prevPageBtn");
+        const nextPageBtn = document.getElementById("nextPageBtn");
+        const lastPageBtn = document.getElementById("lastPageBtn");
+        const pageSizeSelect = document.getElementById("pageSizeSelect");
+        if (firstPageBtn) firstPageBtn.addEventListener("click", () => this.goToPage(1));
+        if (prevPageBtn) prevPageBtn.addEventListener("click", () => this.changePage(-1));
+        if (nextPageBtn) nextPageBtn.addEventListener("click", () => this.changePage(1));
+        if (lastPageBtn) lastPageBtn.addEventListener("click", () => this.goToLastPage());
+        if (pageSizeSelect) pageSizeSelect.addEventListener("change", (e) => this.changePageSize(e.target.value));
+
         // 深色模式按钮
         const darkModeBtn = document.getElementById('darkModeBtn');
         if (darkModeBtn) darkModeBtn.addEventListener('click', () => this.toggleDarkMode());
-        // 模式切换按钮
-        const premiumModeBtn = document.getElementById('premiumModeBtn');
-        const discountModeBtn = document.getElementById('discountModeBtn');
-        if (premiumModeBtn) premiumModeBtn.addEventListener('click', () => this.setDisplayMode('premium'));
-        if (discountModeBtn) discountModeBtn.addEventListener('click', () => this.setDisplayMode('discount'));
-        // 基金详情弹窗事件
-        const closeFundDetailBtn = document.getElementById('closeFundDetailBtn');
-        const fundDetailModal = document.getElementById('fundDetailModal');
-        if (closeFundDetailBtn) closeFundDetailBtn.addEventListener('click', () => this.closeFundDetail());
-        if (fundDetailModal) fundDetailModal.addEventListener('click', e => { if (e.target === fundDetailModal) this.closeFundDetail(); });
-        // 点击复制
-        document.addEventListener('click', e => {
-            const target = e.target.closest('.click-copy');
-            if (target) {
-                const text = target.dataset.copy;
-                if (text) {
-                    navigator.clipboard.writeText(text).then(() => {
-                        this.showCopyToast(text);
-                    }).catch(() => {});
-                }
+        // PC端：点击代码/名称列 → 复制文本
+        document.querySelector('.fund-table')?.addEventListener('click', (e) => {
+            const codeCell = e.target.closest('.col-code');
+            const nameCell = e.target.closest('.col-name');
+            if (codeCell || nameCell) {
+                e.stopPropagation();
+                const text = (codeCell || nameCell).textContent.trim();
+                navigator.clipboard.writeText(text).then(() => this.showToast('复制成功')).catch(() => {});
+                return;
+            }
+        });
+        // 标记初始排序列
+        const initTh = document.querySelector(`.sortable[data-field="${this.sortField}"]`);
+        if (initTh) initTh.classList.add('sort-desc', 'active');
+        // 通用点击事件委托（移动端 ? 图标 / 详情弹窗 / 卡片→弹窗）
+        document.addEventListener('click', (e) => {
+            // 移动端 ? 按钮
+            const helpBtn = e.target.closest('.mc-profit-help');
+            if (helpBtn) {
+                e.stopPropagation();
+                this.showProfitDetail(helpBtn.dataset.code);
+                return;
+            }
+            // 详情弹窗预计收益额 ? 图标
+            const profitHelp = e.target.closest('#fdProfitHelp');
+            if (profitHelp) {
+                e.stopPropagation();
+                this._toggleFeeBreakdown();
+                return;
+            }
+            // 图表信息 ? 图标
+            const infoIcon = e.target.closest('.fd-info-icon');
+            if (infoIcon) {
+                e.stopPropagation();
+                this._showChartInfoTip(infoIcon.dataset.tip);
+                return;
+            }
+            // 详情弹窗内代码/名称点击 → 复制文本 (Change 6)
+            const detailCopy = e.target.closest('[data-copy]');
+            if (detailCopy) {
+                e.stopPropagation();
+                const text = detailCopy.textContent.trim();
+                navigator.clipboard.writeText(text).then(() => this.showToast('复制成功')).catch(() => {});
+                return;
+            }
+            // PC端 ? 按钮 → 收益构成弹窗
+            const profitInfo = e.target.closest('.btn-profit-info');
+            if (profitInfo) {
+                e.stopPropagation();
+                this.showProfitDetail(profitInfo.dataset.code);
+                return;
+            }
+
+                        // 关闭详情弹窗
+            const closeBtn = e.target.closest('#fdCloseBtn');
+            if (closeBtn) { this.closeFundDetail(); return; }
+            if (e.target.id === 'fundDetailModal') { this.closeFundDetail(); return; }
+            // PC端基金行 / 移动端卡片点击 → 详情弹窗
+            const row = e.target.closest('.fund-row');
+            const card = e.target.closest('.mobile-card');
+            if (row || card) {
+                if (e.target.closest('.col-code') || e.target.closest('.col-name') ||
+                    e.target.closest('.btn-profit-info') || e.target.closest('.mc-profit-help')) return;
+                const code = (row || card).dataset.code;
+                if (code) this.showFundDetail(code);
             }
         });
     }
 
     // ===== 深色模式 =====
     toggleDarkMode() {
-        // 循环切换: 'dark' <-> 'light'
-        this.darkMode = this.darkMode === 'dark' ? 'light' : 'dark';
+        if (this.darkMode === 'light') {
+            this.darkMode = 'dark';
+        } else {
+            this.darkMode = 'light';
+        }
         localStorage.setItem('lof_darkMode', this.darkMode);
         this.applyDarkMode(true);
     }
@@ -595,52 +608,15 @@ class LofFundMonitor {
         const btn = document.getElementById('darkModeBtn');
         const root = document.documentElement;
 
-        // 清除之前的类
         root.classList.remove('dark-mode', 'light-mode');
 
         if (this.darkMode === 'dark') {
             root.classList.add('dark-mode');
-            if (btn) btn.textContent = '☀️';
-            if (btn) btn.title = '深色模式（点击切换浅色）';
+            if (btn) { btn.textContent = '☀️'; btn.title = '当前：深色模式（点击切换浅色）'; }
         } else {
             root.classList.add('light-mode');
-            if (btn) btn.textContent = '🌙';
-            if (btn) btn.title = '浅色模式（点击切换深色）';
+            if (btn) { btn.textContent = '🌙'; btn.title = '当前：浅色模式（点击切换深色）'; }
         }
-    }
-
-    // ===== 显示模式切换 =====
-    applyDisplayMode() {
-        const premiumBtn = document.getElementById('premiumModeBtn');
-        const discountBtn = document.getElementById('discountModeBtn');
-        if (premiumBtn) premiumBtn.classList.toggle('active', this.displayMode === 'premium');
-        if (discountBtn) discountBtn.classList.toggle('active', this.displayMode === 'discount');
-    }
-
-    setDisplayMode(mode) {
-        this.displayMode = mode;
-        localStorage.setItem('lof_displayMode', mode);
-        // 更新按钮状态
-        this.applyDisplayMode();
-        // 重置排序字段，让 applyFilters 使用 displayMode 决定排序
-        this.sortField = null;
-        this.applyFilters();
-        this.renderTable();
-        this.updatePaginationInfo();
-    }
-
-    // ===== 复制提示 =====
-    showCopyToast(text) {
-        let toast = document.getElementById('copyToast');
-        if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'copyToast';
-            toast.className = 'copy-toast';
-            document.body.appendChild(toast);
-        }
-        toast.textContent = '✓ 已复制: ' + text;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 1000);
     }
 
     openSettingsModal() {
@@ -658,11 +634,13 @@ class LofFundMonitor {
         if (commissionMinInput) commissionMinInput.value = this.commissionMin;
         if (maxCapitalInput) maxCapitalInput.value = this.maxCapital;
         if (modal) modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
     }
 
     closeSettingsModal() {
         const modal = document.getElementById('settingsModal');
         if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';  
     }
 
     applySettings() {
@@ -724,8 +702,70 @@ class LofFundMonitor {
             th.classList.remove('sort-asc', 'sort-desc', 'active');
             if (th.dataset.field === field) th.classList.add(`sort-${this.sortOrder}`, 'active');
         });
+        this.currentPage = 1;
         this.applyFilters();
         this.renderTable();
+    }
+
+    setSortMode(mode) {
+        this.sortField = 'premium_rate';
+        this.sortOrder = mode === 'discount' ? 'asc' : 'desc';
+        // 更新按钮样式
+        const premiumBtn = document.getElementById('premiumModeBtn');
+        const discountBtn = document.getElementById('discountModeBtn');
+        if (premiumBtn && discountBtn) {
+            premiumBtn.classList.toggle('active', mode === 'premium');
+            discountBtn.classList.toggle('active', mode === 'discount');
+        }
+        // 同步PC端表头
+        document.querySelectorAll('.sortable').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc', 'active');
+            if (th.dataset.field === 'premium_rate') {
+                th.classList.add(`sort-${this.sortOrder}`, 'active');
+            }
+        });
+        this.currentPage = 1;
+        this.applyFilters();
+        this.renderTable();
+    }
+
+    showArbHelp(type) {
+        const overlay = document.getElementById('arbHelpOverlay');
+        const title = document.getElementById('arbHelpTitle');
+        const body = document.getElementById('arbHelpBody');
+        if (!overlay || !body) return;
+
+        if (type === 'premium') {
+            if (title) title.textContent = '溢价套利流程';
+            body.innerHTML = `
+                <div class="arb-step"><span class="arb-step-num">1</span><span class="arb-step-text"><b>场内申购</b>基金份额，按<b>净值</b>成交（价格更低）</span></div>
+                <div class="arb-step"><span class="arb-step-num">2</span><span class="arb-step-text"><b>T+2 日</b>份额到账</span></div>
+                <div class="arb-step"><span class="arb-step-num">3</span><span class="arb-step-text"><b>场内卖出</b>，按<b>市价</b>成交（价格更高）</span></div>
+                <div class="arb-step"><span class="arb-step-num">4</span><span class="arb-step-text"><b>收益</b> = 溢价率 − 申购费率 − 卖出佣金率</span></div>
+                <div class="arb-warn">⚠️ 风险：T+2 期间基金净值可能下跌，导致套利亏损甚至折价。溢价率需覆盖交易成本才有安全垫。</div>
+            `;
+        } else {
+            if (title) title.textContent = '折价套利流程';
+            body.innerHTML = `
+                <div class="arb-step"><span class="arb-step-num">1</span><span class="arb-step-text"><b>场内买入</b>基金份额，按<b>市价</b>成交（价格更低）</span></div>
+                <div class="arb-step"><span class="arb-step-num">2</span><span class="arb-step-text"><b>T+1 日</b>申请<b>赎回</b></span></div>
+                <div class="arb-step"><span class="arb-step-num">3</span><span class="arb-step-text">按<b>净值</b>赎回，资金 <b>T+3~7 日</b>到账</span></div>
+                <div class="arb-step"><span class="arb-step-num">4</span><span class="arb-step-text"><b>收益</b> = 折价率 − 买入佣金率 − 赎回费率</span></div>
+                <div class="arb-warn">⚠️ 风险：赎回期间净值波动可能侵蚀折价空间，且资金占用时间较长（3~7天）。部分基金持有不足7天有惩罚性赎回费。</div>
+            `;
+        }
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeArbHelp() {
+        const overlay = document.getElementById('arbHelpOverlay');
+        if (overlay) overlay.style.display = 'none';
+        // Only restore body scroll if fund detail modal is also closed
+        const fundModal = document.getElementById('fundDetailModal');
+        if (!fundModal || fundModal.style.display === 'none') {
+            document.body.style.overflow = '';
+        }
     }
 
     handleSearch(keyword) {
@@ -738,7 +778,6 @@ class LofFundMonitor {
             this.updatePaginationInfo();
         }, 300);
     }
-
 
     startAutoRefresh() {
         this.stopAutoRefresh();
@@ -761,11 +800,8 @@ class LofFundMonitor {
     }
 
     updateStatus(message) {
-        // 状态文字现在只用于初始加载等场景，刷新状态由 refreshStatus 元素单独显示
         const el = document.getElementById('statusText');
-        if (el && el.textContent !== message) {
-            el.textContent = message;
-        }
+        if (el && el.textContent !== message) el.textContent = message;
     }
 
     updateLoaderText(text) {
@@ -777,7 +813,6 @@ class LofFundMonitor {
         if (document.getElementById('cacheCount')) document.getElementById('cacheCount').textContent = data.cache_count ?? '-';
         if (document.getElementById('lastFetch')) document.getElementById('lastFetch').textContent = this.formatTime(data.last_fetch);
         if (document.getElementById('refreshInterval')) document.getElementById('refreshInterval').textContent = (data.refresh_interval_sec || 300) / 60 + '分钟';
-        // 基金总数优先使用 API 返回的总数字段，否则用缓存数
         const total = data.total ?? data.cache_count ?? this.funds.length;
         if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = total;
     }
@@ -791,7 +826,7 @@ class LofFundMonitor {
             document.getElementById('shownRecords').textContent = `${start}-${end}`;
         }
         if (document.getElementById('pageInfo')) {
-            document.getElementById('pageInfo').textContent = `第 ${this.currentPage} 页 / 共 ${totalPages} 页`;
+            document.getElementById('pageInfo').textContent = `${this.currentPage}/${totalPages} 页`;
         }
         const prevBtn = document.getElementById('prevPageBtn');
         const nextBtn = document.getElementById('nextPageBtn');
@@ -856,11 +891,14 @@ class LofFundMonitor {
         if (btn) { btn.disabled = true; }
         if (icon) {
             icon.classList.remove('bouncing');
-            void icon.offsetWidth;
-            icon.classList.add('bouncing');
+            icon.addEventListener('animationend', () => icon.classList.remove('bouncing'), { once: true });
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    icon.classList.add('bouncing');
+                });
+            });
         }
 
-        // 显示"刷新中..."
         if (statusEl) {
             statusEl.textContent = '刷新中...';
             statusEl.classList.add('show');
@@ -870,166 +908,281 @@ class LofFundMonitor {
             await this.checkHealth();
             await this.loadRankings();
             await this.loadFunds();
-
-            // 显示"✓"成功
-            if (statusEl) {
-                statusEl.textContent = '✓';
-            }
+            if (statusEl) statusEl.textContent = '✓';
         } catch (error) {
-            if (statusEl) {
-                statusEl.textContent = '✗';
-            }
+            if (statusEl) statusEl.textContent = '✗';
             this.showToast('刷新失败: ' + error.message);
         } finally {
             if (btn) { btn.disabled = false; }
-
-            // 2秒后隐藏状态
             setTimeout(() => {
-                if (statusEl) {
-                    statusEl.classList.remove('show');
-                }
+                if (statusEl) statusEl.classList.remove('show');
             }, 2000);
         }
     }
 
-    showToast(message) { alert(message); }
-
-    formatTime(isoString) {
-        if (!isoString) return '-';
-        return new Date(isoString).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    showToast(message) {
+        const existing = document.querySelector('.copy-toast');
+        if (existing) existing.remove();
+        const toast = document.createElement('div');
+        toast.className = 'copy-toast';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        requestAnimationFrame(() => toast.classList.add('show'));
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 1000);
     }
 
-    // ===== 基金详情 =====
-    async showFundDetail(code) {
-        const fund = this.funds.find(f => f.code === code);
-        if (!fund) {
-            this.showToast('未找到该基金');
-            return;
-        }
-
+    // ===== 基金详情弹窗 =====
+    showFundDetail(code) {
         const modal = document.getElementById('fundDetailModal');
+        const skeleton = document.getElementById('fdSkeleton');
+        const phase1 = document.getElementById('fdPhase1');
+        const phase2 = document.getElementById('fdPhase2');
         if (!modal) return;
 
-        // 填充基本信息
-        document.getElementById('fundDetailTitle').textContent = `${fund.code} ${fund.name}`;
-        document.getElementById('fdCode').textContent = fund.code;
-        document.getElementById('fdName').textContent = fund.name;
-        document.getElementById('fdPrice').textContent = fund.price != null ? fund.price.toFixed(3) : '--';
-        const navType = fund.is_formal_nav ? '正式' : '估算';
-        document.getElementById('fdNav').textContent = fund.nav != null ? `${navType} ${fund.nav.toFixed(3)}` : '--';
-        
-        const pr = fund.premium_rate;
-        const premiumSign = pr > 0 ? '+' : '';
-        document.getElementById('fdPremiumRate').textContent = pr != null ? premiumSign + pr.toFixed(2) + '%' : '--';
-        document.getElementById('fdPremiumRate').className = 'fd-value ' + (pr > 0 ? 'fd-pos' : pr < 0 ? 'fd-neg' : '');
-        
-        const amountWan = (fund.amount ?? 0) / 10000;
-        document.getElementById('fdAmount').textContent = amountWan >= 10000 ? (amountWan / 10000).toFixed(2) + '亿' : amountWan.toFixed(2) + '万';
-        
-        const est = this.calcEstimatedProfit(fund);
-        document.getElementById('fdEstProfitRate').textContent = est ? (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%' : '--';
-        document.getElementById('fdEstProfitRate').className = 'fd-value ' + (est && est.rate > 0 ? 'fd-pos' : est && est.rate < 0 ? 'fd-neg' : '');
-        document.getElementById('fdEstProfitAmount').textContent = est ? (est.amount > 0 ? '+' : '') + est.amount.toFixed(2) + '元' : '--';
-        document.getElementById('fdEstProfitAmount').className = 'fd-value ' + (est && est.amount > 0 ? 'fd-pos' : est && est.amount < 0 ? 'fd-neg' : '');
-        
-        document.getElementById('fdStatus').innerHTML = `<span class="status-badge ${fund.premium_status || ''}">${fund.premium_status || '未知'}</span>`;
-        document.getElementById('fdNavDate').textContent = fund.nav_date || '--';
-
-        // 绘制图表
-        await this.renderFundDetailChart(fund);
-
         modal.style.display = 'flex';
-    }
+        document.body.style.overflow = 'hidden';
+        skeleton.classList.add('show');
+        phase1.classList.add('hidden');
+        phase2.style.display = 'none';
+        phase2.classList.remove('visible');
 
-    async renderFundDetailChart(fund) {
-        const canvas = document.getElementById('fdChart');
-        if (!canvas) return;
-
-        // 销毁旧图表
-        if (this.detailChart) {
-            this.detailChart.destroy();
-            this.detailChart = null;
+        if (this._detailChart) {
+            this._detailChart.destroy();
+            this._detailChart = null;
         }
 
-        // 尝试从 API 获取历史数据
-        let historyData = null;
-        try {
-            const result = await api.getFundDetail(fund.code);
-            historyData = result.data?.history || result.data?.price_history || null;
-        } catch (e) {
-            console.warn('获取历史数据失败:', e.message);
-        }
+        api.getFundDetail(code).then(detailResult => {
+            const fund = detailResult.data;
+            this._populateDetailKpi(fund);
+            skeleton.classList.remove('show');
+            phase1.classList.remove('hidden');
 
-        // 如果没有历史数据，生成模拟数据
-        if (!historyData || !historyData.length) {
-            const labels = [];
-            const prices = [];
-            const navs = [];
-            const today = new Date();
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(d.getDate() - i);
-                labels.push(`${d.getMonth()+1}/${d.getDate()}`);
-                // 场内价格：基于当前价格添加波动
-                const priceVar = fund.price * (1 + (Math.random() - 0.5) * 0.02);
-                prices.push(parseFloat(priceVar.toFixed(3)));
-                // 场外净值：基于当前净值添加波动
-                const navVar = fund.nav * (1 + (Math.random() - 0.5) * 0.015);
-                navs.push(parseFloat(navVar.toFixed(4)));
-            }
-            historyData = { labels, prices, navs };
-        }
-
-        const ctx = canvas.getContext('2d');
-        const isDark = this.darkMode === 'dark';
-        
-        this.detailChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: historyData.labels || historyData.map(h => h.date),
-                datasets: [
-                    {
-                        label: '场内价格',
-                        data: historyData.prices || historyData.map(h => h.price),
-                        borderColor: '#ff7a45',
-                        backgroundColor: 'rgba(255, 122, 69, 0.1)',
-                        yAxisID: 'y',
-                        tension: 0.3,
-                        pointRadius: 3,
-                    },
-                    {
-                        label: '场外净值',
-                        data: historyData.navs || historyData.map(h => h.nav),
-                        borderColor: '#40a9ff',
-                        backgroundColor: 'rgba(64, 169, 255, 0.1)',
-                        yAxisID: 'y',
-                        tension: 0.3,
-                        pointRadius: 3,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: { position: 'top', labels: { color: isDark ? '#fff' : '#333' } },
-                    tooltip: { mode: 'index', intersect: false }
-                },
-                scales: {
-                    x: { ticks: { color: isDark ? '#aaa' : '#666' }, grid: { color: isDark ? '#333' : '#eee' } },
-                    y: { type: 'linear', display: true, position: 'left', title: { display: true, text: '价格', color: isDark ? '#fff' : '#333' }, ticks: { color: isDark ? '#aaa' : '#666' }, grid: { color: isDark ? '#333' : '#eee' } }
+            api.getFundChart(code).then(chartResult => {
+                const chartData = chartResult.data?.chart || [];
+                if (chartData.length > 0) {
+                    phase2.style.display = 'block';
+                    requestAnimationFrame(() => {
+                        phase2.classList.add('visible');
+                        this._renderDetailChart(chartData);
+                    });
                 }
-            }
+            }).catch(() => {});
+        }).catch(err => {
+            console.error('[LOF] 基金详情加载失败:', err);
+            this.showToast('详情加载失败: ' + err.message);
         });
+
+    }
+    _populateDetailKpi(fund) {
+        const setVal = (id, text, cls) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text || '--';
+            el.className = 'fd-kpi-value';
+            if (cls) el.classList.add(cls);
+        };
+        const isCopy = (id) => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('fd-code-name');
+        };
+
+        const pr = fund.premium_rate;
+        const prCls = pr > 0 ? 'fd-pos' : pr < 0 ? 'fd-neg' : '';
+        const prSign = pr > 0 ? '+' : '';
+
+        const avg3d = fund.avg_premium_3d;
+        const avgCls = avg3d > 0 ? 'fd-pos' : avg3d < 0 ? 'fd-neg' : '';
+        const avgSign = avg3d > 0 ? '+' : '';
+
+        const cp = fund.change_pct;
+        const cpCls = cp >= 0 ? 'fd-change-up' : 'fd-change-down';
+        const cpSign = cp >= 0 ? '+' : '';
+
+        const navType = fund.is_formal_nav ? '正式' : '估算';
+
+        let amountText = '--';
+        if (fund.amount != null) {
+            const aw = fund.amount / 10000;
+            amountText = aw >= 10000 ? (aw / 10000).toFixed(2) + '亿' : aw.toFixed(2) + '万';
+        }
+
+        const est = this.calcEstimatedProfit(fund);
+
+        setVal('fdCode', fund.code); isCopy('fdCode');
+        setVal('fdName', fund.name); isCopy('fdName');
+        setVal('fdPrice', fund.price != null ? fund.price.toFixed(3) : null);
+        setVal('fdNav', fund.nav != null ? fund.nav.toFixed(3) + ' (' + navType + ')' : null);
+        setVal('fdChangePct', cp != null ? cpSign + cp.toFixed(2) + '%' : null, cpCls);
+        setVal('fdPremiumRate', pr != null ? prSign + pr.toFixed(2) + '%' : null, prCls);
+        setVal('fdAvgPremium', avg3d != null ? avgSign + avg3d.toFixed(2) + '%' : null, avgCls);
+        setVal('fdAmount', amountText);
+        setVal('fdEstProfitRate', est ? (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%' : '--',
+            est ? (est.rate > 0 ? 'fd-pos' : est.rate < 0 ? 'fd-neg' : '') : '');
+        setVal('fdEstProfitAmount', est ? (est.amount > 0 ? '+' : '') + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元') : '--',
+            est ? (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '') : '');
+        setVal('fdStatus', fund.premium_status || '未知');
+        setVal('fdNavDate', fund.nav_date || '-');
+
+        this._detailEstProfit = est;
+        this._detailFundCode = fund.code;
+
+        const profitVal = document.getElementById('fdEstProfit');
+        if (profitVal) {
+            if (est) {
+                const sign = est.amount > 0 ? '+' : '';
+                profitVal.textContent = sign + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元');
+                profitVal.className = 'fd-profit-val ' + (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '');
+            } else {
+                profitVal.textContent = '--';
+                profitVal.className = 'fd-profit-val';
+            }
+        }
+
+        const breakdown = document.getElementById('fdFeeBreakdown');
+        if (breakdown) { breakdown.innerHTML = ''; breakdown.classList.remove('show'); }
     }
 
     closeFundDetail() {
         const modal = document.getElementById('fundDetailModal');
         if (modal) modal.style.display = 'none';
-        if (this.detailChart) {
-            this.detailChart.destroy();
-            this.detailChart = null;
+        document.body.style.overflow = '';  
+        if (this._detailChart) {
+            this._detailChart.destroy();
+            this._detailChart = null;
         }
+    }
+
+    _renderDetailChart(chartData) {
+        const canvas = document.getElementById('fdChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        const labels = chartData.map(d => d.date.slice(5));
+        const prices = chartData.map(d => d.price);
+        const navs = chartData.map(d => d.nav);
+
+        const allVals = prices.concat(navs).filter(v => v != null);
+        const yMin = allVals.length > 0 ? Math.floor(Math.min(...allVals) * 0.995 * 1000) / 1000 : 0;
+        const yMax = allVals.length > 0 ? Math.ceil(Math.max(...allVals) * 1.005 * 1000) / 1000 : 1;
+
+        const isDark = this.darkMode === 'dark';
+        const textColor = isDark ? '#8899aa' : '#666';
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        this._detailChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: '场内价格',
+                        data: prices,
+                        borderColor: '#ff7a45',
+                        backgroundColor: 'rgba(255, 122, 69, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#ff7a45',
+                        tension: 0.2,
+                        fill: false,
+                    },
+                    {
+                        label: '场外净值',
+                        data: navs,
+                        borderColor: '#40a9ff',
+                        backgroundColor: 'rgba(64, 169, 255, 0.08)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#40a9ff',
+                        tension: 0.2,
+                        fill: false,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => ctx.dataset.label + ': ' + (ctx.raw != null ? ctx.raw.toFixed(3) : '--'),
+                        },
+                    },
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 11 }, color: textColor },
+                    },
+                    y: {
+grid: { color: gridColor },
+                        min: yMin,
+                        max: yMax,
+                        ticks: {
+                            font: { size: 11 }, color: textColor,
+                            callback: (v) => v.toFixed(3),
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    _toggleFeeBreakdown() {
+        const breakdown = document.getElementById('fdFeeBreakdown');
+        if (!breakdown) return;
+        const isOpen = breakdown.classList.contains('show');
+        if (isOpen) {
+            breakdown.classList.remove('show');
+            return;
+        }
+        const est = this._detailEstProfit;
+        if (!est) return;
+        const bd = est.breakdown;
+        let rows = '';
+        if (bd.premiumRate !== undefined) {
+            rows += '<tr><td class="fd-fee-label">溢价率</td><td class="fd-fee-val fd-pos">+' + bd.premiumRate.toFixed(2) + '%</td></tr>';
+            rows += '<tr><td class="fd-fee-label">申购费率</td><td class="fd-fee-val fd-neg">-' + bd.purchaseFeeRate.toFixed(2) + '%</td></tr>';
+            rows += '<tr><td class="fd-fee-label">卖出佣金率' + (bd.isMinCommission ? '(最低收费)' : '') + '</td><td class="fd-fee-val fd-neg">-' + bd.sellCommissionRate.toFixed(4) + '%</td></tr>';
+            rows += '<tr class="fd-fee-sep"><td colspan="2"></td></tr>';
+            rows += '<tr class="fd-fee-total"><td>预计收益率</td><td class="fd-fee-val ' + (est.rate > 0 ? 'fd-pos' : 'fd-neg') + '">' + (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%</td></tr>';
+        } else if (bd.discountRate !== undefined) {
+            rows += '<tr><td class="fd-fee-label">折价率</td><td class="fd-fee-val fd-pos">+' + bd.discountRate.toFixed(2) + '%</td></tr>';
+            rows += '<tr><td class="fd-fee-label">买入佣金率' + (bd.isMinCommission ? '(最低收费)' : '') + '</td><td class="fd-fee-val fd-neg">-' + bd.buyCommissionRate.toFixed(4) + '%</td></tr>';
+            rows += '<tr><td class="fd-fee-label">赎回费率</td><td class="fd-fee-val fd-neg">-' + bd.redemptionFeeRate.toFixed(2) + '%</td></tr>';
+            rows += '<tr class="fd-fee-sep"><td colspan="2"></td></tr>';
+            rows += '<tr class="fd-fee-total"><td>预计收益率</td><td class="fd-fee-val ' + (est.rate > 0 ? 'fd-pos' : 'fd-neg') + '">' + (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%</td></tr>';
+        }
+        if (rows) {
+            breakdown.innerHTML = '<table class="fd-fee-table"><tbody>' + rows + '</tbody></table>';
+            breakdown.classList.add('show');
+        }
+    }
+
+    _showChartInfoTip(type) {
+        const existing = document.querySelector('.fd-custom-tip');
+        if (existing) existing.remove();
+
+        const tips = {
+            price: '场内价格 = 基金在证券交易所的实时成交价，随买卖供需波动',
+            nav: '场外净值 = 基金公司公布的每日单位净值（盘后正式/盘中估算），反映基金持仓的真实价值'
+        };
+        const text = tips[type] || '';
+        if (!text) return;
+
+        const tip = document.createElement('div');
+        tip.className = 'fd-custom-tip';
+        tip.textContent = text;
+        document.querySelector('.fund-detail-modal')?.appendChild(tip);
+        setTimeout(() => tip.remove(), 4000);
+    }
+
+    formatTime(isoString) {
+        if (!isoString) return '-';
+        return new Date(isoString).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
 }
 

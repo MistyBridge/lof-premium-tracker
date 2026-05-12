@@ -105,6 +105,12 @@ class LofApiService {
         return this.requestWithRetry(`/api/rankings?type=${type}&limit=${limit}`);
     }
 
+
+    // 6. 基金图表数据（近7日价格/净值曲线）
+    async getFundChart(code) {
+        return this.requestWithRetry(`/api/funds/${code}/chart`);
+    }
+
     // 5. 刷新数据
     async refreshData() {
         return this.requestWithRetry('/refresh', { method: 'POST' });
