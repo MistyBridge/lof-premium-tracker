@@ -257,7 +257,8 @@ class HistoryDB:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(
                     """
-                    SELECT s.code, s.premium_rate, s.price, s.nav, s.amount,
+                    SELECT s.date::TEXT AS date, s.code, s.premium_rate,
+                           s.price, s.nav, s.amount,
                            COALESCE(f.name, s.code) AS name
                     FROM premium_snapshots s
                     LEFT JOIN funds f ON s.code = f.code
@@ -346,7 +347,8 @@ class HistoryDB:
                 if code:
                     cur.execute(
                         """
-                        SELECT s.date, s.code, s.premium_rate, s.price, s.nav, s.amount,
+                        SELECT s.date::TEXT AS date, s.code, s.premium_rate,
+                               s.price, s.nav, s.amount,
                                COALESCE(f.name, s.code) AS name
                         FROM premium_snapshots s
                         LEFT JOIN funds f ON s.code = f.code
@@ -358,7 +360,8 @@ class HistoryDB:
                 else:
                     cur.execute(
                         """
-                        SELECT s.date, s.code, s.premium_rate, s.price, s.nav, s.amount,
+                        SELECT s.date::TEXT AS date, s.code, s.premium_rate,
+                               s.price, s.nav, s.amount,
                                COALESCE(f.name, s.code) AS name
                         FROM premium_snapshots s
                         LEFT JOIN funds f ON s.code = f.code
@@ -377,7 +380,7 @@ class HistoryDB:
         try:
             with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
                 cur.execute(
-                    "SELECT DISTINCT date FROM premium_snapshots ORDER BY date DESC LIMIT 7"
+                    "SELECT DISTINCT date::TEXT AS date FROM premium_snapshots ORDER BY date DESC LIMIT 7"
                 )
                 return [r["date"] for r in cur.fetchall()]
         finally:
