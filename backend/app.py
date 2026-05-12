@@ -73,10 +73,10 @@ def _is_suspended(fund: dict) -> bool:
     # 成交额为0 → 停牌（SSE 数据有 amount）
     if amt is not None and amt == 0:
         return True
-    # SZ 数据可能缺少 volume/amount，但 price=1.0 且无波动 → 停牌基金典型特征
+    # SZ 数据可能缺少 volume/amount，但 price≈1.0 且无波动 → 停牌基金典型特征
     price = fund.get("price", 0) or 0
     pct = fund.get("change_pct", 0) or 0
-    if price == 1.0 and pct == 0 and (vol is None or vol == 0):
+    if abs(price - 1.0) < 0.001 and pct == 0 and (vol is None or vol == 0):
         return True
     return False
 
@@ -116,7 +116,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         "can_purchase": fund.get("can_purchase"),  # 是否可申购（None=未知）
         "data_date": fund.get("_history_date"),     # 数据日期（历史回填时有值）
         # ── 推导字段 ──
-        "change_amount": round(change_pct / 100 * nav, 4) if (nav and nav > 0) else None,
+        "change_amount": round(change_pct / 100 * price, 4) if (price and price > 0) else None,
     }
 
     if detail:
