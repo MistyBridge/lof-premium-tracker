@@ -1,34 +1,55 @@
-# 金快查 — 全市场 LOF 基金实时折溢价监控系统
+# 金快查 — 全市场 LOF 基金实时折溢价监控系统 | LOF 套利助手
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-3.0.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Web%20%7C%20MiniProgram-green.svg)
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Platform](https://img.shields.io/badge/platform-Web%20%7C%20MiniProgram%20%7C%20API-green.svg)
 ![License](https://img.shields.io/badge/license-AGPLv3-red.svg)
+![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 
-**全市场 ~540 只深沪 LOF 实时折溢价监控，套利收益一键计算**
+**全市场 ~540 只深沪 LOF 实时折溢价监控 · 套利收益一键计算 · 溢价率排行 · PC + 移动 + 小程序三端**
 
-[在线使用](https://lof-fund-monitor.pages.dev) · [技术文档](docs/TECH.md)
+[在线使用](https://lof-fund-monitor.pages.dev) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md) · [本地版](https://github.com/MistyBridge/get-lof-test)
 
 </div>
 
-> 本项目基于 GNU AGPLv3 开源协议开放源码，仅供个人学习、非商业场景免费使用。
-> 任何企业、组织机构及个人，凡用于商业运营、私有化部署、二次修改后集成至商业产品及服务，均须提前获得作者书面授权许可，未经授权禁止使用、分发与商用。
+---
+
+## 这是什么？
+
+金快查是一款专注 **LOF 基金折溢价监控** 的开源工具，面向个人投资者与量化爱好者，提供全市场 LOF 基金的 **实时溢价率、折价率、成交额、预计套利收益** 等核心指标。支持 PC 网页、移动端 H5、微信小程序三种访问方式，覆盖 **LOF 套利全流程** 从数据发现到收益测算。
+
+> **LOF 基金**（Listed Open-Ended Fund，上市型开放式基金）同时存在场内交易价格和场外基金净值，二者偏差即为折溢价。当溢价率足够覆盖交易成本时，投资者可通过 **申购→卖出** 或 **买入→赎回** 进行套利操作。
 
 ---
 
-## 功能特性
+## 核心功能
 
-- **全市场覆盖** — 深沪两市全部 LOF 基金（~540 只），含深市代码每周自动扫描更新
-- **实时溢价监控** — 溢价率、三日均溢、涨跌幅、成交额一目了然
-- **套利收益计算** — 自动扣除申购/赎回/佣金费率，计算预计收益率与收益额
-- **基金详情弹窗** — 12 项 KPI 指标 + 7 交易日价格/净值双线图表（Chart.js）
-- **费率明细** — 溢价/折价套利费用拆解，含最低佣金识别
-- **双模式切换** — 移动端溢价模式（高→低）与折价模式（低→高）一键切换
-- **套利流程引导** — 内置溢价/折价套利全流程说明与风险提示
-- **暗色模式** — 自适应系统偏好，手动切换持久化
-- **响应式设计** — PC 表格布局 + 移动端卡片布局，适配所有屏幕
-- **多端支持** — Web 端（PC + 移动）+ 微信小程序
+### 数据监控
+| 功能 | 说明 |
+|------|------|
+| 全市场覆盖 | 深沪两市全部 LOF 基金（~540 只），深市代码每周自动扫描更新 |
+| 实时溢价率 | 场内价格 vs 场外净值实时对比，溢价/折价一目了然 |
+| 三日均溢 | 近 3 个交易日平均溢价率，过滤短期噪音，发现稳定套利标的 |
+| 涨跌幅 & 成交额 | 当日涨跌幅 + 实时成交额，辅助判断流动性与市场情绪 |
+| 净值类型标注 | 区分「正式净值」（盘后公布）与「估算净值」（盘中实时），明确数据可靠程度 |
+
+### 套利分析
+| 功能 | 说明 |
+|------|------|
+| 预计收益率 | 自动扣除申购费率 + 赎回费率 + 券商佣金，输出净收益率 |
+| 预计收益额 | 结合投入金额上限与基金申购限额，计算实际预期收益 |
+| 费率明细拆解 | 溢价/折价套利各环节费用逐项展示，识别最低佣金门槛 |
+| 套利流程引导 | 内置溢价套利（申购→卖出）与折价套利（买入→赎回）全流程说明 |
+
+### 体验设计
+| 功能 | 说明 |
+|------|------|
+| 暗色模式 | 手动切换，偏好自动持久化 |
+| 响应式布局 | PC 端表格式数据看板 + 移动端卡片式信息流 |
+| 多端支持 | Web 网页 + 移动端 H5 + 微信小程序，数据实时同步 |
+| 基金详情弹窗 | 12 项 KPI 指标 + 7 交易日价格/净值双线 Chart.js 图表 |
+| 个性化筛选 | 自定义溢价率阈值、三日均溢阈值、成交额门槛、佣金参数 |
 
 ---
 
@@ -36,35 +57,40 @@
 
 ```
 lof-premium-tracker/
-├── index.html                 # Web 前端入口（单页应用）
+├── index.html                 # Web 前端入口（单页 SPA）
 ├── css/style.css              # 全局样式（暗色模式 + 响应式）
 ├── js/
-│   ├── config.js              # 运行配置（API 地址、分页等）
-│   ├── api.js                 # 网络层（请求封装、重试、健康检查）
-│   └── app.js                 # 业务逻辑（渲染、排序、筛选、弹窗、Chart）
+│   ├── config.js              # 环境配置（API 地址、刷新间隔等）
+│   ├── api.js                 # 网络层（请求封装、自动重试、超时处理）
+│   └── app.js                 # 业务逻辑（排序、筛选、弹窗、Chart.js 图表）
 ├── assets/icon.jpg            # 品牌图标
 ├── pages/
 │   ├── agreement.html         # 用户协议
 │   └── privacy.html           # 隐私政策
 ├── functions/                 # Cloudflare Functions 代理层
-│   ├── api/[[path]].js        # /api/* → Railway 代理
+│   ├── api/[[path]].js        # /api/* → Railway 后端代理
 │   └── health.js              # /health 健康检查代理
-├── backend/                   # Flask 后端
-│   ├── app.py                 # API 路由（6 个端点）
+├── backend/                   # Flask 后端服务
+│   ├── app.py                 # API 路由（6 个 REST 端点）
 │   ├── config.py              # 配置常量
-│   ├── data_fetcher.py        # 多数据源抓取引擎（~800 行）
-│   ├── fee_fetcher.py         # 费率爬虫
-│   ├── history_fetcher.py     # 历史 K 线 + 净值抓取
-│   ├── history_db.py          # PostgreSQL 读写 + 清理
-│   ├── sz_lof_codes.json      # 深市 LOF 代码缓存（每周自刷新）
-│   └── requirements.txt       # Python 依赖
-├── miniprogram/               # 微信小程序
+│   ├── data_fetcher.py        # 多数据源聚合引擎
+│   ├── fee_fetcher.py         # 基金费率爬虫（申购/赎回费率）
+│   ├── history_fetcher.py     # 历史 K 线 + 净值数据抓取
+│   ├── history_db.py          # PostgreSQL 历史数据读写 + 自动清理
+│   ├── datasource/            # 数据源适配层（东方财富/天天基金/akshare）
+│   ├── sz_lof_codes.json      # 深市 LOF 代码缓存（每周自动刷新）
+│   └── requirements.txt       # Python 后端依赖
+├── miniprogram/               # 微信小程序源码
+│   ├── pages/index/           # 列表页（基金列表 + 排行榜）
+│   ├── pages/detail/          # 详情页
+│   └── utils/                 # 工具函数
 ├── docs/
-│   ├── TECH.md                # 详细技术文档
-│   └── DEVELOPMENT.md         # 开发指南
+│   ├── TECH.md                # 技术架构文档
+│   └── DEVELOPMENT.md         # 本地开发指南
 ├── railway.json               # Railway 部署配置
 ├── wrangler.toml              # Cloudflare Pages 配置
-└── requirements.txt           # Railway 构建依赖
+├── requirements.txt           # Railway 构建依赖
+└── LICENSE                    # GNU AGPL v3.0
 ```
 
 ---
@@ -72,48 +98,55 @@ lof-premium-tracker/
 ## 部署架构
 
 ```
-浏览器 ──→ Cloudflare Pages (静态文件)
-         ──→ CF Functions (/api/* 代理)
-                └──→ Railway (Flask + Gunicorn)
-                       └──→ PostgreSQL (premium_snapshots)
+用户浏览器 ──→ Cloudflare Pages (静态资源 CDN 分发)
+                   │
+                   └──→ CF Functions (/api/* 反向代理)
+                            │
+                            └──→ Railway (Flask + Gunicorn)
+                                     │
+                                     ├──→ PostgreSQL (历史快照存储)
+                                     └──→ 数据源 (东方财富 / 天天基金 / 腾讯行情)
 ```
 
-| 层 | 平台 | 技术 |
-|---|------|------|
-| 前端 | Cloudflare Pages | HTML5 + CSS3 + Vanilla JS + Chart.js |
-| 代理 | Cloudflare Functions | JavaScript |
-| 后端 | Railway | Python Flask + Gunicorn |
-| 数据库 | Railway PostgreSQL | PostgreSQL |
-| 数据源 | 东方财富 / 天天基金 / Tencent | push2delay / fundgz / qt |
+| 层级 | 平台 | 技术栈 | 职责 |
+|------|------|--------|------|
+| 前端 | Cloudflare Pages | HTML5 + CSS3 + Vanilla JS + Chart.js | 页面渲染、数据可视化、用户交互 |
+| 代理 | Cloudflare Functions | JavaScript (Service Worker) | 同源 API 代理，解决跨境网络访问 |
+| 后端 | Railway | Python Flask + Gunicorn | 数据聚合、缓存、API 服务 |
+| 数据库 | Railway PostgreSQL | PostgreSQL | 历史净值/价格快照，21 天滚动保留 |
+| 数据源 | 东方财富 / 天天基金 | push2delay / fundgz / qt | 实时行情、净值估算、基金元数据 |
 
 ---
 
 ## 快速开始
 
-### 在线使用
-访问 **[lof-fund-monitor.pages.dev](https://lof-fund-monitor.pages.dev)**
+### 在线使用（无需部署）
+
+访问 **[lof-fund-monitor.pages.dev](https://lof-fund-monitor.pages.dev)** 即可直接使用。
 
 ### 本地开发
 
 ```bash
-# 克隆
+# 克隆仓库
 git clone https://github.com/MistyBridge/lof-premium-tracker.git
 cd lof-premium-tracker
 
-# 前端（端口 8080）
+# 启动前端（端口 8080）
 py -m http.server 8080
-# 访问 http://localhost:8080?api=http://localhost:5000
 
-# 后端（端口 5000）
+# 启动后端（端口 5000，需新开终端）
 cd backend
 pip install -r requirements.txt
 flask run --port 5000
+
+# 浏览器访问
+# http://localhost:8080?api=http://localhost:5000
 ```
 
-### 部署
+### 生产部署
 
 ```bash
-# 前端
+# 前端 — Cloudflare Pages
 npx wrangler pages deploy . --project-name lof-fund-monitor --branch main
 
 # 后端 — 推送 GitHub 后 Railway 自动部署
@@ -124,34 +157,80 @@ git push origin main
 
 ## API 端点
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| `GET` | `/api/funds` | 全量基金列表（分页 + 排序 + 搜索 + 筛选） |
-| `GET` | `/api/funds/<code>` | 单只基金详情 |
-| `GET` | `/api/funds/<code>/chart` | 近 7 交易日价格/净值曲线 |
-| `GET` | `/health` | 服务健康状态 |
-| `POST` | `/refresh` | 手动触发全量刷新 |
-| `POST` | `/init-history` | 手动补填历史数据 |
+| 方法 | 路径 | 参数 | 说明 |
+|------|------|------|------|
+| `GET` | `/api/funds` | `page`, `page_size`, `sort`, `order`, `keyword`, `min_premium`, `min_amount` | 全量基金列表（分页 + 排序 + 搜索 + 多条件筛选） |
+| `GET` | `/api/funds/<code>` | — | 单只基金详情（含申购/赎回费率） |
+| `GET` | `/api/funds/<code>/chart` | — | 近 7 交易日价格/净值双线曲线数据 |
+| `GET` | `/health` | — | 服务健康检查（缓存状态、最后更新时间） |
+| `POST` | `/refresh` | — | 手动触发全量数据刷新 |
+| `POST` | `/init-history` | — | 手动补填历史快照数据 |
 
 ---
 
 ## 数据更新频率
 
-| 数据 | 频率 | 说明 |
-|------|------|------|
-| 场内价格 / 净值 / 溢价率 | 每 5 分钟 | 懒更新（用户访问触发） |
-| 深市 LOF 代码列表 | 每周 | 自动扫描 push2delay |
-| 历史 K 线 / 净值 | 每日 | 懒更新时自动保存快照 |
-| 历史数据保留 | 21 天 | 超期自动清理 |
+| 数据类型 | 更新频率 | 触发方式 |
+|----------|----------|----------|
+| 场内实时价格 / 净值 / 溢价率 | 每 5 分钟 | 用户访问时懒更新 |
+| 基金申购/赎回费率 | 按需 | 首次查看某基金时抓取并缓存 |
+| 深市 LOF 代码列表 | 每周 | 自动扫描 push2delay 全表 |
+| 历史 K 线 / 历史净值 | 每日 | 懒更新时自动保存当日快照 |
+| 历史数据保留期 | 21 天 | 超期数据自动清理 |
+
+---
+
+## 常见问题 (FAQ)
+
+<details>
+<summary><strong>LOF 基金溢价率怎么算？</strong></summary>
+溢价率 = (场内交易价格 − 场外基金净值) / 场外基金净值 × 100%。正值表示溢价（市价高于净值），负值表示折价（市价低于净值）。金快查自动拉取实时价格与最新净值，即时计算并展示。
+</details>
+
+<details>
+<summary><strong>LOF 套利怎么操作？风险是什么？</strong></summary>
+溢价套利：场内申购（按净值）→ T+2 到账 → 场内卖出（按市价），赚取溢价差价。折价套利：场内买入（按市价）→ T+1 赎回（按净值），赚取折价差价。主要风险在于 T+N 期间价格波动可能侵蚀套利空间，需确保溢价率覆盖申购费 + 佣金等交易成本。
+</details>
+
+<details>
+<summary><strong>什么是三日平均溢价率？有什么用？</strong></summary>
+三日均溢是近 3 个交易日溢价率的算术平均值。单日溢价率可能因短期波动失真，三日均溢可过滤噪音，帮助发现持续性折溢价机会，是判断套利标的稳定性的重要参考。
+</details>
+
+<details>
+<summary><strong>正式净值和估算净值有什么区别？</strong></summary>
+正式净值是基金公司每日收盘后公布的官方单位净值，准确但滞后；估算净值是盘中根据基金持仓实时推算的参考净值，及时但可能存在偏差。金快查在页面中明确标注净值类型，供用户判断数据可靠程度。
+</details>
+
+<details>
+<summary><strong>只需要前端/小程序代码怎么办？</strong></summary>
+如果只需要静态前端文件（无需后端），可使用 [金快查本地版](https://github.com/MistyBridge/get-lof-test) — 它包含完整的前端 + Cloudflare Functions 代理 + 微信小程序源码，可直接部署到 Cloudflare Pages 或 GitHub Pages。
+</details>
+
+---
+
+## 相关项目
+
+| 项目 | 说明 |
+|------|------|
+| [金快查本地版](https://github.com/MistyBridge/get-lof-test) | 纯前端 + 小程序版本，无需后端即可部署 |
+| [在线 Demo](https://lof-fund-monitor.pages.dev) | 生产环境在线实例 |
 
 ---
 
 ## 技术文档
 
-完整的架构设计、数据流、模块说明、配置常量等详见 **[技术文档 (TECH.md)](docs/TECH.md)**。
+完整的架构设计、数据流说明、模块详解、配置参数等详见：
+
+- **[技术文档 (TECH.md)](docs/TECH.md)** — 系统架构、数据源适配、数据库设计
+- **[开发指南 (DEVELOPMENT.md)](docs/DEVELOPMENT.md)** — 本地环境搭建、调试技巧、贡献指南
 
 ---
 
 ## License
 
-GNU AGPLv3 © 2026
+本项目基于 **GNU Affero General Public License v3.0 (AGPL-3.0)** 开源。
+
+> 仅供个人学习与非商业场景免费使用。任何企业、组织机构及个人用于商业运营、私有化部署、二次修改后集成至商业产品及服务，均须提前获得作者书面授权许可。
+
+Copyright © 2026 [MistyBridge](https://github.com/MistyBridge)
