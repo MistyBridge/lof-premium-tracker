@@ -178,12 +178,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* Settings Modal */
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-.modal-content { background: var(--card); border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); }
+.modal-content { background: var(--card); border-radius: 12px; width: 90%; max-width: 400px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .modal-header h3 { font-size: 1.1rem; margin: 0; }
 .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text2); cursor: pointer; }
 .modal-close:hover { color: var(--text); }
-.modal-body { padding: 20px; }
+.modal-body { padding: 20px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; font-size: 0.9rem; font-weight: 500; margin-bottom: 8px; }
 .input-with-unit { display: flex; align-items: center; gap: 8px; }
@@ -191,7 +191,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .input-with-unit input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
 .input-with-unit .unit { color: var(--text2); font-size: 0.9rem; }
 .form-hint { font-size: 0.8rem; color: var(--text2); margin-top: 6px; }
-.modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid var(--border); }
+.modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
 .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
 .btn-primary:hover { background: #357abd; }
 .btn-secondary { background: #f0f0f0; color: var(--text); border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
@@ -327,6 +327,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     .page-info { font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
     .page-size-select { display: none; }
     .footer { margin-top: 0; padding: 16px 12px; font-size: 0.75rem; }
+    /* Settings Modal - 移动端固定高度滑动式 */
+    .modal-content { width: 100%; max-width: 100%; height: 85vh; max-height: 85vh; border-radius: 16px 16px 0 0; margin-top: auto; }
+    .modal-overlay { align-items: flex-end; }
+    .modal-body { padding: 16px 20px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .modal-header { padding: 16px 20px; }
+    .modal-footer { padding: 12px 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { font-size: 0.85rem; }
+    .form-hint { font-size: 0.75rem; }
+    .input-with-unit input { padding: 10px 12px; font-size: 0.95rem; border-radius: 8px; }
+    .btn-primary, .btn-secondary { padding: 10px 24px; font-size: 0.9rem; border-radius: 8px; }
+    .modal-close { font-size: 1.6rem; padding: 4px 8px; }
 }
 
 @media (min-width: 769px) {
