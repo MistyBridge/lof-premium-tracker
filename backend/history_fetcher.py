@@ -133,6 +133,57 @@ def fetch_kline_data(session: requests.Session, code: str, beg_date: str, end_da
         return {}
 
 
+def fetch_kline_tencent(session: requests.Session, code: str) -> Dict[str, dict]:
+    """
+    腾讯QT K线API备源。返回格式同 fetch_kline_data。
+    """
+    prefix = "sh" if code.startswith(("501", "502")) else "sz"
+    url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={prefix}{code},day,,,400"
+    try:
+        resp = session.get(url, headers=_KLINE_HEADERS, timeout=10)
+        data = resp.json()
+        klines = (data.get("data") or {}).get(f"{prefix}{code}", {}).get("day", []) or \
+                 (data.get("data") or {}).get(f"{prefix}{code}", {}).get("qfqday", [])
+        if not klines:
+            return {}
+        result = {}
+        for line in klines:
+            if len(line) < 6:
+                continue
+            date = line[0]
+            price = _safe_float(line[2])  # close
+            amount = _safe_float(line[5]) * 100  # volume * 100 = 成交额(元)
+            change_pct = 0
+            if price <= 0:
+                continue
+            result[date] = {"price": price, "amount": amount, "change_pct": change_pct}
+        return result
+    except Exception as e:
+        logger.debug(f"Tencent K-line failed for {code}: {e}")
+        return {}
+
+
+def fetch_kline_multisource(session: requests.Session, code: str,
+                             beg_date: str, end_date: str) -> Dict[str, dict]:
+    """
+    多源K线数据抓取：依次尝试 EastMoney → 腾讯QT，返回第一个有数据的。
+    """
+    # Source 1: East Money push2his (primary, most complete)
+    result = fetch_kline_data(session, code, beg_date, end_date)
+    if result:
+        return result
+
+    # Source 2: Tencent QT (backup)
+    result = fetch_kline_tencent(session, code)
+    if result:
+        # Filter by date range
+        filtered = {d: v for d, v in result.items() if beg_date[:4] <= d[:4] <= end_date[:4]}
+        if filtered:
+            return filtered
+
+    return {}
+
+
 # ── 净值历史抓取 ──────────────────────────────────
 
 def fetch_nav_history(session: requests.Session, code: str, start_date: str, end_date: str) -> Dict[str, float]:
@@ -360,10 +411,15 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     total = len(all_codes)
     total_rows = 0
 
+    session_k = _make_session()
+
     for idx, code in enumerate(all_codes):
         try:
-            # 使用datasource manager（AkShare主源→Legacy后备，比直连更可靠）
-            kline = ds.fetch_kline(code, beg_ymd, end_ymd)
+            # 多源K线: EastMoney → Tencent → AkShare
+            kline = fetch_kline_multisource(session_k, code, beg_ymd, end_ymd)
+            if not kline:
+                # 多源都失败，尝试datasource manager作为最后手段
+                kline = ds.fetch_kline(code, beg_ymd, end_ymd)
             if not kline:
                 continue
             navs = ds.fetch_nav_history(code, beg_dash, end_dash)
