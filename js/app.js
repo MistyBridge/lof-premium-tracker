@@ -1046,7 +1046,7 @@ class LofFundMonitor {
                 scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tc } },
                     yPrice: { type: 'linear', display: true, position: 'left', grid: { color: gc }, min: 0, max: 1, ticks: { font: { size: 11 }, color: tc, callback: (v) => v.toFixed(3) } },
-                    yPrem: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false }, min: -5, max: 5, ticks: { font: { size: 11 }, color: '#52c41a', callback: (v) => v + '%' } },
+                    yPrem: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false }, min: -5, max: 5, ticks: { font: { size: 11 }, color: (ctx) => ctx.tick.value > 0 ? '#e74c3c' : ctx.tick.value < 0 ? '#27ae60' : tc, callback: (v) => v + '%' } },
                 },
             },
         });
@@ -1223,7 +1223,11 @@ class LofFundMonitor {
                     yPrem: {
                         type: 'linear', display: isPremMode, position: 'left',
                         grid: { color: gc }, min: -prMax, max: prMax,
-                        ticks: { font: { size: 11 }, color: '#52c41a', callback: (v) => v.toFixed(1) + '%' },
+                        ticks: {
+                            font: { size: 11 },
+                            color: (ctx) => ctx.tick.value > 0 ? '#e74c3c' : ctx.tick.value < 0 ? '#27ae60' : tc,
+                            callback: (v) => v.toFixed(1) + '%',
+                        },
                     },
                 },
             },
