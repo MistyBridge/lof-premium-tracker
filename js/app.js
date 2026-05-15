@@ -1333,8 +1333,10 @@ class LofFundMonitor {
         html += '<div class="arb-tooltip-sep"></div>';
         html += '<div class="arb-tooltip-title">' + titleText + '</div>';
 
-        if (bestProfit !== null) {
-            html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>' + bestLabel + ' 预计收益</span><span class="' + (bestProfit >= 0 ? 'arb-pos' : 'arb-neg') + '">' + (bestProfit >= 0 ? '+' : '') + bestProfit.toFixed(2) + '元</span></div>';
+        if (bestProfit !== null && bestProfit > 0) {
+            html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>' + bestLabel + ' 预计收益</span><span class="arb-pos">+' + bestProfit.toFixed(2) + '元</span></div>';
+        } else if (bestProfit !== null) {
+            html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>不建议操作</span><span class="arb-neg">无正收益机会</span></div>';
         } else {
             html += '<div class="arb-tooltip-row"><span>数据不足</span><span>缺少后续价格/净值</span></div>';
         }
