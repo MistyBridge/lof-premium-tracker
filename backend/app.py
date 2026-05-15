@@ -23,6 +23,7 @@ from config import Config
 from data_fetcher import get_fetcher
 from history_db import get_history_db, filter_and_forward_fill
 from chart_cache import get_chart_cache
+from task_queue import get_task_queue
 
 # ─────────────────────────────────────────────
 # 日志配置
@@ -183,6 +184,7 @@ def health():
         "history_dates": available_dates,
         "history_days": len(available_dates),
         "chart_cache": get_chart_cache().get_stats(),
+        "tasks": get_task_queue().get_stats(),
     })
 
 
@@ -226,32 +228,27 @@ def init_history():
 
 
 # ── 手动补填K线历史数据 ──
-_kline_fetching = False
-_kline_lock = threading.Lock()
-
 @app.route("/init-kline-history", methods=["POST"])
 def init_kline_history():
-    """手动触发365天K线历史数据补填（后台线程，避免gunicorn超时）"""
-    global _kline_fetching
-    with _kline_lock:
-        if _kline_fetching:
-            return ok({"status": "already_running", "tip": "K线数据补填已在后台运行中"})
-        _kline_fetching = True
+    """手动触发365天K线历史数据补填（任务队列调度）"""
+    tq = get_task_queue()
 
     def _do_kline_fetch():
-        global _kline_fetching
-        try:
-            from history_fetcher import fetch_kline_historical_data
-            rows = fetch_kline_historical_data()
-            logger.info(f"✅ K线数据补填完成: {rows} 行")
-        except Exception as e:
-            logger.error(f"K线数据补填失败: {e}")
-        finally:
-            _kline_fetching = False
+        from history_fetcher import fetch_kline_historical_data
+        return fetch_kline_historical_data()
 
-    t = threading.Thread(target=_do_kline_fetch, daemon=True)
-    t.start()
-    return ok({"status": "started", "tip": "K线数据补填已在后台启动，约需20-30分钟"})
+    task = tq.submit("kline_backfill", "K线历史数据补填", _do_kline_fetch)
+    if task.status.value == "running":
+        return ok({"status": "already_running", "task": task.to_dict()})
+    return ok({"status": "started", "task": task.to_dict()})
+
+
+# ── 任务状态查询 ──
+@app.route("/api/tasks", methods=["GET"])
+def list_tasks():
+    """查看后台任务状态"""
+    tq = get_task_queue()
+    return ok({"tasks": tq.get_stats()})
 
 
 # ─────────────────────────────────────────────────────────────────
