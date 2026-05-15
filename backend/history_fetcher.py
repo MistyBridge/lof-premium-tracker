@@ -328,8 +328,6 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     返回: 保存的总行数
     """
     from history_db import get_history_db
-    from datasource.manager import get_datasource_manager
-    ds = get_datasource_manager()
 
     end_dt = datetime.now()
     beg_dt = end_dt - timedelta(days=days_lookback)
@@ -358,15 +356,16 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     # ── 2. 多线程逐基金抓取 K 线 + 净值 ──
     all_rows = []  # [(date, code, price, nav, amount, change_pct, premium_rate), ...]
     rows_lock = threading.Lock()
-    sem = threading.Semaphore(8)
+    sem = threading.Semaphore(15)
     total = len(all_codes)
     processed = [0]
 
     def process_one(code: str):
         with sem:
             try:
-                kline = ds.fetch_kline(code, beg_ymd, end_ymd)
-                navs = ds.fetch_nav_history(code, beg_dash, end_dash)
+                # 直连东方财富API（跳过AkShare降级，速度快10倍+）
+                kline = fetch_kline_data(session, code, beg_ymd, end_ymd)
+                navs = fetch_nav_history(session, code, beg_dash, end_dash)
                 if not kline:
                     return
                 with rows_lock:
@@ -389,7 +388,7 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
                 if processed[0] % 50 == 0:
                     logger.info(f"Kline history progress: {processed[0]}/{total}")
 
-    batch_size = 40
+    batch_size = 60
     for i in range(0, total, batch_size):
         batch = all_codes[i:i + batch_size]
         threads = []
@@ -399,7 +398,7 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
             threads.append(t)
         for t in threads:
             t.join()
-        time.sleep(0.8)
+        time.sleep(0.2)
 
     logger.info(f"Kline history fetch complete: {processed[0]}/{total} funds")
 
