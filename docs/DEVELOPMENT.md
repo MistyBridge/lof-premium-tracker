@@ -51,7 +51,6 @@ lof-premium-tracker/
 │   ├── history_seed.json  # 种子数据（冷启动降级）
 │   ├── sz_lof_codes.json  # 深交所LOF代码缓存
 │   └── requirements.txt   # Python依赖
-├── miniprogram/            # 微信小程序（独立项目）
 ├── wrangler.toml           # CF Pages配置
 └── .github/workflows/      # GitHub Actions
 ```

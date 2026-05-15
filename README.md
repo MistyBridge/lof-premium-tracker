@@ -3,12 +3,12 @@
 <div align="center">
 
 ![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
-![Platform](https://img.shields.io/badge/platform-Web%20%7C%20MiniProgram%20%7C%20API-green.svg)
+![Platform](https://img.shields.io/badge/platform-Web%20%7C%20API-green.svg)
 ![License](https://img.shields.io/badge/license-AGPLv3-red.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 ![DB](https://img.shields.io/badge/data-396%2F538%20funds%20%7C%2097K%20rows-orange.svg)
 
-**全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利模拟回测 · 溢价率排行 · PC + 移动 + 小程序三端**
+**全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利模拟回测 · 溢价率排行 · PC + 移动端**
 
 [在线使用](https://lof-fund-monitor.pages.dev) · [更新日志](CHANGELOG_USER.md) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md) · [本地版](https://github.com/MistyBridge/get-lof-test)
 
@@ -18,7 +18,7 @@
 
 ## 这是什么？
 
-金快查是一款专注 **LOF 基金折溢价监控** 的开源工具，面向个人投资者与量化爱好者，提供全市场 LOF 基金的 **实时溢价率、折价率、成交额、预计套利收益** 等核心指标。支持 PC 网页、移动端 H5、微信小程序三种访问方式，覆盖 **LOF 套利全流程** 从数据发现到收益测算。
+金快查是一款专注 **LOF 基金折溢价监控** 的开源工具，面向个人投资者与量化爱好者，提供全市场 LOF 基金的 **实时溢价率、折价率、成交额、预计套利收益** 等核心指标。支持 PC 网页和移动端 H5 两种访问方式，覆盖 **LOF 套利全流程** 从数据发现到收益测算。
 
 > **LOF 基金**（Listed Open-Ended Fund，上市型开放式基金）同时存在场内交易价格和场外基金净值，二者偏差即为折溢价。当溢价率足够覆盖交易成本时，投资者可通过 **申购→卖出** 或 **买入→赎回** 进行套利操作。
 
@@ -48,7 +48,7 @@
 |------|------|
 | 暗色模式 | 手动切换，偏好自动持久化 |
 | 响应式布局 | PC 端表格式数据看板 + 移动端卡片式信息流 |
-| 多端支持 | Web 网页 + 移动端 H5 + 微信小程序，数据实时同步 |
+| 多端支持 | Web 网页 + 移动端 H5，响应式设计自适应屏幕 |
 | 基金详情弹窗 | 12 项 KPI 指标 + 7 交易日价格/净值双线 Chart.js 图表 |
 | 个性化筛选 | 自定义溢价率阈值、三日均溢阈值、成交额门槛、佣金参数 |
 
@@ -81,7 +81,7 @@ lof-premium-tracker/
 │   ├── datasource/            # 分级数据源适配层（AKShare 主源 + 东方财富/天天基金/腾讯后备）
 │   ├── sz_lof_codes.json      # 深市 LOF 代码缓存（每周自动刷新）
 │   └── requirements.txt       # Python 后端依赖
-├── miniprogram/               # 微信小程序源码
+
 │   ├── pages/index/           # 列表页（基金列表 + 排行榜）
 │   ├── pages/detail/          # 详情页
 │   └── utils/                 # 工具函数
@@ -234,18 +234,12 @@ git push origin main
 正式净值是基金公司每日收盘后公布的官方单位净值，准确但滞后；估算净值是盘中根据基金持仓实时推算的参考净值，及时但可能存在偏差。金快查在页面中明确标注净值类型，供用户判断数据可靠程度。
 </details>
 
-<details>
-<summary><strong>只需要前端/小程序代码怎么办？</strong></summary>
-如果只需要静态前端文件（无需后端），可使用 [金快查本地版](https://github.com/MistyBridge/get-lof-test) — 它包含完整的前端 + Cloudflare Functions 代理 + 微信小程序源码，可直接部署到 Cloudflare Pages 或 GitHub Pages。
-</details>
-
 ---
 
 ## 相关项目
 
 | 项目 | 说明 |
 |------|------|
-| [金快查本地版](https://github.com/MistyBridge/get-lof-test) | 纯前端 + 小程序版本，无需后端即可部署 |
 | [在线 Demo](https://lof-fund-monitor.pages.dev) | 生产环境在线实例 |
 
 ---

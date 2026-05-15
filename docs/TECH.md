@@ -2,7 +2,7 @@
 
 ## 一、项目概述
 
-金快查是一个 LOF（Listed Open-end Fund，上市型开放式基金）全市场实时折溢价监控系统，覆盖深沪两市全部 LOF 基金（~540 只），提供 Web 端与微信小程序双端访问，帮助投资者发现套利机会。
+金快查是一个 LOF（Listed Open-end Fund，上市型开放式基金）全市场实时折溢价监控系统，覆盖深沪两市全部 LOF 基金（~540 只），提供 Web 端响应式访问，帮助投资者发现套利机会。
 
 **生产地址**
 - 前端：`https://lof-fund-monitor.pages.dev`
@@ -340,9 +340,6 @@ premium_rate = (场内价格 - 场外净值) / 场外净值 × 100
 - 保留 21 天，自动清理过期数据
 - Railway 重启时从 PostgreSQL 恢复缓存
 
-### 6.6 小程序
-
-`miniprogram/` 目录包含微信小程序源码：
 - 首页：LOF 基金列表
 - 详情页：基金详情 + 套利计算器
 - 工具函数：`utils/format.js`（金额格式化）、`utils/request.js`（网络请求）
