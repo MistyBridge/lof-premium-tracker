@@ -594,6 +594,13 @@ class LofFundMonitor {
                 return;
             }
 
+            // 点击收益明细弹窗外部时关闭
+            const feeBreakdown = document.getElementById('fdFeeBreakdown');
+            if (feeBreakdown && feeBreakdown.classList.contains('show') &&
+                !e.target.closest('#fdFeeBreakdown') && !e.target.closest('#fdProfitHelp')) {
+                feeBreakdown.classList.remove('show');
+            }
+
                         // 关闭详情弹窗
             const closeBtn = e.target.closest('#fdCloseBtn');
             if (closeBtn) { this.closeFundDetail(); return; }

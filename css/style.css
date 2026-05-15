@@ -593,7 +593,7 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 
 .fd-profit-section {
     margin-top: 16px; background: linear-gradient(135deg, #f6f8fc, #eef2f7);
-    border-radius: 12px; padding: 16px;
+    border-radius: 12px; padding: 16px; position: relative;
 }
 .fd-profit-header {
     display: flex; align-items: center; gap: 8px;
@@ -611,10 +611,12 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-profit-help:hover { border-color: var(--primary); color: var(--primary); background: #e8f4ff; }
 
 .fd-fee-breakdown {
-    display: none; margin-top: 12px; padding-top: 12px;
-    border-top: 1px dashed var(--border);
+    display: none; position: absolute; z-index: 15; top: 100%; left: 0; right: 0; margin-top: 4px;
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 .fd-fee-breakdown.show { display: block; }
+.dark-mode .fd-fee-breakdown { background: #162d50; border-color: #334466; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
 .fd-fee-table { width: 100%; font-size: 0.82rem; border-collapse: collapse; }
 .fd-fee-table td { padding: 5px 0; }
 .fd-fee-label { color: var(--text2); }
