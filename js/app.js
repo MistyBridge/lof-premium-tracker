@@ -1254,7 +1254,7 @@ class LofFundMonitor {
             const el = document.createElement('div');
             el.id = 'fdArbTooltip';
             el.className = 'fd-arb-tooltip';
-            document.querySelector('.fd-chart-container')?.appendChild(el);
+            document.getElementById('fdPhase2')?.insertBefore(el, document.querySelector('.fd-chart-container'));
         }
         const el = document.getElementById('fdArbTooltip');
         if (!el) return;
@@ -1344,20 +1344,6 @@ class LofFundMonitor {
 
         el.innerHTML = html;
         el.style.display = 'block';
-
-        // Position tooltip
-        const chartRect = context.chart.canvas.getBoundingClientRect();
-        const containerRect = document.querySelector('.fd-chart-container')?.getBoundingClientRect();
-        if (containerRect) {
-            const left = ci.caretX;
-            const top = ci.caretY;
-            const ttW = el.offsetWidth || 260;
-            let x = left - ttW / 2;
-            if (x < 10) x = 10;
-            if (x + ttW > containerRect.width - 10) x = containerRect.width - ttW - 10;
-            el.style.left = x + 'px';
-            el.style.top = Math.max(0, top - el.offsetHeight - 15) + 'px';
-        }
     }
 
     _toggleFeeBreakdown() {
