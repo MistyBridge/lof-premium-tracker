@@ -36,8 +36,9 @@ KLIN_RETENTION_DAYS = 510  # 360个交易日 ≈ 504日历日 + 缓冲
 def filter_and_forward_fill(raw_rows: list) -> list:
     """
     过滤非法K线数据并前向填充。
-    - price <= 0 或 nav <= 0 → 用前一个有效日数据填充
+    - price <= 0 → 用前一个有效日数据填充（停牌/无交易）
     - 停牌检测: price 无变化且 amount == 0 → 前向填充
+    - NAV 为 0/None 不影响（允许只显示价格曲线）
     """
     if not raw_rows:
         return []
@@ -50,7 +51,8 @@ def filter_and_forward_fill(raw_rows: list) -> list:
         nav = float(row.get("nav") or 0)
         amount = float(row.get("amount") or 0)
 
-        if price <= 0 or nav <= 0:
+        # 只过滤价格无效的行（NAV可以为空——很多K线数据没有匹配的净值）
+        if price <= 0:
             if prev_valid is not None:
                 result.append({
                     "date": row["date"],
@@ -60,6 +62,7 @@ def filter_and_forward_fill(raw_rows: list) -> list:
                 })
             continue
 
+        # 停牌检测
         if prev_valid is not None:
             prev_price_raw = prev_valid.get("_raw_price", prev_valid["price"])
             if abs(price - prev_price_raw) < 0.001 and amount == 0:
@@ -76,7 +79,7 @@ def filter_and_forward_fill(raw_rows: list) -> list:
         entry = {
             "date": row["date"],
             "price": round(price, 4),
-            "nav": round(nav, 4),
+            "nav": round(nav, 4) if nav > 0 else None,
             "premium_rate": premium,
             "_raw_price": price,
         }
