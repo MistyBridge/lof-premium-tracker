@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 # 保留天数
 RETENTION_DAYS = 21
-KLIN_RETENTION_DAYS = 395  # 365个交易日 + 30天缓冲
+KLIN_RETENTION_DAYS = 510  # 360个交易日 ≈ 504日历日 + 缓冲
 
 
 class HistoryDB:
@@ -268,6 +268,7 @@ class HistoryDB:
             self._pool.putconn(conn)
 
         self._cleanup()
+        self._cleanup_kline()
 
     def get_snapshot_by_date(self, date: str) -> List[dict]:
         """获取某一天的所有快照数据（含基金名称，用于缓存初始化）"""
