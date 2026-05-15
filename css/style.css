@@ -645,7 +645,7 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 /* Arbitrage tooltip */
 .fd-arb-tooltip {
     position: absolute; z-index: 10; pointer-events: none;
-    top: -60px; left: 10px; right: 10px;
+    bottom: 100%; left: 10px; right: 10px; margin-bottom: 8px;
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     padding: 10px 14px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12); font-size: 0.78rem;
