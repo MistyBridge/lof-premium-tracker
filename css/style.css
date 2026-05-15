@@ -521,6 +521,23 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 }
 @keyframes fd-fadein { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+/* 基金详情弹窗滚动条 */
+.fund-detail-modal::-webkit-scrollbar { width: 6px; }
+.fund-detail-modal::-webkit-scrollbar-track { background: transparent; border-radius: 3px; }
+.fund-detail-modal::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 3px; }
+.fund-detail-modal::-webkit-scrollbar-thumb:hover { background: #909399; }
+.dark-mode .fund-detail-modal::-webkit-scrollbar-thumb { background: #3a4a6a; }
+.dark-mode .fund-detail-modal::-webkit-scrollbar-thumb:hover { background: #556688; }
+
+/* 全局滚动条 */
+body::-webkit-scrollbar { width: 8px; }
+body::-webkit-scrollbar-track { background: var(--bg); }
+body::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 4px; }
+body::-webkit-scrollbar-thumb:hover { background: #909399; }
+.dark-mode body::-webkit-scrollbar-track { background: #0d1b2e; }
+.dark-mode body::-webkit-scrollbar-thumb { background: #2a3f5f; }
+.dark-mode body::-webkit-scrollbar-thumb:hover { background: #3d5a80; }
+
 .fd-header {
     display: flex; justify-content: space-between; align-items: center;
     padding: 20px 24px; border-bottom: 1px solid var(--border);
