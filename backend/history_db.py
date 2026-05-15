@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 # 保留天数
 RETENTION_DAYS = 21
-KLIN_RETENTION_DAYS = 510  # 360个交易日 ≈ 504日历日 + 缓冲
+KLIN_RETENTION_DAYS = 365  # 日线数据保留365自然日，每基金每天最多1条
 
 
 def filter_and_forward_fill(raw_rows: list) -> list:
@@ -318,8 +318,41 @@ class HistoryDB:
                     snap_rows,
                     page_size=500,
                 )
+                # 同步写入 daily_kline（每基金每天仅一条，作为日线数据）
+                kline_rows = []
+                for code, fund in funds.items():
+                    if fund.get("premium_rate") is None:
+                        continue
+                    kline_rows.append((
+                        snapshot_date,
+                        code,
+                        fund.get("price"),
+                        fund.get("nav"),
+                        fund.get("amount") or 0,
+                        fund.get("change_pct") or 0,
+                        fund.get("premium_rate"),
+                    ))
+                if kline_rows:
+                    psycopg2.extras.execute_values(
+                        cur,
+                        """
+                        INSERT INTO daily_kline
+                            (date, code, price, nav, amount, change_pct, premium_rate)
+                        VALUES %s
+                        ON CONFLICT (date, code) DO UPDATE SET
+                            price        = EXCLUDED.price,
+                            nav          = EXCLUDED.nav,
+                            amount       = EXCLUDED.amount,
+                            change_pct   = EXCLUDED.change_pct,
+                            premium_rate = EXCLUDED.premium_rate,
+                            created_at   = NOW()
+                        """,
+                        kline_rows,
+                        page_size=500,
+                    )
             conn.commit()
-            logger.info("Saved snapshot for %s: %d funds", snapshot_date, len(snap_rows))
+            logger.info("Saved snapshot for %s: %d funds (+daily_kline)",
+                         snapshot_date, len(snap_rows))
         except Exception as e:
             logger.error("Failed to save snapshot: %s", e)
             conn.rollback()
