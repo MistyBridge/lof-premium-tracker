@@ -354,18 +354,19 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     logger.info(f"Kline history: {len(all_codes)} codes (SZ:{len(sz_codes)} SH:{len(sse_codes)})")
 
     # ── 2. 流式逐基金抓取 + 即时保存 ──
+    from datasource.manager import get_datasource_manager
+    ds = get_datasource_manager()
     hdb = get_history_db()
     total = len(all_codes)
     total_rows = 0
-    session2 = _make_session()  # NAV用独立session避免连接池冲突
 
     for idx, code in enumerate(all_codes):
         try:
-            # 逐只基金请求，避免并发触发API限流
-            kline = fetch_kline_data(session, code, beg_ymd, end_ymd)
+            # 使用datasource manager（AkShare主源→Legacy后备，比直连更可靠）
+            kline = ds.fetch_kline(code, beg_ymd, end_ymd)
             if not kline:
                 continue
-            navs = fetch_nav_history(session2, code, beg_dash, end_dash)
+            navs = ds.fetch_nav_history(code, beg_dash, end_dash)
             rows = []
             for date_str, info in kline.items():
                 nav = navs.get(date_str)
