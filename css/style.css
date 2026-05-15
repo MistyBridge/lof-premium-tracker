@@ -591,8 +591,6 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-kpi-value.fd-change-down { color: var(--neg); }
 .fd-code-name { cursor: pointer; user-select: all; transition: color 0.15s; }
 .fd-code-name:hover { color: var(--primary); }
-.fd-copy-hint { font-size: 0.65rem; color: transparent; margin-left: 4px; transition: color 0.2s; user-select: none; }
-.fd-kpi-item:hover .fd-copy-hint { color: var(--text2); opacity: 0.5; }
 
 .fd-profit-section {
     margin-top: 16px; background: linear-gradient(135deg, #f6f8fc, #eef2f7);
