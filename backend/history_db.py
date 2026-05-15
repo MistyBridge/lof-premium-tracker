@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 # 保留天数
 RETENTION_DAYS = 21
+KLIN_RETENTION_DAYS = 395  # 365个交易日 + 30天缓冲
 
 
 class HistoryDB:
@@ -114,6 +115,24 @@ class HistoryDB:
         cur.execute("""
             CREATE INDEX IF NOT EXISTS idx_snap_code_date
                 ON premium_snapshots (code, date DESC)
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS daily_kline (
+                date         DATE         NOT NULL,
+                code         VARCHAR(6)   NOT NULL
+                             REFERENCES funds(code) ON DELETE CASCADE,
+                price        NUMERIC(12,4),
+                nav          NUMERIC(12,4),
+                amount       NUMERIC(16,2) DEFAULT 0,
+                change_pct   NUMERIC(10,4) DEFAULT 0,
+                premium_rate NUMERIC(10,4),
+                created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+                PRIMARY KEY (date, code)
+            )
+        """)
+        cur.execute("""
+            CREATE INDEX IF NOT EXISTS idx_kline_code_date
+                ON daily_kline (code, date DESC)
         """)
 
     def _migrate_schema(self, cur):
@@ -429,6 +448,98 @@ class HistoryDB:
             return round(sum(float(e["premium_rate"]) for e in entries) / len(entries), 3)
 
         return round(total_weighted / total_amount, 3)
+
+    # ── Daily K-line Methods ────────────────────────
+
+    def save_kline_batch(self, rows: List[tuple]):
+        """
+        批量 upsert 日K线数据
+        rows: [(date, code, price, nav, amount, change_pct, premium_rate), ...]
+        """
+        if not rows:
+            return
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                psycopg2.extras.execute_values(
+                    cur,
+                    """
+                    INSERT INTO daily_kline
+                        (date, code, price, nav, amount, change_pct, premium_rate)
+                    VALUES %s
+                    ON CONFLICT (date, code) DO UPDATE SET
+                        price        = EXCLUDED.price,
+                        nav          = EXCLUDED.nav,
+                        amount       = EXCLUDED.amount,
+                        change_pct   = EXCLUDED.change_pct,
+                        premium_rate = EXCLUDED.premium_rate,
+                        created_at   = NOW()
+                    """,
+                    rows,
+                    page_size=500,
+                )
+            conn.commit()
+            logger.info("Saved %d kline rows", len(rows))
+        except Exception as e:
+            logger.error("Failed to save kline batch: %s", e)
+            conn.rollback()
+        finally:
+            self._pool.putconn(conn)
+        self._cleanup_kline()
+
+    def get_kline_history(self, code: str, days: int = 365) -> list:
+        """
+        获取基金日K线历史数据（按日期升序），无数据时回退到 premium_snapshots
+        """
+        cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute(
+                    """
+                    SELECT date::TEXT AS date, price, nav, amount,
+                           change_pct, premium_rate
+                    FROM daily_kline
+                    WHERE code = %s AND date >= %s
+                    ORDER BY date ASC
+                    """,
+                    (code, cutoff)
+                )
+                rows = [dict(r) for r in cur.fetchall()]
+                if rows:
+                    return rows
+                # 回退到 premium_snapshots（尚未拉取K线数据的基金）
+                cur.execute(
+                    """
+                    SELECT date::TEXT AS date, price, nav, amount,
+                           premium_rate
+                    FROM premium_snapshots
+                    WHERE code = %s AND date >= %s
+                    ORDER BY date ASC
+                    """,
+                    (code, cutoff)
+                )
+                return [dict(r) for r in cur.fetchall()]
+        finally:
+            self._pool.putconn(conn)
+
+    def _cleanup_kline(self):
+        """清理超过 KLIN_RETENTION_DAYS 的K线数据"""
+        cutoff = (datetime.now() - timedelta(days=KLIN_RETENTION_DAYS)).strftime("%Y-%m-%d")
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "DELETE FROM daily_kline WHERE date < %s", (cutoff,)
+                )
+                if cur.rowcount > 0:
+                    conn.commit()
+                    logger.info("Cleaned up %d kline rows older than %s", cur.rowcount, cutoff)
+        except Exception as e:
+            logger.error("Kline cleanup failed: %s", e)
+            conn.rollback()
+        finally:
+            self._pool.putconn(conn)
 
 
 # ── Singleton ─────────────────────────────────────

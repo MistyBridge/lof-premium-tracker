@@ -172,6 +172,26 @@
   color: #999;
 }
 
+.purchase-limit-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-top: 20rpx; margin-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+.purchase-limit-row .label { font-size: 24rpx; color: #999; }
+.purchase-limit-row .value { font-size: 28rpx; color: #333; font-weight: 500; }
+
+/* Chart */
+.chart-card { padding-bottom: 20rpx; }
+.chart-range { display: flex; gap: 12rpx; justify-content: center; margin-bottom: 16rpx; }
+.range-btn { padding: 8rpx 32rpx; border: 1rpx solid #d9d9d9; border-radius: 32rpx; font-size: 24rpx; color: #666; background: #fff; }
+.range-btn.active { background: #1890ff; color: #fff; border-color: #1890ff; }
+.chart-legend { display: flex; gap: 30rpx; justify-content: center; margin-bottom: 16rpx; font-size: 22rpx; color: #666; }
+.legend-item { display: flex; align-items: center; gap: 8rpx; }
+.legend-dot { width: 16rpx; height: 16rpx; border-radius: 50%; }
+.legend-dot--price { background: #ff7a45; }
+.legend-dot--nav { background: #40a9ff; }
+.detail-chart { width: 100%; }
+
 .tip-card {
   background: #fffbe6;
   border: 1rpx solid #ffe58f;

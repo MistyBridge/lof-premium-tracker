@@ -565,6 +565,20 @@ class LofFundMonitor {
                 this._showChartInfoTip(infoIcon.dataset.tip);
                 return;
             }
+            // 图表时间范围切换按钮
+            const rangeBtn = e.target.closest('.fd-range-btn');
+            if (rangeBtn) {
+                e.stopPropagation();
+                const days = parseInt(rangeBtn.dataset.days);
+                if (days && days !== this._detailDays && this._detailFundCode) {
+                    this._detailDays = days;
+                    document.querySelectorAll('.fd-range-btn').forEach(b => {
+                        b.classList.toggle('active', parseInt(b.dataset.days) === days);
+                    });
+                    this._loadDetailChart(this._detailFundCode);
+                }
+                return;
+            }
             // 详情弹窗内代码/名称点击 → 复制文本 (Change 6)
             const detailCopy = e.target.closest('[data-copy]');
             if (detailCopy) {
@@ -969,6 +983,13 @@ class LofFundMonitor {
         phase2.style.display = 'none';
         phase2.classList.remove('visible');
 
+        this._detailDays = 7;
+        this._detailFundCode = code;
+        // 重置时间范围按钮状态
+        document.querySelectorAll('.fd-range-btn').forEach(b => {
+            b.classList.toggle('active', parseInt(b.dataset.days) === 7);
+        });
+
         if (this._detailChart) {
             this._detailChart.destroy();
             this._detailChart = null;
@@ -980,21 +1001,36 @@ class LofFundMonitor {
             skeleton.classList.remove('show');
             phase1.classList.remove('hidden');
 
-            api.getFundChart(code).then(chartResult => {
-                const chartData = chartResult.data?.chart || [];
-                if (chartData.length > 0) {
-                    phase2.style.display = 'block';
-                    requestAnimationFrame(() => {
-                        phase2.classList.add('visible');
-                        this._renderDetailChart(chartData);
-                    });
-                }
-            }).catch(() => {});
+            this._loadDetailChart(code);
         }).catch(err => {
             console.error('[LOF] 基金详情加载失败:', err);
             this.showToast('详情加载失败: ' + err.message);
         });
+    }
 
+    _loadDetailChart(code) {
+        const days = this._detailDays || 7;
+        const phase2 = document.getElementById('fdPhase2');
+        if (!phase2) return;
+
+        if (this._detailChart) {
+            this._detailChart.destroy();
+            this._detailChart = null;
+        }
+
+        phase2.style.display = 'none';
+        phase2.classList.remove('visible');
+
+        api.getFundChart(code, days).then(chartResult => {
+            const chartData = chartResult.data?.chart || [];
+            if (chartData.length > 0) {
+                phase2.style.display = 'block';
+                requestAnimationFrame(() => {
+                    phase2.classList.add('visible');
+                    this._renderDetailChart(chartData);
+                });
+            }
+        }).catch(() => {});
     }
     _populateDetailKpi(fund) {
         const setVal = (id, text, cls) => {
@@ -1044,6 +1080,22 @@ class LofFundMonitor {
         setVal('fdEstProfitAmount', est ? (est.amount > 0 ? '+' : '') + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元') : '--',
             est ? (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '') : '');
         setVal('fdStatus', fund.premium_status || '未知');
+
+        // 申购限额
+        const limitEl = document.getElementById('fdPurchaseLimit');
+        if (limitEl) {
+            if (fund.can_purchase === false) {
+                limitEl.parentElement.style.display = 'none';
+            } else {
+                limitEl.parentElement.style.display = '';
+                if (fund.purchase_limit != null && fund.purchase_limit > 0) {
+                    limitEl.textContent = (fund.purchase_limit / 10000).toFixed(0) + '万';
+                } else {
+                    limitEl.textContent = '不限额';
+                }
+            }
+        }
+
         setVal('fdNavDate', fund.nav_date || '-');
 
         this._detailEstProfit = est;
@@ -1091,6 +1143,9 @@ class LofFundMonitor {
         const isDark = this.darkMode === 'dark';
         const textColor = isDark ? '#8899aa' : '#666';
         const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        const isYearly = chartData.length > 60;
+        const pointR = isYearly ? 0 : 4;
+        const tickLimit = isYearly ? 15 : chartData.length;
         this._detailChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -1102,7 +1157,7 @@ class LofFundMonitor {
                         borderColor: '#ff7a45',
                         backgroundColor: 'rgba(255, 122, 69, 0.08)',
                         borderWidth: 2,
-                        pointRadius: 4,
+                        pointRadius: pointR,
                         pointBackgroundColor: '#ff7a45',
                         tension: 0.2,
                         fill: false,
@@ -1113,7 +1168,7 @@ class LofFundMonitor {
                         borderColor: '#40a9ff',
                         backgroundColor: 'rgba(64, 169, 255, 0.08)',
                         borderWidth: 2,
-                        pointRadius: 4,
+                        pointRadius: pointR,
                         pointBackgroundColor: '#40a9ff',
                         tension: 0.2,
                         fill: false,
@@ -1135,7 +1190,7 @@ class LofFundMonitor {
                 scales: {
                     x: {
                         grid: { display: false },
-                        ticks: { font: { size: 11 }, color: textColor },
+                        ticks: { font: { size: 11 }, color: textColor, maxTicksLimit: tickLimit, autoSkip: true },
                     },
                     y: {
 grid: { color: gridColor },

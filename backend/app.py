@@ -132,6 +132,65 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
     return result
 
 
+def _filter_and_forward_fill(raw_rows: list) -> list:
+    """
+    过滤非法K线数据并前向填充。
+    - price <= 0 或 nav <= 0 → 用前一个有效日数据填充
+    - 停牌检测: price 无变化且 amount == 0 → 前向填充
+    - 保留原始日期标签，数据值使用前一个有效日的值
+    """
+    if not raw_rows:
+        return []
+
+    result = []
+    prev_valid = None
+
+    for row in raw_rows:
+        price = float(row.get("price") or 0)
+        nav = float(row.get("nav") or 0)
+        amount = float(row.get("amount") or 0)
+
+        # 基本合法性检查
+        if price <= 0 or nav <= 0:
+            if prev_valid is not None:
+                result.append({
+                    "date": row["date"],
+                    "price": prev_valid["price"],
+                    "nav": prev_valid["nav"],
+                    "premium_rate": prev_valid["premium_rate"],
+                })
+            continue
+
+        # 停牌检测: 价格无变化且无成交
+        if prev_valid is not None:
+            prev_price_raw = prev_valid.get("_raw_price", prev_valid["price"])
+            if abs(price - prev_price_raw) < 0.001 and amount == 0:
+                result.append({
+                    "date": row["date"],
+                    "price": prev_valid["price"],
+                    "nav": prev_valid["nav"],
+                    "premium_rate": prev_valid["premium_rate"],
+                })
+                continue
+
+        premium = float(row.get("premium_rate") or 0) if row.get("premium_rate") is not None else None
+
+        entry = {
+            "date": row["date"],
+            "price": round(price, 4),
+            "nav": round(nav, 4),
+            "premium_rate": premium,
+            "_raw_price": price,
+        }
+        result.append(entry)
+        prev_valid = entry
+
+    for entry in result:
+        entry.pop("_raw_price", None)
+
+    return result
+
+
 # ══════════════════════════════════════════════════════════════════
 # Web 前端静态文件服务
 # ══════════════════════════════════════════════════════════════════
@@ -220,6 +279,18 @@ def init_history():
         return ok({"rows": rows, "dates": hdb.get_available_dates(), "cache_count": len(f.get_all())})
     except Exception as e:
         return err_resp(f"历史数据补填失败: {e}", code=11, status=500)
+
+
+# ── 手动补填K线历史数据 ──
+@app.route("/init-kline-history", methods=["POST"])
+def init_kline_history():
+    """手动触发365天K线历史数据补填（价格+净值）"""
+    try:
+        from history_fetcher import fetch_kline_historical_data
+        rows = fetch_kline_historical_data()
+        return ok({"rows": rows})
+    except Exception as e:
+        return err_resp(f"K线历史数据补填失败: {e}", code=12, status=500)
 
 
 # ─────────────────────────────────────────────────────────────────
@@ -355,23 +426,26 @@ def fund_detail(code: str):
 
 @app.route("/api/funds/<code>/chart", methods=["GET"])
 def fund_chart(code: str):
-    """近7个交易日场内价格和场外净值曲线数据"""
+    """获取基金历史价格/净值曲线数据，支持 7/30/365 日"""
     f = get_fetcher()
     fund = f.get_one(code)
     if not fund:
         return err_resp(f"未找到基金: {code}", code=7, status=404)
+
+    try:
+        days = min(365, max(7, int(request.args.get("days", 7))))
+    except ValueError:
+        days = 7
+
     hdb = get_history_db()
-    history = hdb.get_history(code=code, days=21)
-    history.sort(key=lambda x: x["date"])
+    raw = hdb.get_kline_history(code=code, days=days)
+    filtered = _filter_and_forward_fill(raw)
+
     return ok({
         "code": code,
         "name": fund.get("name"),
-        "chart": [{
-            "date": h["date"],
-            "price": h["price"],
-            "nav": h["nav"],
-            "premium_rate": h["premium_rate"],
-        } for h in history],
+        "days": days,
+        "chart": filtered,
     })
 
 # 接口3: GET /api/rankings
@@ -623,6 +697,32 @@ def _startup_init():
 # 启动后台初始化线程（gunicorn导入模块时自动触发）
 _init_thread = threading.Thread(target=_startup_init, daemon=True)
 _init_thread.start()
+
+
+def _seed_kline_data():
+    """后台: 检查 daily_kline 是否为空，若为空则自动播种365天K线数据"""
+    hdb = get_history_db()
+    conn = hdb._pool.getconn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM daily_kline")
+            count = cur.fetchone()[0]
+    except Exception:
+        count = 0
+    finally:
+        hdb._pool.putconn(conn)
+    if count == 0:
+        logger.info("📦 daily_kline 为空，启动后台K线数据播种（约需20-30分钟，服务正常运行）...")
+        try:
+            from history_fetcher import fetch_kline_historical_data
+            rows = fetch_kline_historical_data()
+            logger.info(f"✅ K线数据播种完成: {rows} 行")
+        except Exception as e:
+            logger.warning(f"⚠️ K线数据播种失败（非致命）: {e}")
+
+
+_kline_seed_thread = threading.Thread(target=_seed_kline_data, daemon=True)
+_kline_seed_thread.start()
 
 
 # ══════════════════════════════════════════════════════════════════

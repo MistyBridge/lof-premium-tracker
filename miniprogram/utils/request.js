@@ -67,4 +67,7 @@ module.exports = {
     request('/api/rankings', { type: 'discount', limit }),
   // 手动刷新数据
   refresh: () => request('/refresh', {}, 'POST'),
+  // 基金图表数据（支持 7/30/365 日）
+  getFundChart: (code, days = 7) =>
+    request(`/api/funds/${code}/chart`, { days }),
 };

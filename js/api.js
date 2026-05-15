@@ -106,9 +106,9 @@ class LofApiService {
     }
 
 
-    // 6. 基金图表数据（近7日价格/净值曲线）
-    async getFundChart(code) {
-        return this.requestWithRetry(`/api/funds/${code}/chart`);
+    // 6. 基金图表数据（支持 7/30/365 日）
+    async getFundChart(code, days = 7) {
+        return this.requestWithRetry(`/api/funds/${code}/chart?days=${days}`);
     }
 
     // 5. 刷新数据

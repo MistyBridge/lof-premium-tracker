@@ -59,6 +59,37 @@
         <text class="premium-label">{{fund.premium_status || '无数据'}}</text>
       </view>
     </view>
+    <!-- 申购限额 -->
+    <view class="purchase-limit-row" wx:if="{{fund.can_purchase !== false}}">
+      <text class="label">申购限额</text>
+      <text class="value">{{fund.purchase_limit != null ? formatPurchaseLimit(fund.purchase_limit) : '不限额'}}</text>
+    </view>
+  </view>
+
+  <!-- 走势图 -->
+  <view class="card chart-card" wx:if="{{chartData.length}}">
+    <view class="card-title">走势图</view>
+    <view class="chart-range">
+      <view class="range-btn {{chartDays === 7 ? 'active' : ''}}" bindtap="switchRange" data-days="7">7日</view>
+      <view class="range-btn {{chartDays === 30 ? 'active' : ''}}" bindtap="switchRange" data-days="30">30日</view>
+      <view class="range-btn {{chartDays === 365 ? 'active' : ''}}" bindtap="switchRange" data-days="365">1年</view>
+    </view>
+    <view class="chart-legend">
+      <view class="legend-item">
+        <view class="legend-dot legend-dot--price"></view>
+        <text>场内价格</text>
+      </view>
+      <view class="legend-item">
+        <view class="legend-dot legend-dot--nav"></view>
+        <text>场外净值</text>
+      </view>
+    </view>
+    <canvas
+      type="2d"
+      id="detailChart"
+      class="detail-chart"
+      style="width: {{chartWidth}}px; height: {{chartHeight}}px;"
+    ></canvas>
   </view>
 
   <!-- 说明 -->

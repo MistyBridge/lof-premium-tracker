@@ -247,6 +247,7 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">预计收益率</span><span class="fd-kpi-value" id="fdEstProfitRate">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">预计收益额</span><span class="fd-kpi-value" id="fdEstProfitAmount">--</span></div>
                     <div class="fd-kpi-item fd-mobile-hide"><span class="fd-kpi-label">状态</span><span class="fd-kpi-value" id="fdStatus">--</span></div>
+                    <div class="fd-kpi-item fd-mobile-hide"><span class="fd-kpi-label">申购限额</span><span class="fd-kpi-value" id="fdPurchaseLimit">--</span></div>
                     <div class="fd-kpi-item fd-mobile-span"><span class="fd-kpi-label">净值日期</span><span class="fd-kpi-value" id="fdNavDate">--</span></div>
                 </div>
                 <div class="fd-profit-section">
@@ -268,6 +269,11 @@
                         <span class="fd-legend-dot fd-legend-dot--nav"></span> 场外净值
                         <button class="fd-info-icon" data-tip="nav" title="了解场外净值">?</button>
                     </span>
+                </div>
+                <div class="fd-chart-range">
+                    <button class="fd-range-btn active" data-days="7">7日</button>
+                    <button class="fd-range-btn" data-days="30">30日</button>
+                    <button class="fd-range-btn" data-days="365">1年</button>
                 </div>
                 <div class="fd-chart-container"><canvas id="fdChart"></canvas></div>
             </div>

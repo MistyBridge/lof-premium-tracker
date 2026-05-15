@@ -318,3 +318,93 @@ def fetch_historical_data(days: int = 7) -> int:
 
     logger.info(f"✅ Historical data saved: {total_rows} rows across {len(by_date)} dates")
     return total_rows
+
+
+def fetch_kline_historical_data(days_lookback: int = 395) -> int:
+    """
+    获取过去约1年的日K线数据（价格+净值），存入 daily_kline 表。
+    用于图表展示的 7日/30日/365日 数据源。
+
+    返回: 保存的总行数
+    """
+    from history_db import get_history_db
+    from datasource.manager import get_datasource_manager
+    ds = get_datasource_manager()
+
+    end_dt = datetime.now()
+    beg_dt = end_dt - timedelta(days=days_lookback)
+    beg_ymd = beg_dt.strftime("%Y%m%d")
+    end_ymd = end_dt.strftime("%Y%m%d")
+    beg_dash = beg_dt.strftime("%Y-%m-%d")
+    end_dash = end_dt.strftime("%Y-%m-%d")
+
+    # ── 1. 获取所有 LOF 代码 ──
+    sz_codes = []
+    cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sz_lof_codes.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                sz_codes = [k for k in json.load(f).keys() if not k.startswith("_")]
+        except Exception as e:
+            logger.warning(f"Failed to load sz_lof_codes.json: {e}")
+
+    session = _make_session()
+    logger.info("Fetching SSE LOF codes for kline...")
+    sse_codes = _fetch_sse_lof_codes(session)
+
+    all_codes = list(set(sz_codes + sse_codes))
+    logger.info(f"Kline history: {len(all_codes)} codes (SZ:{len(sz_codes)} SH:{len(sse_codes)})")
+
+    # ── 2. 多线程逐基金抓取 K 线 + 净值 ──
+    all_rows = []  # [(date, code, price, nav, amount, change_pct, premium_rate), ...]
+    rows_lock = threading.Lock()
+    sem = threading.Semaphore(8)
+    total = len(all_codes)
+    processed = [0]
+
+    def process_one(code: str):
+        with sem:
+            try:
+                kline = ds.fetch_kline(code, beg_ymd, end_ymd)
+                navs = ds.fetch_nav_history(code, beg_dash, end_dash)
+                if not kline:
+                    return
+                with rows_lock:
+                    for date_str, info in kline.items():
+                        nav = navs.get(date_str)
+                        price = info["price"]
+                        amount = info.get("amount", 0)
+                        change_pct = info.get("change_pct", 0)
+                        premium_rate = None
+                        if nav and nav > 0 and price > 0:
+                            premium_rate = round((price - nav) / nav * 100, 3)
+                        all_rows.append((
+                            date_str, code, price, nav, amount,
+                            change_pct, premium_rate
+                        ))
+            except Exception as e:
+                logger.debug(f"Kline fetch failed for {code}: {e}")
+            finally:
+                processed[0] += 1
+                if processed[0] % 50 == 0:
+                    logger.info(f"Kline history progress: {processed[0]}/{total}")
+
+    batch_size = 40
+    for i in range(0, total, batch_size):
+        batch = all_codes[i:i + batch_size]
+        threads = []
+        for code in batch:
+            t = threading.Thread(target=process_one, args=(code,))
+            t.start()
+            threads.append(t)
+        for t in threads:
+            t.join()
+        time.sleep(0.8)
+
+    logger.info(f"Kline history fetch complete: {processed[0]}/{total} funds")
+
+    # ── 3. 保存到 daily_kline ──
+    hdb = get_history_db()
+    hdb.save_kline_batch(all_rows)
+    logger.info(f"✅ Kline history saved: {len(all_rows)} rows")
+    return len(all_rows)
