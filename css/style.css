@@ -681,6 +681,11 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
     .fd-chart-controls { gap: 6px; }
     .fd-ind-select, .fd-range-select { padding: 5px 8px; font-size: 0.72rem; }
     .fd-chart-container { height: 200px; }
+    /* 移动端滚动条适配 */
+    .fund-detail-modal::-webkit-scrollbar { width: 3px; }
+    .fund-detail-modal::-webkit-scrollbar-thumb { border-radius: 2px; }
+    body::-webkit-scrollbar { width: 4px; }
+    body::-webkit-scrollbar-thumb { border-radius: 2px; }
     .fd-skeleton { padding: 16px; }
     .fd-skeleton-kpi { grid-template-columns: repeat(2, 1fr); gap: 8px; }
     .fd-skeleton-grid { height: 180px; }
