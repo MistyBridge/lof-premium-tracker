@@ -33,6 +33,62 @@ RETENTION_DAYS = 21
 KLIN_RETENTION_DAYS = 510  # 360个交易日 ≈ 504日历日 + 缓冲
 
 
+def filter_and_forward_fill(raw_rows: list) -> list:
+    """
+    过滤非法K线数据并前向填充。
+    - price <= 0 或 nav <= 0 → 用前一个有效日数据填充
+    - 停牌检测: price 无变化且 amount == 0 → 前向填充
+    """
+    if not raw_rows:
+        return []
+
+    result = []
+    prev_valid = None
+
+    for row in raw_rows:
+        price = float(row.get("price") or 0)
+        nav = float(row.get("nav") or 0)
+        amount = float(row.get("amount") or 0)
+
+        if price <= 0 or nav <= 0:
+            if prev_valid is not None:
+                result.append({
+                    "date": row["date"],
+                    "price": prev_valid["price"],
+                    "nav": prev_valid["nav"],
+                    "premium_rate": prev_valid["premium_rate"],
+                })
+            continue
+
+        if prev_valid is not None:
+            prev_price_raw = prev_valid.get("_raw_price", prev_valid["price"])
+            if abs(price - prev_price_raw) < 0.001 and amount == 0:
+                result.append({
+                    "date": row["date"],
+                    "price": prev_valid["price"],
+                    "nav": prev_valid["nav"],
+                    "premium_rate": prev_valid["premium_rate"],
+                })
+                continue
+
+        premium = float(row.get("premium_rate") or 0) if row.get("premium_rate") is not None else None
+
+        entry = {
+            "date": row["date"],
+            "price": round(price, 4),
+            "nav": round(nav, 4),
+            "premium_rate": premium,
+            "_raw_price": price,
+        }
+        result.append(entry)
+        prev_valid = entry
+
+    for entry in result:
+        entry.pop("_raw_price", None)
+
+    return result
+
+
 class HistoryDB:
     """线程安全的 PostgreSQL 历史数据库（连接池）"""
 

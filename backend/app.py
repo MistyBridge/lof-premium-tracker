@@ -21,7 +21,8 @@ from flask_cors import CORS
 
 from config import Config
 from data_fetcher import get_fetcher
-from history_db import get_history_db
+from history_db import get_history_db, filter_and_forward_fill
+from chart_cache import get_chart_cache
 
 # ─────────────────────────────────────────────
 # 日志配置
@@ -133,65 +134,6 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
     return result
 
 
-def _filter_and_forward_fill(raw_rows: list) -> list:
-    """
-    过滤非法K线数据并前向填充。
-    - price <= 0 或 nav <= 0 → 用前一个有效日数据填充
-    - 停牌检测: price 无变化且 amount == 0 → 前向填充
-    - 保留原始日期标签，数据值使用前一个有效日的值
-    """
-    if not raw_rows:
-        return []
-
-    result = []
-    prev_valid = None
-
-    for row in raw_rows:
-        price = float(row.get("price") or 0)
-        nav = float(row.get("nav") or 0)
-        amount = float(row.get("amount") or 0)
-
-        # 基本合法性检查
-        if price <= 0 or nav <= 0:
-            if prev_valid is not None:
-                result.append({
-                    "date": row["date"],
-                    "price": prev_valid["price"],
-                    "nav": prev_valid["nav"],
-                    "premium_rate": prev_valid["premium_rate"],
-                })
-            continue
-
-        # 停牌检测: 价格无变化且无成交
-        if prev_valid is not None:
-            prev_price_raw = prev_valid.get("_raw_price", prev_valid["price"])
-            if abs(price - prev_price_raw) < 0.001 and amount == 0:
-                result.append({
-                    "date": row["date"],
-                    "price": prev_valid["price"],
-                    "nav": prev_valid["nav"],
-                    "premium_rate": prev_valid["premium_rate"],
-                })
-                continue
-
-        premium = float(row.get("premium_rate") or 0) if row.get("premium_rate") is not None else None
-
-        entry = {
-            "date": row["date"],
-            "price": round(price, 4),
-            "nav": round(nav, 4),
-            "premium_rate": premium,
-            "_raw_price": price,
-        }
-        result.append(entry)
-        prev_valid = entry
-
-    for entry in result:
-        entry.pop("_raw_price", None)
-
-    return result
-
-
 # ══════════════════════════════════════════════════════════════════
 # Web 前端静态文件服务
 # ══════════════════════════════════════════════════════════════════
@@ -240,6 +182,7 @@ def health():
         "refresh_interval_sec": Config.REFRESH_INTERVAL_SECONDS,
         "history_dates": available_dates,
         "history_days": len(available_dates),
+        "chart_cache": get_chart_cache().get_stats(),
     })
 
 
@@ -444,7 +387,7 @@ def fund_detail(code: str):
 
 @app.route("/api/funds/<code>/chart", methods=["GET"])
 def fund_chart(code: str):
-    """获取基金历史价格/净值曲线数据，支持 7/30/365 日"""
+    """获取基金历史价格/净值曲线数据，支持 7/30/365 日。热门基金优先从缓存读取"""
     f = get_fetcher()
     fund = f.get_one(code)
     if not fund:
@@ -455,9 +398,24 @@ def fund_chart(code: str):
     except ValueError:
         days = 7
 
+    # 检查预渲染缓存
+    cc = get_chart_cache()
+    cached = cc.get(code)
+    if cached and str(days) in cached.get("charts", {}):
+        chart = cached["charts"][str(days)]
+        if chart:
+            return ok({
+                "code": code,
+                "name": fund.get("name"),
+                "days": days,
+                "chart": chart,
+                "cached": True,
+            })
+
+    # 未缓存，实时查询
     hdb = get_history_db()
     raw = hdb.get_kline_history(code=code, days=days)
-    filtered = _filter_and_forward_fill(raw)
+    filtered = filter_and_forward_fill(raw)
 
     return ok({
         "code": code,
@@ -598,6 +556,12 @@ def _trigger_lazy_refresh():
                     with f._lock:
                         for code, fund in f._cache.items():
                             fund["avg_premium_3d"] = avg_map.get(code)
+                    # 刷新热门基金曲线图缓存
+                    try:
+                        cc = get_chart_cache()
+                        cc.refresh(hdb, f.get_all())
+                    except Exception as ex:
+                        logger.debug(f"Chart cache refresh skipped: {ex}")
                 except Exception as ex:
                     logger.warning(f"历史数据保存失败: {ex}")
                 logger.info(f"✅ 懒更新完成，当前缓存 {len(f.get_all())} 只基金")
@@ -705,6 +669,11 @@ def _startup_init():
             with f._lock:
                 for code, fund in f._cache.items():
                     fund["avg_premium_3d"] = avg_map.get(code)
+            try:
+                cc = get_chart_cache()
+                cc.refresh(hdb, f.get_all())
+            except Exception as ex:
+                logger.debug(f"Chart cache refresh skipped: {ex}")
         except Exception as ex:
             logger.warning(f"历史数据保存失败: {ex}")
         logger.info(f"✅ 实时数据刷新完成，{len(f.get_all())} 只基金")
