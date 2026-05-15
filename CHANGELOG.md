@@ -24,8 +24,18 @@
 | 代码/名称无复制提示 | 标签改为"代码(点击可复制)""名称(点击可复制)" | Web详情弹窗UI |
 | 无溢价率Y轴颜色 | 溢价率坐标轴刻度正红负绿 | Web前端图表 |
 | 无数据不足判断 | 溢价/折价任一套利方向数据缺失即显示数据不足 | Web前端图表交互 |
+| AkShare失败每次都等待超时 | 熔断机制：连续失败3次自动降级Legacy，5分钟后自动重试AkShare | 后端数据源调度 |
+| Git历史作者混杂(hangogo/KeHan/woredasdnmv) | 全部统一为MistyBridge，删除旧分支 | 仓库管理 |
 
 ## 数据概览
+
+- **版本**: v1.1.0
+- **活跃基金**: 538 只
+- **K线数据覆盖**: 396/538 只基金，97,630 行
+- **数据源**: AkShare(主) + 东方财富(Legacy) + 腾讯QT(备) + 熔断保护
+- **数据库**: Railway PostgreSQL, 500MB 存储卷
+- **前端**: Cloudflare Pages (lof-fund-monitor.pages.dev)
+- **后端**: Railway (lof-premium-tracker-production.up.railway.app)
 
 - **活跃基金**: 538 只
 - **K线数据覆盖**: 396/538 只基金，97,630 行
