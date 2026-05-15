@@ -980,12 +980,12 @@ class LofFundMonitor {
         document.body.style.overflow = 'hidden';
         skeleton.classList.add('show');
         phase1.classList.add('hidden');
-        phase2.style.display = 'none';
+        // 图表区域立即显示空坐标系，避免后续弹出
+        phase2.style.display = 'block';
         phase2.classList.remove('visible');
 
         this._detailDays = 7;
         this._detailFundCode = code;
-        // 重置时间范围按钮状态
         document.querySelectorAll('.fd-range-btn').forEach(b => {
             b.classList.toggle('active', parseInt(b.dataset.days) === 7);
         });
@@ -1001,7 +1001,12 @@ class LofFundMonitor {
             skeleton.classList.remove('show');
             phase1.classList.remove('hidden');
 
-            this._loadDetailChart(code);
+            // 立即渲染空坐标系占位
+            requestAnimationFrame(() => {
+                phase2.classList.add('visible');
+                this._renderEmptyChart();
+                this._loadDetailChart(code);
+            });
         }).catch(err => {
             console.error('[LOF] 基金详情加载失败:', err);
             this.showToast('详情加载失败: ' + err.message);
@@ -1011,26 +1016,45 @@ class LofFundMonitor {
     _loadDetailChart(code) {
         const days = this._detailDays || 7;
         const phase2 = document.getElementById('fdPhase2');
-        if (!phase2) return;
+
+        api.getFundChart(code, days).then(chartResult => {
+            const chartData = chartResult.data?.chart || [];
+            if (chartData.length > 0) {
+                this._renderDetailChart(chartData);
+            }
+        }).catch(() => {});
+    }
+
+    _renderEmptyChart() {
+        const canvas = document.getElementById('fdChart');
+        if (!canvas) return;
 
         if (this._detailChart) {
             this._detailChart.destroy();
             this._detailChart = null;
         }
 
-        phase2.style.display = 'none';
-        phase2.classList.remove('visible');
-
-        api.getFundChart(code, days).then(chartResult => {
-            const chartData = chartResult.data?.chart || [];
-            if (chartData.length > 0) {
-                phase2.style.display = 'block';
-                requestAnimationFrame(() => {
-                    phase2.classList.add('visible');
-                    this._renderDetailChart(chartData);
-                });
-            }
-        }).catch(() => {});
+        const ctx = canvas.getContext('2d');
+        const isDark = this.darkMode === 'dark';
+        const textColor = isDark ? '#8899aa' : '#666';
+        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        this._detailChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [
+                { label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+                { label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+            ]},
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: textColor } },
+                    y: { grid: { color: gridColor }, min: 0, max: 1, ticks: { font: { size: 11 }, color: textColor, callback: (v) => v.toFixed(3) } },
+                },
+            },
+        });
     }
     _populateDetailKpi(fund) {
         const setVal = (id, text, cls) => {
@@ -1130,6 +1154,12 @@ class LofFundMonitor {
     _renderDetailChart(chartData) {
         const canvas = document.getElementById('fdChart');
         if (!canvas) return;
+
+        // 替换空坐标系图表
+        if (this._detailChart) {
+            this._detailChart.destroy();
+            this._detailChart = null;
+        }
 
         const ctx = canvas.getContext('2d');
         const labels = chartData.map(d => d.date.slice(5));
