@@ -1038,7 +1038,7 @@ class LofFundMonitor {
             data: { labels: [], datasets: [
                 { _key: 'price', label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice' },
                 { _key: 'nav', label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice' },
-                { _key: 'premium', label: '溢价率', data: [], borderColor: '#52c41a', backgroundColor: 'rgba(82,196,26,0.06)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrem', hidden: true },
+                { _key: 'premium', label: '溢价率', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrem', hidden: true },
             ]},
             options: {
                 responsive: true, maintainAspectRatio: false, animation: false,
@@ -1197,9 +1197,12 @@ class LofFundMonitor {
                     },
                     {
                         _key: 'premium', label: '溢价率', yAxisID: 'yPrem',
-                        data: premiums, borderColor: '#52c41a', backgroundColor: 'rgba(82,196,26,0.06)',
-                        borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#52c41a', tension: 0.2, fill: false,
+                        data: premiums, borderWidth: 2, pointRadius: pointR, tension: 0.2, fill: false,
                         hidden: !isPremMode,
+                        segment: {
+                            borderColor: (ctx) => (ctx.p0.raw >= 0 ? '#e74c3c' : '#27ae60'),
+                        },
+                        pointBackgroundColor: premiums.map(v => v >= 0 ? '#e74c3c' : '#27ae60'),
                     },
                 ],
             },
