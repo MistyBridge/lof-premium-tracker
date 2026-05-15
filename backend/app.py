@@ -282,15 +282,32 @@ def init_history():
 
 
 # ── 手动补填K线历史数据 ──
+_kline_fetching = False
+_kline_lock = threading.Lock()
+
 @app.route("/init-kline-history", methods=["POST"])
 def init_kline_history():
-    """手动触发365天K线历史数据补填（价格+净值）"""
-    try:
-        from history_fetcher import fetch_kline_historical_data
-        rows = fetch_kline_historical_data()
-        return ok({"rows": rows})
-    except Exception as e:
-        return err_resp(f"K线历史数据补填失败: {e}", code=12, status=500)
+    """手动触发365天K线历史数据补填（后台线程，避免gunicorn超时）"""
+    global _kline_fetching
+    with _kline_lock:
+        if _kline_fetching:
+            return ok({"status": "already_running", "tip": "K线数据补填已在后台运行中"})
+        _kline_fetching = True
+
+    def _do_kline_fetch():
+        global _kline_fetching
+        try:
+            from history_fetcher import fetch_kline_historical_data
+            rows = fetch_kline_historical_data()
+            logger.info(f"✅ K线数据补填完成: {rows} 行")
+        except Exception as e:
+            logger.error(f"K线数据补填失败: {e}")
+        finally:
+            _kline_fetching = False
+
+    t = threading.Thread(target=_do_kline_fetch, daemon=True)
+    t.start()
+    return ok({"status": "started", "tip": "K线数据补填已在后台启动，约需20-30分钟"})
 
 
 # ─────────────────────────────────────────────────────────────────
