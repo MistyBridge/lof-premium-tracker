@@ -699,30 +699,8 @@ _init_thread = threading.Thread(target=_startup_init, daemon=True)
 _init_thread.start()
 
 
-def _seed_kline_data():
-    """后台: 检查 daily_kline 是否为空，若为空则自动播种365天K线数据"""
-    hdb = get_history_db()
-    conn = hdb._pool.getconn()
-    try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT COUNT(*) FROM daily_kline")
-            count = cur.fetchone()[0]
-    except Exception:
-        count = 0
-    finally:
-        hdb._pool.putconn(conn)
-    if count == 0:
-        logger.info("📦 daily_kline 为空，启动后台K线数据播种（约需20-30分钟，服务正常运行）...")
-        try:
-            from history_fetcher import fetch_kline_historical_data
-            rows = fetch_kline_historical_data()
-            logger.info(f"✅ K线数据播种完成: {rows} 行")
-        except Exception as e:
-            logger.warning(f"⚠️ K线数据播种失败（非致命）: {e}")
-
-
-_kline_seed_thread = threading.Thread(target=_seed_kline_data, daemon=True)
-_kline_seed_thread.start()
+# K线数据播种已改为手动触发: POST /init-kline-history
+# 避免部署时因长耗时健康检查超时导致失败
 
 
 # ══════════════════════════════════════════════════════════════════
