@@ -1254,7 +1254,7 @@ class LofFundMonitor {
             const el = document.createElement('div');
             el.id = 'fdArbTooltip';
             el.className = 'fd-arb-tooltip';
-            document.getElementById('fdPhase2')?.insertBefore(el, document.querySelector('.fd-chart-container'));
+            document.getElementById('fdPhase2')?.appendChild(el);
         }
         const el = document.getElementById('fdArbTooltip');
         if (!el) return;

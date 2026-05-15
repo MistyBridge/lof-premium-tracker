@@ -644,10 +644,13 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 
 /* Arbitrage tooltip */
 .fd-arb-tooltip {
+    position: absolute; z-index: 10; pointer-events: none;
+    top: -60px; left: 10px; right: 10px;
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 10px 14px; margin: 0 0 6px 0;
+    padding: 10px 14px;
     box-shadow: 0 4px 16px rgba(0,0,0,0.12); font-size: 0.78rem;
     display: none; color: var(--text);
+    text-align: center;
 }
 .dark-mode .fd-arb-tooltip { background: #162d50; border-color: #334466; box-shadow: 0 4px 16px rgba(0,0,0,0.5); }
 .arb-tooltip-date { font-weight: 700; font-size: 0.88rem; margin-bottom: 6px; color: var(--text); }
@@ -669,7 +672,7 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .dark-mode .fd-ind-select, .dark-mode .fd-range-select { background: #1a2a4a; border-color: #334466; color: #c8d6e5; }
 
 /* Full-width chart */
-.fd-phase { width: 100%; }
+.fd-phase { width: 100%; position: relative; }
 
 .fd-custom-tip {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
