@@ -266,10 +266,14 @@ class AkShareSource(LOFDataSource):
     # ── fundgz NAV (AkShare 无盘中估算净值) ─────────
 
     def _fetch_nav_from_fundgz(self, code: str) -> Dict[str, Any]:
+        """fundgz + lsjz 交叉验证，盘中优先用估算净值(gsz)"""
         url = Config.FUND_NAV_URL.format(code=code)
-        resp = self._sess().get(url, headers=_FUNDGZ_HEADERS, timeout=Config.REQUEST_TIMEOUT)
-        resp.encoding = "utf-8"
-        text = resp.text.strip()
+        try:
+            resp = self._sess().get(url, headers=_FUNDGZ_HEADERS, timeout=Config.REQUEST_TIMEOUT)
+            resp.encoding = "utf-8"
+            text = resp.text.strip()
+        except Exception:
+            return self._fetch_nav_from_lsjz(code)
 
         m = re.search(r"\((.+)\)\s*;?\s*$", text, re.DOTALL)
         if not m:
@@ -280,24 +284,56 @@ class AkShareSource(LOFDataSource):
         except json.JSONDecodeError:
             return self._fetch_nav_from_lsjz(code)
 
-        nav_str = data.get("dwjz")
-        prev_str = data.get("jjjz")
-        gztime = data.get("gztime")
+        today = datetime.now().strftime("%Y-%m-%d")
+        jzrq = data.get("jzrq", "")  # 净值日期
+        dwjz = data.get("dwjz")  # 最新官方净值
+        gsz = data.get("gsz")  # 盘中估算净值
+        prev_str = data.get("jjjz")  # 前一交易日净值
+        gztime = data.get("gztime", "")
 
-        if not nav_str:
-            return self._fetch_nav_from_lsjz(code)
+        # Step 1: lsjz 交叉验证，有今日官方净值则优先
+        lsjz_info = self._fetch_nav_from_lsjz(code)
+        if lsjz_info.get("nav_date") == today and lsjz_info.get("nav"):
+            return lsjz_info
 
-        nav = _safe_float(nav_str)
-        prev = _safe_float(prev_str, nav)
-        gztime_str = str(gztime) if gztime else ""
-        is_formal = "15:00" in gztime_str or "15:30" in gztime_str
+        # Step 2: fundgz 今日官方净值
+        if jzrq == today and dwjz:
+            nav = _safe_float(dwjz)
+            prev = _safe_float(prev_str, nav)
+            return {
+                "nav": round(nav, 4),
+                "prev_nav": round(prev, 4),
+                "nav_date": jzrq,
+                "is_formal_nav": True,
+            }
 
-        return {
-            "nav": round(nav, 4),
-            "prev_nav": round(prev, 4),
-            "nav_date": gztime_str or None,
-            "is_formal_nav": is_formal,
-        }
+        # Step 3: 盘中估算净值 gsz
+        if gsz and _safe_float(gsz) > 0:
+            nav = _safe_float(gsz)
+            prev = _safe_float(dwjz, nav) if dwjz else _safe_float(prev_str, nav)
+            return {
+                "nav": round(nav, 4),
+                "prev_nav": round(prev, 4),
+                "nav_date": str(gztime) if gztime else today,
+                "is_formal_nav": False,
+            }
+
+        # Step 4: fundgz 昨日官方净值（兜底）
+        if dwjz:
+            nav = _safe_float(dwjz)
+            prev = _safe_float(prev_str, nav)
+            return {
+                "nav": round(nav, 4),
+                "prev_nav": round(prev, 4),
+                "nav_date": jzrq,
+                "is_formal_nav": True,
+            }
+
+        # Step 5: lsjz 兜底
+        if lsjz_info.get("nav"):
+            return lsjz_info
+
+        return {"nav": None, "nav_date": None, "is_formal_nav": False}
 
     def _fetch_nav_from_lsjz(self, code: str) -> Dict[str, Any]:
         url = f"https://api.fund.eastmoney.com/f10/lsjz?fundCode={code}&pageIndex=1&pageSize=1"
