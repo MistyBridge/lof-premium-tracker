@@ -625,27 +625,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .fd-chart-container { width: 100%; height: 320px; margin-top: 4px; }
 .fd-chart-container canvas { width: 100% !important; height: 100% !important; }
 
-/* Chart area layout: indicators left, chart center, dates right */
-.fd-chart-area { display: flex; gap: 8px; align-items: stretch; min-height: 280px; }
-.fd-indicators { display: flex; flex-direction: column; gap: 4px; justify-content: center; min-width: 80px; padding-right: 8px; border-right: 1px solid var(--border); }
-.fd-ind-btn { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1.5px solid transparent; border-radius: 8px; background: transparent; color: var(--text2); font-size: 0.73rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-.fd-ind-btn:hover { background: var(--bg); border-color: var(--border); }
-.fd-ind-btn.active { background: var(--bg); border-color: var(--primary); color: var(--primary); font-weight: 600; }
-.fd-ind-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.fd-ind-dot--price { background: #ff7a45; }
-.fd-ind-dot--nav { background: #40a9ff; }
-.fd-ind-dot--premium { background: #52c41a; }
-.fd-chart-main { flex: 1; min-width: 0; }
-.dark-mode .fd-ind-btn { background: #1a2a4a; border-color: #334466; color: #8899aa; }
-.dark-mode .fd-ind-btn.active { background: #1a2a4a; border-color: var(--primary); color: var(--primary); }
+/* Chart controls: indicator dropdown left, range dropdown right */
+.fd-chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
+.fd-ind-select, .fd-range-select { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 0.82rem; cursor: pointer; outline: none; transition: border-color 0.2s; }
+.fd-ind-select:hover, .fd-range-select:hover { border-color: var(--primary); }
+.fd-ind-select:focus, .fd-range-select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
+.dark-mode .fd-ind-select, .dark-mode .fd-range-select { background: #1a2a4a; border-color: #334466; color: #c8d6e5; }
 
-/* 时间范围选择器 */
-.fd-chart-range { display: flex; gap: 6px; justify-content: center; margin: 8px 0 4px; }
-.fd-range-btn { padding: 5px 16px; border: 1.5px solid var(--border); border-radius: 16px; background: var(--card); color: var(--text2); font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-.fd-range-btn:hover { border-color: var(--primary); color: var(--primary); }
-.fd-range-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-.dark-mode .fd-range-btn { background: #1a2a4a; border-color: #334466; color: #8899aa; }
-.dark-mode .fd-range-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+/* Full-width chart */
+.fd-phase { width: 100%; }
 
 .fd-custom-tip {
     position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -673,11 +661,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     .fd-profit-section { margin-top: 10px; padding: 12px 14px; }
     .fd-profit-val { font-size: 1.15rem; }
     .fd-chart-legend { gap: 10px; font-size: 0.78rem; }
-    .fd-chart-area { flex-direction: column; gap: 4px; }
-    .fd-indicators { flex-direction: row; gap: 4px; border-right: none; border-bottom: 1px solid var(--border); padding: 0 0 6px 0; justify-content: center; min-width: 0; }
-    .fd-ind-btn { padding: 4px 8px; font-size: 0.68rem; border-radius: 6px; }
-    .fd-chart-range { gap: 4px; }
-    .fd-range-btn { padding: 4px 12px; font-size: 0.72rem; border-radius: 12px; }
+    .fd-chart-controls { gap: 6px; }
+    .fd-ind-select, .fd-range-select { padding: 5px 8px; font-size: 0.72rem; }
     .fd-chart-container { height: 200px; }
     .fd-skeleton { padding: 16px; }
     .fd-skeleton-kpi { grid-template-columns: repeat(2, 1fr); gap: 8px; }

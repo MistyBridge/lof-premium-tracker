@@ -565,35 +565,17 @@ class LofFundMonitor {
                 this._showChartInfoTip(infoIcon.dataset.tip);
                 return;
             }
-            // 图表指标切换按钮
-            const indBtn = e.target.closest('.fd-ind-btn');
-            if (indBtn) {
-                e.stopPropagation();
-                const key = indBtn.dataset.key;
-                indBtn.classList.toggle('active');
-                if (this._detailChart) {
-                    const ds = this._detailChart.data.datasets;
-                    for (let i = 0; i < ds.length; i++) {
-                        if (ds[i]._key === key) {
-                            ds[i].hidden = !ds[i].hidden;
-                        }
-                    }
-                    this._detailChart.update();
-                }
+            // 图表指标下拉菜单
+            if (e.target.id === 'fdIndSelect') {
+                this._detailMode = e.target.value;
+                this._renderEmptyChart();
+                this._loadDetailChart(this._detailFundCode);
                 return;
             }
-            // 图表时间范围切换按钮
-            const rangeBtn = e.target.closest('.fd-range-btn');
-            if (rangeBtn) {
-                e.stopPropagation();
-                const days = parseInt(rangeBtn.dataset.days);
-                if (days && days !== this._detailDays && this._detailFundCode) {
-                    this._detailDays = days;
-                    document.querySelectorAll('.fd-range-btn').forEach(b => {
-                        b.classList.toggle('active', parseInt(b.dataset.days) === days);
-                    });
-                    this._loadDetailChart(this._detailFundCode);
-                }
+            // 时间范围下拉菜单
+            if (e.target.id === 'fdRangeSelect') {
+                this._detailDays = parseInt(e.target.value);
+                this._loadDetailChart(this._detailFundCode);
                 return;
             }
             // 详情弹窗内代码/名称点击 → 复制文本 (Change 6)
@@ -997,15 +979,17 @@ class LofFundMonitor {
         document.body.style.overflow = 'hidden';
         skeleton.classList.add('show');
         phase1.classList.add('hidden');
-        // 图表区域立即显示空坐标系，避免后续弹出
         phase2.style.display = 'block';
         phase2.classList.remove('visible');
 
+        // Reset dropdowns to default
+        this._detailMode = 'price,nav';
         this._detailDays = 7;
         this._detailFundCode = code;
-        document.querySelectorAll('.fd-range-btn').forEach(b => {
-            b.classList.toggle('active', parseInt(b.dataset.days) === 7);
-        });
+        const indSel = document.getElementById('fdIndSelect');
+        const rangeSel = document.getElementById('fdRangeSelect');
+        if (indSel) indSel.value = 'price,nav';
+        if (rangeSel) rangeSel.value = '7';
 
         if (this._detailChart) {
             this._detailChart.destroy();
@@ -1018,7 +1002,6 @@ class LofFundMonitor {
             skeleton.classList.remove('show');
             phase1.classList.remove('hidden');
 
-            // 立即渲染空坐标系占位
             requestAnimationFrame(() => {
                 phase2.classList.add('visible');
                 this._renderEmptyChart();
@@ -1032,8 +1015,6 @@ class LofFundMonitor {
 
     _loadDetailChart(code) {
         const days = this._detailDays || 7;
-        const phase2 = document.getElementById('fdPhase2');
-
         api.getFundChart(code, days).then(chartResult => {
             const chartData = chartResult.data?.chart || [];
             if (chartData.length > 0) {
@@ -1045,31 +1026,27 @@ class LofFundMonitor {
     _renderEmptyChart() {
         const canvas = document.getElementById('fdChart');
         if (!canvas) return;
-
-        if (this._detailChart) {
-            this._detailChart.destroy();
-            this._detailChart = null;
-        }
+        if (this._detailChart) { this._detailChart.destroy(); this._detailChart = null; }
 
         const ctx = canvas.getContext('2d');
         const isDark = this.darkMode === 'dark';
-        const textColor = isDark ? '#8899aa' : '#666';
-        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        const tc = isDark ? '#8899aa' : '#666';
+        const gc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+
         this._detailChart = new Chart(ctx, {
             type: 'line',
             data: { labels: [], datasets: [
-                { _key: 'price', label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
-                { _key: 'nav', label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
-                { _key: 'premium', label: '溢价率', data: [], borderColor: '#52c41a', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, hidden: true },
+                { _key: 'price', label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice' },
+                { _key: 'nav', label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice' },
+                { _key: 'premium', label: '溢价率', data: [], borderColor: '#52c41a', backgroundColor: 'rgba(82,196,26,0.06)', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrem', hidden: true },
             ]},
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: false,
+                responsive: true, maintainAspectRatio: false, animation: false,
                 plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 scales: {
-                    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: textColor } },
-                    y: { grid: { color: gridColor }, min: 0, max: 1, ticks: { font: { size: 11 }, color: textColor, callback: (v) => v.toFixed(3) } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tc } },
+                    yPrice: { type: 'linear', display: true, position: 'left', grid: { color: gc }, min: 0, max: 1, ticks: { font: { size: 11 }, color: tc, callback: (v) => v.toFixed(3) } },
+                    yPrem: { type: 'linear', display: false, position: 'right', grid: { drawOnChartArea: false }, min: -5, max: 5, ticks: { font: { size: 11 }, color: '#52c41a', callback: (v) => v + '%' } },
                 },
             },
         });
@@ -1172,12 +1149,7 @@ class LofFundMonitor {
     _renderDetailChart(chartData) {
         const canvas = document.getElementById('fdChart');
         if (!canvas) return;
-
-        // 替换空坐标系图表
-        if (this._detailChart) {
-            this._detailChart.destroy();
-            this._detailChart = null;
-        }
+        if (this._detailChart) { this._detailChart.destroy(); this._detailChart = null; }
 
         const ctx = canvas.getContext('2d');
         const labels = chartData.map(d => d.date.slice(5));
@@ -1185,86 +1157,70 @@ class LofFundMonitor {
         const navs = chartData.map(d => d.nav);
         const premiums = chartData.map(d => d.premium_rate);
 
-        const allVals = prices.concat(navs).filter(v => v != null);
-        const yMin = allVals.length > 0 ? Math.floor(Math.min(...allVals) * 0.995 * 1000) / 1000 : 0;
-        const yMax = allVals.length > 0 ? Math.ceil(Math.max(...allVals) * 1.005 * 1000) / 1000 : 1;
-
         const isDark = this.darkMode === 'dark';
-        const textColor = isDark ? '#8899aa' : '#666';
-        const gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+        const tc = isDark ? '#8899aa' : '#666';
+        const gc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
         const isYearly = chartData.length > 60;
         const pointR = isYearly ? 0 : 4;
         const tickLimit = isYearly ? 15 : chartData.length;
+
+        // 模式: 'price,nav' 显示价格+净值, 'premium' 显示溢价率
+        const mode = this._detailMode || 'price,nav';
+        const isPremMode = mode === 'premium';
+
+        // 价格/净值 Y轴范围
+        const pnVals = prices.concat(navs).filter(v => v != null);
+        const pnMin = pnVals.length > 0 ? Math.floor(Math.min(...pnVals) * 0.995 * 1000) / 1000 : 0;
+        const pnMax = pnVals.length > 0 ? Math.ceil(Math.max(...pnVals) * 1.005 * 1000) / 1000 : 1;
+
+        // 溢价率 Y轴范围
+        const prVals = premiums.filter(v => v != null);
+        const prAbs = prVals.length > 0 ? Math.max(Math.abs(Math.min(...prVals)), Math.abs(Math.max(...prVals))) : 5;
+        const prMax = Math.ceil(prAbs * 1.2) || 5;
+
         this._detailChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels,
                 datasets: [
                     {
-                        _key: 'price',
-                        label: '场内价格',
-                        data: prices,
-                        borderColor: '#ff7a45',
-                        backgroundColor: 'rgba(255, 122, 69, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: pointR,
-                        pointBackgroundColor: '#ff7a45',
-                        tension: 0.2,
-                        fill: false,
+                        _key: 'price', label: '场内价格', yAxisID: 'yPrice',
+                        data: prices, borderColor: '#ff7a45', backgroundColor: 'rgba(255,122,69,0.08)',
+                        borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#ff7a45', tension: 0.2, fill: false,
+                        hidden: isPremMode,
                     },
                     {
-                        _key: 'nav',
-                        label: '场外净值',
-                        data: navs,
-                        borderColor: '#40a9ff',
-                        backgroundColor: 'rgba(64, 169, 255, 0.08)',
-                        borderWidth: 2,
-                        pointRadius: pointR,
-                        pointBackgroundColor: '#40a9ff',
-                        tension: 0.2,
-                        fill: false,
+                        _key: 'nav', label: '场外净值', yAxisID: 'yPrice',
+                        data: navs, borderColor: '#40a9ff', backgroundColor: 'rgba(64,169,255,0.08)',
+                        borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#40a9ff', tension: 0.2, fill: false,
+                        hidden: isPremMode,
                     },
                     {
-                        _key: 'premium',
-                        label: '溢价率',
-                        data: premiums,
-                        borderColor: '#52c41a',
-                        backgroundColor: 'rgba(82, 196, 26, 0.06)',
-                        borderWidth: 2,
-                        borderDash: [5, 3],
-                        pointRadius: pointR,
-                        pointBackgroundColor: '#52c41a',
-                        tension: 0.2,
-                        fill: false,
-                        hidden: true,
+                        _key: 'premium', label: '溢价率', yAxisID: 'yPrem',
+                        data: premiums, borderColor: '#52c41a', backgroundColor: 'rgba(82,196,26,0.06)',
+                        borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#52c41a', tension: 0.2, fill: false,
+                        hidden: !isPremMode,
                     },
                 ],
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 interaction: { mode: 'index', intersect: false },
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => ctx.dataset.label + ': ' + (ctx.raw != null ? ctx.raw.toFixed(3) : '--'),
-                        },
-                    },
+                    tooltip: { callbacks: { label: (ctx) => ctx.dataset.label + ': ' + (ctx.raw != null ? (isPremMode ? ctx.raw.toFixed(2)+'%' : ctx.raw.toFixed(3)) : '--') } },
                 },
                 scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 11 }, color: textColor, maxTicksLimit: tickLimit, autoSkip: true },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tc, maxTicksLimit: tickLimit, autoSkip: true } },
+                    yPrice: {
+                        type: 'linear', display: !isPremMode, position: 'left',
+                        grid: { color: gc }, min: pnMin, max: pnMax,
+                        ticks: { font: { size: 11 }, color: tc, callback: (v) => v.toFixed(3) },
                     },
-                    y: {
-grid: { color: gridColor },
-                        min: yMin,
-                        max: yMax,
-                        ticks: {
-                            font: { size: 11 }, color: textColor,
-                            callback: (v) => v.toFixed(3),
-                        },
+                    yPrem: {
+                        type: 'linear', display: isPremMode, position: 'left',
+                        grid: { color: gc }, min: -prMax, max: prMax,
+                        ticks: { font: { size: 11 }, color: '#52c41a', callback: (v) => v.toFixed(1) + '%' },
                     },
                 },
             },
