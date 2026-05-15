@@ -565,6 +565,23 @@ class LofFundMonitor {
                 this._showChartInfoTip(infoIcon.dataset.tip);
                 return;
             }
+            // 图表指标切换按钮
+            const indBtn = e.target.closest('.fd-ind-btn');
+            if (indBtn) {
+                e.stopPropagation();
+                const key = indBtn.dataset.key;
+                indBtn.classList.toggle('active');
+                if (this._detailChart) {
+                    const ds = this._detailChart.data.datasets;
+                    for (let i = 0; i < ds.length; i++) {
+                        if (ds[i]._key === key) {
+                            ds[i].hidden = !ds[i].hidden;
+                        }
+                    }
+                    this._detailChart.update();
+                }
+                return;
+            }
             // 图表时间范围切换按钮
             const rangeBtn = e.target.closest('.fd-range-btn');
             if (rangeBtn) {
@@ -1041,8 +1058,9 @@ class LofFundMonitor {
         this._detailChart = new Chart(ctx, {
             type: 'line',
             data: { labels: [], datasets: [
-                { label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
-                { label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+                { _key: 'price', label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+                { _key: 'nav', label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false },
+                { _key: 'premium', label: '溢价率', data: [], borderColor: '#52c41a', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, hidden: true },
             ]},
             options: {
                 responsive: true,
@@ -1165,6 +1183,7 @@ class LofFundMonitor {
         const labels = chartData.map(d => d.date.slice(5));
         const prices = chartData.map(d => d.price);
         const navs = chartData.map(d => d.nav);
+        const premiums = chartData.map(d => d.premium_rate);
 
         const allVals = prices.concat(navs).filter(v => v != null);
         const yMin = allVals.length > 0 ? Math.floor(Math.min(...allVals) * 0.995 * 1000) / 1000 : 0;
@@ -1182,6 +1201,7 @@ class LofFundMonitor {
                 labels,
                 datasets: [
                     {
+                        _key: 'price',
                         label: '场内价格',
                         data: prices,
                         borderColor: '#ff7a45',
@@ -1193,6 +1213,7 @@ class LofFundMonitor {
                         fill: false,
                     },
                     {
+                        _key: 'nav',
                         label: '场外净值',
                         data: navs,
                         borderColor: '#40a9ff',
@@ -1202,6 +1223,20 @@ class LofFundMonitor {
                         pointBackgroundColor: '#40a9ff',
                         tension: 0.2,
                         fill: false,
+                    },
+                    {
+                        _key: 'premium',
+                        label: '溢价率',
+                        data: premiums,
+                        borderColor: '#52c41a',
+                        backgroundColor: 'rgba(82, 196, 26, 0.06)',
+                        borderWidth: 2,
+                        borderDash: [5, 3],
+                        pointRadius: pointR,
+                        pointBackgroundColor: '#52c41a',
+                        tension: 0.2,
+                        fill: false,
+                        hidden: true,
                     },
                 ],
             },

@@ -260,22 +260,21 @@
                 </div>
             </div>
             <div id="fdPhase2" class="fd-phase">
-                <div class="fd-chart-legend">
-                    <span class="fd-legend-item">
-                        <span class="fd-legend-dot fd-legend-dot--price"></span> 场内价格
-                        <button class="fd-info-icon" data-tip="price" title="了解场内价格">?</button>
-                    </span>
-                    <span class="fd-legend-item">
-                        <span class="fd-legend-dot fd-legend-dot--nav"></span> 场外净值
-                        <button class="fd-info-icon" data-tip="nav" title="了解场外净值">?</button>
-                    </span>
+                <div class="fd-chart-area">
+                    <div class="fd-indicators">
+                        <button class="fd-ind-btn active" data-key="price"><span class="fd-ind-dot fd-ind-dot--price"></span>场内价格</button>
+                        <button class="fd-ind-btn active" data-key="nav"><span class="fd-ind-dot fd-ind-dot--nav"></span>场外净值</button>
+                        <button class="fd-ind-btn" data-key="premium"><span class="fd-ind-dot fd-ind-dot--premium"></span>溢价率</button>
+                    </div>
+                    <div class="fd-chart-main">
+                        <div class="fd-chart-range">
+                            <button class="fd-range-btn active" data-days="7">7日</button>
+                            <button class="fd-range-btn" data-days="30">30日</button>
+                            <button class="fd-range-btn" data-days="365">1年</button>
+                        </div>
+                        <div class="fd-chart-container"><canvas id="fdChart"></canvas></div>
+                    </div>
                 </div>
-                <div class="fd-chart-range">
-                    <button class="fd-range-btn active" data-days="7">7日</button>
-                    <button class="fd-range-btn" data-days="30">30日</button>
-                    <button class="fd-range-btn" data-days="365">1年</button>
-                </div>
-                <div class="fd-chart-container"><canvas id="fdChart"></canvas></div>
             </div>
         </div>
     </div>
