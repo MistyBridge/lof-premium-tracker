@@ -10,7 +10,7 @@
 
 **全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利模拟回测 · 溢价率排行 · PC + 移动 + 小程序三端**
 
-[在线使用](https://lof-fund-monitor.pages.dev) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md) · [本地版](https://github.com/MistyBridge/get-lof-test)
+[在线使用](https://lof-fund-monitor.pages.dev) · [更新日志](CHANGELOG_USER.md) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md) · [本地版](https://github.com/MistyBridge/get-lof-test)
 
 </div>
 
