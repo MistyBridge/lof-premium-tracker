@@ -353,65 +353,42 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     all_codes = list(set(sz_codes + sse_codes))
     logger.info(f"Kline history: {len(all_codes)} codes (SZ:{len(sz_codes)} SH:{len(sse_codes)})")
 
-    # ── 2. 逐批抓取 + 增量保存（不怕中断）──
+    # ── 2. 流式逐基金抓取 + 即时保存 ──
     hdb = get_history_db()
-    sem = threading.Semaphore(10)
     total = len(all_codes)
-    processed = [0]
-    total_rows = [0]
-    rows_lock = threading.Lock()
+    total_rows = 0
+    session2 = _make_session()  # NAV用独立session避免连接池冲突
 
-    def process_one(code: str) -> list:
-        """抓取单只基金K线数据，返回行列表"""
-        with sem:
-            try:
-                kline = fetch_kline_data(session, code, beg_ymd, end_ymd)
-                if not kline:
-                    return []
-                navs = fetch_nav_history(session, code, beg_dash, end_dash)
-                rows = []
-                for date_str, info in kline.items():
-                    nav = navs.get(date_str)
-                    price = info["price"]
-                    amount = info.get("amount", 0)
-                    change_pct = info.get("change_pct", 0)
-                    premium_rate = None
-                    if nav and nav > 0 and price > 0:
-                        premium_rate = round((price - nav) / nav * 100, 3)
-                    rows.append((
-                        date_str, code, price, nav, amount,
-                        change_pct, premium_rate
-                    ))
-                return rows
-            except Exception as e:
-                logger.warning(f"Kline fetch failed for {code}: {e}")
-                return []
-            finally:
-                processed[0] += 1
+    for idx, code in enumerate(all_codes):
+        try:
+            # 逐只基金请求，避免并发触发API限流
+            kline = fetch_kline_data(session, code, beg_ymd, end_ymd)
+            if not kline:
+                continue
+            navs = fetch_nav_history(session2, code, beg_dash, end_dash)
+            rows = []
+            for date_str, info in kline.items():
+                nav = navs.get(date_str)
+                price = info["price"]
+                amount = info.get("amount", 0)
+                change_pct = info.get("change_pct", 0)
+                premium_rate = None
+                if nav and nav > 0 and price > 0:
+                    premium_rate = round((price - nav) / nav * 100, 3)
+                rows.append((
+                    date_str, code, price, nav, amount,
+                    change_pct, premium_rate
+                ))
+            if rows:
+                hdb.save_kline_batch(rows)
+                total_rows += len(rows)
+        except Exception as e:
+            logger.warning("Kline fetch failed for %s: %s", code, e)
 
-    batch_size = 50
-    for i in range(0, total, batch_size):
-        batch = all_codes[i:i + batch_size]
-        threads = []
-        batch_rows = []
-        for code in batch:
-            def worker(c):
-                rows = process_one(c)
-                with rows_lock:
-                    batch_rows.extend(rows)
-            t = threading.Thread(target=worker, args=(code,))
-            t.start()
-            threads.append(t)
-        for t in threads:
-            t.join()
-        # 每批立即保存
-        if batch_rows:
-            hdb.save_kline_batch(batch_rows)
-            total_rows[0] += len(batch_rows)
-        logger.info("Kline progress: %d/%d funds, saved %d rows so far",
-                     min(i + batch_size, total), total, total_rows[0])
-        time.sleep(0.3)
+        if (idx + 1) % 50 == 0:
+            logger.info("Kline streaming: %d/%d funds, %d rows saved",
+                         idx + 1, total, total_rows)
 
-    logger.info("Kline history complete: %d/%d funds, %d total rows",
-                 processed[0], total, total_rows[0])
-    return total_rows[0]
+    logger.info("Kline streaming complete: %d/%d funds, %d rows saved",
+                 total, total, total_rows)
+    return total_rows
