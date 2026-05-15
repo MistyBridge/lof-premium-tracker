@@ -1282,6 +1282,44 @@ class LofFundMonitor {
         const tp1 = chartData[dataIdx + 1];
         const tp1Nav = tp1?.nav != null ? Number(tp1.nav) : null;
 
+        const capStr = maxCap >= 10000 ? (maxCap/10000).toFixed(2) + '万' : maxCap.toFixed(2) + '元';
+
+        // Calculate both arbitrage profits, pick the higher one
+        let bestProfit = null;
+        let bestLabel = '';
+
+        // Premium arbitrage: T nav → T+2 price
+        let premProfit = null;
+        if (tNav && tNav > 0 && tp2Price && tp2Price > 0) {
+            const shares = Math.floor(maxCap / tNav);
+            const buyAmt = shares * tNav;
+            const sellAmt = shares * tp2Price;
+            const purchaseFee = buyAmt * purchaseFeePct;
+            const sellComm = Math.max(sellAmt * commRate, commMin);
+            premProfit = sellAmt - buyAmt - purchaseFee - sellComm;
+        }
+
+        // Discount arbitrage: T price → T+1 NAV
+        let discProfit = null;
+        if (tPrice && tPrice > 0 && tp1Nav && tp1Nav > 0) {
+            const shares = Math.floor(maxCap / tPrice);
+            const buyAmt2 = shares * tPrice;
+            const redeemAmt = shares * tp1Nav;
+            const buyComm = Math.max(buyAmt2 * commRate, commMin);
+            const redeemFee = redeemAmt * redeemFeePct;
+            discProfit = redeemAmt - buyAmt2 - buyComm - redeemFee;
+        }
+
+        if (premProfit !== null && (discProfit === null || premProfit >= discProfit)) {
+            bestProfit = premProfit;
+            bestLabel = '溢价套利';
+        } else if (discProfit !== null) {
+            bestProfit = discProfit;
+            bestLabel = '折价套利';
+        }
+
+        const titleText = '套利模拟(投入' + capStr + ')-基于大模型分析';
+
         let html = '';
         html += '<div class="arb-tooltip-date">' + date + '</div>';
 
@@ -1292,50 +1330,13 @@ class LofFundMonitor {
             html += '<div class="arb-tooltip-row"><span>场外净值</span><span>' + (tNav != null ? tNav.toFixed(3) : '--') + '</span></div>';
         }
 
-        // --- Arbitrage simulation ---
         html += '<div class="arb-tooltip-sep"></div>';
-        html += '<div class="arb-tooltip-title">套利模拟 (投入 ' + (maxCap >= 10000 ? (maxCap/10000).toFixed(1)+'万' : maxCap+'元') + ')</div>';
+        html += '<div class="arb-tooltip-title">' + titleText + '</div>';
 
-        // Premium arbitrage: T nav → T+2 price
-        if (tNav && tNav > 0 && tp2Price && tp2Price > 0) {
-            const shares = Math.floor(maxCap / tNav);
-            const buyAmt = shares * tNav;
-            const sellAmt = shares * tp2Price;
-            const purchaseFee = buyAmt * purchaseFeePct;
-            const sellComm = Math.max(sellAmt * commRate, commMin);
-            const profit = sellAmt - buyAmt - purchaseFee - sellComm;
-            html += '<div class="arb-tooltip-subtitle">溢价套利 (T日净值申购→T+2卖出)</div>';
-            html += '<div class="arb-tooltip-row"><span>份额</span><span>' + shares + '份</span></div>';
-            html += '<div class="arb-tooltip-row"><span>申购成本</span><span>' + buyAmt.toFixed(2) + '元</span></div>';
-            html += '<div class="arb-tooltip-row"><span>申购费</span><span>-' + purchaseFee.toFixed(2) + '</span></div>';
-            html += '<div class="arb-tooltip-row"><span>卖出收入</span><span>' + sellAmt.toFixed(2) + '元</span></div>';
-            html += '<div class="arb-tooltip-row"><span>卖出佣金</span><span>-' + sellComm.toFixed(2) + '</span></div>';
-            html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>预计收益</span><span class="' + (profit >= 0 ? 'arb-pos' : 'arb-neg') + '">' + (profit >= 0 ? '+' : '') + profit.toFixed(2) + '元</span></div>';
+        if (bestProfit !== null) {
+            html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>' + bestLabel + ' 预计收益</span><span class="' + (bestProfit >= 0 ? 'arb-pos' : 'arb-neg') + '">' + (bestProfit >= 0 ? '+' : '') + bestProfit.toFixed(2) + '元</span></div>';
         } else {
-            html += '<div class="arb-tooltip-subtitle">溢价套利</div>';
-            html += '<div class="arb-tooltip-row"><span>数据不足</span><span>缺少T+2价格</span></div>';
-        }
-
-        html += '<div class="arb-tooltip-sep"></div>';
-
-        // Discount arbitrage: T price → T+1 NAV
-        if (tPrice && tPrice > 0 && tp1Nav && tp1Nav > 0) {
-            const shares = Math.floor(maxCap / tPrice);
-            const buyAmt2 = shares * tPrice;
-            const redeemAmt = shares * tp1Nav;
-            const buyComm = Math.max(buyAmt2 * commRate, commMin);
-            const redeemFee = redeemAmt * redeemFeePct;
-            const profit2 = redeemAmt - buyAmt2 - buyComm - redeemFee;
-            html += '<div class="arb-tooltip-subtitle">折价套利 (T日买入→T+1赎回)</div>';
-            html += '<div class="arb-tooltip-row"><span>份额</span><span>' + shares + '份</span></div>';
-            html += '<div class="arb-tooltip-row"><span>买入成本</span><span>' + buyAmt2.toFixed(2) + '元</span></div>';
-            html += '<div class="arb-tooltip-row"><span>买入佣金</span><span>-' + buyComm.toFixed(2) + '</span></div>';
-            html += '<div class="arb-tooltip-row"><span>赎回收入</span><span>' + redeemAmt.toFixed(2) + '元</span></div>';
-            html += '<div class="arb-tooltip-row"><span>赎回费</span><span>-' + redeemFee.toFixed(2) + '</span></div>';
-            html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>预计收益</span><span class="' + (profit2 >= 0 ? 'arb-pos' : 'arb-neg') + '">' + (profit2 >= 0 ? '+' : '') + profit2.toFixed(2) + '元</span></div>';
-        } else {
-            html += '<div class="arb-tooltip-subtitle">折价套利</div>';
-            html += '<div class="arb-tooltip-row"><span>数据不足</span><span>缺少T+1净值</span></div>';
+            html += '<div class="arb-tooltip-row"><span>数据不足</span><span>缺少后续价格/净值</span></div>';
         }
 
         el.innerHTML = html;

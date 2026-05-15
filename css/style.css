@@ -656,7 +656,7 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .arb-tooltip-row span:first-child { color: var(--text2); }
 .arb-tooltip-row span:last-child { font-weight: 500; font-variant-numeric: tabular-nums; }
 .arb-tooltip-sep { border-top: 1px solid var(--border); margin: 6px 0; }
-.arb-tooltip-title { font-weight: 600; color: var(--primary); margin-bottom: 2px; }
+.arb-tooltip-title { font-weight: 600; color: var(--primary); margin-bottom: 2px; font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .arb-tooltip-subtitle { font-size: 0.72rem; color: var(--text2); margin: 4px 0 2px; font-weight: 600; }
 .arb-tooltip-profit span:last-child { font-size: 0.9rem; font-weight: 700; }
 .arb-pos { color: #e74c3c; }
