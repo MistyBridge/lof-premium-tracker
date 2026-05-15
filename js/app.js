@@ -525,6 +525,18 @@ class LofFundMonitor {
         if (lastPageBtn) lastPageBtn.addEventListener("click", () => this.goToLastPage());
         if (pageSizeSelect) pageSizeSelect.addEventListener("change", (e) => this.changePageSize(e.target.value));
 
+        // 图表下拉菜单（change 事件只在真正切换时触发，click 不会误触发）
+        const indSel = document.getElementById('fdIndSelect');
+        const rangeSel = document.getElementById('fdRangeSelect');
+        if (indSel) indSel.addEventListener('change', (e) => {
+            this._detailMode = e.target.value;
+            this._loadDetailChart(this._detailFundCode);
+        });
+        if (rangeSel) rangeSel.addEventListener('change', (e) => {
+            this._detailDays = parseInt(e.target.value);
+            this._loadDetailChart(this._detailFundCode);
+        });
+
         // 深色模式按钮
         const darkModeBtn = document.getElementById('darkModeBtn');
         if (darkModeBtn) darkModeBtn.addEventListener('click', () => this.toggleDarkMode());
@@ -565,19 +577,7 @@ class LofFundMonitor {
                 this._showChartInfoTip(infoIcon.dataset.tip);
                 return;
             }
-            // 图表指标下拉菜单
-            if (e.target.id === 'fdIndSelect') {
-                this._detailMode = e.target.value;
-                this._renderEmptyChart();
-                this._loadDetailChart(this._detailFundCode);
-                return;
-            }
-            // 时间范围下拉菜单
-            if (e.target.id === 'fdRangeSelect') {
-                this._detailDays = parseInt(e.target.value);
-                this._loadDetailChart(this._detailFundCode);
-                return;
-            }
+            // 图表指标/时间范围下拉切换 → 由 change 事件处理，避免 click 时误触发
             // 详情弹窗内代码/名称点击 → 复制文本 (Change 6)
             const detailCopy = e.target.closest('[data-copy]');
             if (detailCopy) {
