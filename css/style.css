@@ -611,7 +611,8 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-profit-help:hover { border-color: var(--primary); color: var(--primary); background: #e8f4ff; }
 
 .fd-fee-breakdown {
-    display: none; position: absolute; z-index: 15; top: 100%; left: 0; right: 0; margin-top: 4px;
+    display: none; position: absolute; z-index: 15; top: 100%; left: 0; margin-top: 4px;
+    width: max-content; min-width: 200px;
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     padding: 12px 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
