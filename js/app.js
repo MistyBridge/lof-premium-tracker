@@ -200,6 +200,7 @@ class LofFundMonitor {
             const sellCommissionAmount = actualCommission;
             const profitRate = premium - purchaseFeeRate - sellCommissionRate;
             const profitAmount = capital * profitRate / 100;
+            if (profitAmount <= 0) return { rate: 0, amount: 0, capital, direction: '不建议交易' };
             return {
                 rate: profitRate, amount: profitAmount, capital,
                 direction: '溢价套利',
@@ -219,6 +220,7 @@ class LofFundMonitor {
             const redemptionFeeAmount = capital * redemptionFeeRate / 100;
             const profitRate = Math.abs(premium) - buyCommissionRate - redemptionFeeRate;
             const profitAmount = capital * profitRate / 100;
+            if (profitAmount <= 0) return { rate: 0, amount: 0, capital, direction: '不建议交易' };
             return {
                 rate: profitRate, amount: profitAmount, capital,
                 direction: '折价套利',
@@ -241,8 +243,9 @@ class LofFundMonitor {
         const est = this.calcEstimatedProfit(fund);
         if (!est) return;
         const bd = est.breakdown;
-        if (est.capital <= 0) {
-            const html = `<div class="profit-detail"><div class="profit-detail-title">${fund.code} ${fund.name}</div><div class="profit-detail-section"><div class="profit-detail-row"><span>申购状态</span><span style="color:#27ae60;font-weight:600">暂停申购</span></div><div class="profit-detail-row"><span>预计收益额</span><span>0 元（无法申购）</span></div></div></div>`;
+        if (est.capital <= 0 || est.direction === '不建议交易') {
+            const reason = est.capital <= 0 ? '暂停申购' : '交易成本高于溢价收益，不建议操作';
+            const html = `<div class="profit-detail"><div class="profit-detail-title">${fund.code} ${fund.name}</div><div class="profit-detail-section"><div class="profit-detail-row"><span>预计收益额</span><span>0 元</span></div><div class="profit-detail-row hint"><span>${reason}</span><span></span></div></div></div>`;
             this._showProfitPopover(html, fundCode);
             return;
         }
