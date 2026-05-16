@@ -246,7 +246,7 @@ class LofFundMonitor {
         lines.push(`<div class="profit-detail-row ${amtClass} total"><span>预计收益额</span><span>${est.amount > 0 ? '+' : ''}${est.amount.toFixed(2)}元</span></div>`);
         lines.push(`</div>`);
 
-        lines.push(`<div class="profit-detail-footer">⚠️ 套利按最短时间估算，忽略T+N价格波动风险</div>`);
+        lines.push(`<div class="profit-detail-footer">所有预估收益为理论计算结果，不产生任何收益保证</div>`);
         lines.push(`</div>`);
 
         this._showProfitPopover(lines.join(''), fundCode);
@@ -1349,6 +1349,7 @@ class LofFundMonitor {
             html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>不建议操作</span><span class="arb-neg">无正收益机会</span></div>';
         }
 
+        html += '<div class="arb-tooltip-disclaimer">所有预估收益为理论计算结果，不产生任何收益保证</div>';
         el.innerHTML = html;
         el.style.display = 'block';
     }
@@ -1379,6 +1380,7 @@ class LofFundMonitor {
             rows += '<tr class="fd-fee-total"><td>预计收益率</td><td class="fd-fee-val ' + (est.rate > 0 ? 'fd-pos' : 'fd-neg') + '">' + (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%</td></tr>';
         }
         if (rows) {
+            rows += '<tr class="fd-fee-disclaimer"><td colspan="2">所有预估收益为理论计算结果，不产生任何收益保证</td></tr>';
             breakdown.innerHTML = '<table class="fd-fee-table"><tbody>' + rows + '</tbody></table>';
             breakdown.classList.add('show');
         }

@@ -671,8 +671,10 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .arb-tooltip-title { font-weight: 600; color: var(--primary); margin-bottom: 2px; font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .arb-tooltip-subtitle { font-size: 0.72rem; color: var(--text2); margin: 4px 0 2px; font-weight: 600; }
 .arb-tooltip-profit span:last-child { font-size: 0.9rem; font-weight: 700; }
+.arb-tooltip-disclaimer { font-size: 0.65rem; color: var(--text2); opacity: 0.6; text-align: center; margin-top: 6px; padding-top: 4px; border-top: 1px solid var(--border); }
 .arb-pos { color: #e74c3c; }
 .arb-neg { color: #27ae60; }
+.fd-fee-disclaimer { font-size: 0.68rem; color: var(--text2); opacity: 0.6; text-align: center; padding-top: 6px; }
 
 /* Chart controls: indicator dropdown left, range dropdown right */
 .fd-chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
