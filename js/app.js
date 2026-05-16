@@ -1093,13 +1093,19 @@ class LofFundMonitor {
     }
 
     _loadDetailChart(code) {
+        if (typeof Chart === 'undefined') {
+            console.error('[LOF] Chart.js not loaded');
+            return;
+        }
         const days = this._detailDays || 7;
         api.getFundChart(code, days).then(chartResult => {
             const chartData = chartResult.data?.chart || [];
             if (chartData.length > 0) {
                 this._renderDetailChart(chartData);
             }
-        }).catch(() => {});
+        }).catch(err => {
+            console.error('[LOF] Chart load failed:', err);
+        });
     }
 
     _renderEmptyChart() {
