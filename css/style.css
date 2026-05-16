@@ -722,8 +722,8 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 /* Chart controls: indicator dropdown left, range dropdown right */
 .fd-chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
 .fd-ind-select, .fd-range-select { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 0.82rem; cursor: pointer; outline: none; transition: border-color 0.2s; }
-.fd-fullscreen-btn { position: absolute; top: 6px; right: 6px; z-index: 5; padding: 4px 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: rgba(128,128,128,0.35); font-size: 1rem; cursor: pointer; line-height: 1; transition: all 0.2s; }
-.fd-fullscreen-btn:hover { color: var(--primary); background: rgba(24,144,255,0.08); }
+.fd-fullscreen-btn { position: absolute; top: 6px; right: 6px; z-index: 5; padding: 4px 8px; border: 1px solid transparent; border-radius: 6px; background: transparent; color: rgba(128,128,128,0.5); font-size: 1rem; cursor: pointer; line-height: 1; transition: all 0.2s; }
+.fd-fullscreen-btn:hover { color: var(--primary); border-color: rgba(24,144,255,0.3); background: rgba(24,144,255,0.08); }
 .fd-ind-select:hover, .fd-range-select:hover { border-color: var(--primary); }
 .fd-ind-select:focus, .fd-range-select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
 .dark-mode .fd-ind-select, .dark-mode .fd-range-select { background: #1a2a4a; border-color: #334466; color: #c8d6e5; }
