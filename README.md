@@ -11,7 +11,7 @@
 
 **全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利模拟回测 · 溢价率排行 · PC + 移动端**
 
-[jinkuaicha.com](https://jinkuaicha.com) · [更新日志](CHANGELOG_USER.md) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md)
+[在线使用](https://jinkuaicha.com) · [更新日志](CHANGELOG_USER.md) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md)
 
 </div>
 
