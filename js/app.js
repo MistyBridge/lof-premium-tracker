@@ -130,11 +130,10 @@ class LofFundMonitor {
             }
             // 保存原始数据总数（过滤前）
             const totalFromApi = result.data.length;
-            // 过滤停牌、无溢价率、暂停申购的基金
+            // 过滤停牌、无溢价率的基金（停购基金动态过滤，不在此处处理）
             this.funds = result.data.filter(fund => {
                 if (fund.is_suspended) return false;
                 if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
-                if (!this.showUnpurchasable && fund.can_purchase === false) return false;  // 暂停申购
                 return true;
             });
             this.applyFilters();
@@ -301,6 +300,9 @@ class LofFundMonitor {
 
     applyFilters() {
         let filtered = [...this.funds];
+        if (!this.showUnpurchasable) {
+            filtered = filtered.filter(fund => fund.can_purchase !== false);
+        }
         if (this.searchKeyword) {
             const keyword = this.searchKeyword.toLowerCase();
             filtered = filtered.filter(fund =>
