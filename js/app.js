@@ -15,17 +15,22 @@ class LofFundMonitor {
         this.searchTimeout = null;
         this.isLoading = false;
         // 筛选参数（从 localStorage 恢复或用默认值）
-        this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
-        this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
-        this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
-        this.showSuspended = localStorage.getItem('lof_showSuspended') === '1';
-        this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') === '1';
-        // 预计收益计算参数（从 localStorage 恢复或用默认值）
-        this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
-        this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
-        this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;        // 元
-        // 深色模式（从 localStorage 恢复，默认浅色）
-        this.darkMode = localStorage.getItem('lof_darkMode') || 'light';
+        try {
+            this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
+            this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
+            this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
+            this.showSuspended = localStorage.getItem('lof_showSuspended') === '1';
+            this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') === '1';
+            this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;
+            this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;
+            this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;
+            this.darkMode = localStorage.getItem('lof_darkMode') || 'light';
+        } catch (e) {
+            this.threshold = 0; this.avgThreshold = 0; this.minAmount = 100;
+            this.showSuspended = false; this.showUnpurchasable = false;
+            this.commissionRate = 1.5; this.commissionMin = 5; this.maxCapital = 1000;
+            this.darkMode = 'light';
+        }
         this.bindEvents();
         this.applyDarkMode(false); // 不保存，仅应用
         this.init();
@@ -88,16 +93,19 @@ class LofFundMonitor {
     }
 
     _showWelcome() {
-        // sessionStorage: 浏览器会话内记住，关闭标签页后自动清除
-        if (sessionStorage.getItem('jkc_welcome_shown')) return;
-        sessionStorage.setItem('jkc_welcome_shown', '1');
-        const overlay = document.getElementById('welcomeOverlay');
-        const agreeBtn = document.getElementById('welcomeAgreeBtn');
-        if (overlay && agreeBtn) {
-            overlay.classList.remove('hidden');
-            agreeBtn.addEventListener('click', () => {
-                overlay.classList.add('hidden');
-            }, { once: true });
+        try {
+            if (sessionStorage.getItem('jkc_welcome_shown')) return;
+            sessionStorage.setItem('jkc_welcome_shown', '1');
+            const overlay = document.getElementById('welcomeOverlay');
+            const agreeBtn = document.getElementById('welcomeAgreeBtn');
+            if (overlay && agreeBtn) {
+                overlay.classList.remove('hidden');
+                agreeBtn.addEventListener('click', () => {
+                    overlay.classList.add('hidden');
+                }, { once: true });
+            }
+        } catch (e) {
+            // sessionStorage may be blocked in some browsers
         }
     }
 
