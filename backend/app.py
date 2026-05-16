@@ -116,7 +116,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         # ── 费率数据 ──
         "purchase_fee_rate": fund.get("purchase_fee_rate"),  # 申购优惠费率（%）
         "redemption_fee_rate": fund.get("redemption_fee_rate"),  # 赎回费率最短档（%）
-        "purchase_limit": fund.get("purchase_limit"),  # 日累计申购限额（元），None=无限额
+        "purchase_limit": 0 if fund.get("can_purchase") is False else fund.get("purchase_limit"),  # 停止申购→0
         # ── 状态 ──
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
         "can_purchase": fund.get("can_purchase"),  # 是否可申购（None=未知）
