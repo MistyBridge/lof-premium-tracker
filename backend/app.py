@@ -24,6 +24,7 @@ from data_fetcher import get_fetcher
 from history_db import get_history_db, filter_and_forward_fill
 from chart_cache import get_chart_cache
 from task_queue import get_task_queue
+from nav_backfill import run_nav_backfill
 
 # ─────────────────────────────────────────────
 # 日志配置
@@ -238,6 +239,20 @@ def init_kline_history():
         return fetch_kline_historical_data()
 
     task = tq.submit("kline_backfill", "K线历史数据补填", _do_kline_fetch)
+    if task.status.value == "running":
+        return ok({"status": "already_running", "task": task.to_dict()})
+    return ok({"status": "started", "task": task.to_dict()})
+
+
+@app.route("/init-nav-backfill", methods=["POST"])
+def init_nav_backfill():
+    """手动触发净值数据回填 — 补充 daily_kline 中缺失的 NAV"""
+    tq = get_task_queue()
+
+    def _do_nav_backfill():
+        return run_nav_backfill()
+
+    task = tq.submit("nav_backfill", "净值数据回填", _do_nav_backfill)
     if task.status.value == "running":
         return ok({"status": "already_running", "task": task.to_dict()})
     return ok({"status": "started", "task": task.to_dict()})
