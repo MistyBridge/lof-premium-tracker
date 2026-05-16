@@ -244,7 +244,7 @@ def init_kline_history():
     return ok({"status": "started", "task": task.to_dict()})
 
 
-@app.route("/init-nav-backfill", methods=["POST"])
+@app.route("/api/nav-backfill", methods=["POST"])
 def init_nav_backfill():
     """手动触发净值数据回填 — 补充 daily_kline 中缺失的 NAV"""
     tq = get_task_queue()
