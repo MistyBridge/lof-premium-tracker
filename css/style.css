@@ -691,6 +691,8 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-info-icon:hover { border-color: var(--primary); color: var(--primary); background: #e8f4ff; }
 
 .fd-chart-container { width: 100%; height: 320px; margin-top: 4px; position: relative; }
+.fd-chart-container:fullscreen { height: 100vh; background: var(--card); padding: 16px; display: flex; align-items: center; }
+.fd-chart-container:fullscreen canvas { max-height: 100vh; }
 .fd-chart-container canvas { width: 100% !important; height: 100% !important; }
 
 /* Arbitrage tooltip */
@@ -720,6 +722,9 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 /* Chart controls: indicator dropdown left, range dropdown right */
 .fd-chart-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px; }
 .fd-ind-select, .fd-range-select { padding: 6px 12px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font-size: 0.82rem; cursor: pointer; outline: none; transition: border-color 0.2s; }
+.fd-fullscreen-btn { display: none; padding: 6px 10px; border: 1.5px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text2); font-size: 1.1rem; cursor: pointer; line-height: 1; transition: all 0.2s; }
+.fd-fullscreen-btn:hover { border-color: var(--primary); color: var(--primary); }
+@media (max-width: 600px) { .fd-fullscreen-btn { display: inline-block; } }
 .fd-ind-select:hover, .fd-range-select:hover { border-color: var(--primary); }
 .fd-ind-select:focus, .fd-range-select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(24,144,255,0.15); }
 .dark-mode .fd-ind-select, .dark-mode .fd-range-select { background: #1a2a4a; border-color: #334466; color: #c8d6e5; }

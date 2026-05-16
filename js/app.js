@@ -71,6 +71,20 @@ class LofFundMonitor {
         }
     }
 
+    _toggleChartFullscreen() {
+        const container = document.querySelector('.fd-chart-container');
+        if (!container) return;
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            container.requestFullscreen().then(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => {});
+                }
+            }).catch(() => {});
+        }
+    }
+
     _showWelcome() {
         // sessionStorage: 浏览器会话内记住，关闭标签页后自动清除
         if (sessionStorage.getItem('jkc_welcome_shown')) return;
@@ -552,6 +566,10 @@ class LofFundMonitor {
             this._detailDays = parseInt(e.target.value);
             this._loadDetailChart(this._detailFundCode);
         });
+
+        // 图表全屏按钮
+        const fsBtn = document.getElementById('fdFullscreenBtn');
+        if (fsBtn) fsBtn.addEventListener('click', () => this._toggleChartFullscreen());
 
         // 深色模式按钮
         const darkModeBtn = document.getElementById('darkModeBtn');
