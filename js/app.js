@@ -185,7 +185,7 @@ class LofFundMonitor {
         const purchaseLimit = fund.can_purchase === false ? 0 : fund.purchase_limit;
         const maxCap = overrideCapital !== null ? overrideCapital : this.maxCapital;
         const capital = purchaseLimit ? Math.min(maxCap, purchaseLimit) : maxCap;
-        if (capital <= 0) return { rate: 0, amount: 0, capital: 0, direction: '暂停申购', breakdown: { premiumRate: premium, maxCapital: maxCap } };
+        if (capital <= 0) return { rate: 0, amount: 0, capital: 0, direction: '暂停申购', breakdown: { premiumRate: premium, purchaseLimit: 0, maxCapital: maxCap } };
 
         const commissionRatePct = this.commissionRate / 10000;
         const rawCommission = capital * commissionRatePct;
@@ -241,6 +241,11 @@ class LofFundMonitor {
         const est = this.calcEstimatedProfit(fund);
         if (!est) return;
         const bd = est.breakdown;
+        if (est.capital <= 0) {
+            const html = `<div class="profit-detail"><div class="profit-detail-title">${fund.code} ${fund.name}</div><div class="profit-detail-section"><div class="profit-detail-row"><span>申购状态</span><span style="color:#27ae60;font-weight:600">暂停申购</span></div><div class="profit-detail-row"><span>预计收益额</span><span>0 元（无法申购）</span></div></div></div>`;
+            this._showProfitPopover(html, fundCode);
+            return;
+        }
 
         let lines = [];
         lines.push(`<div class="profit-detail">`);
