@@ -7,7 +7,7 @@ class LofFundMonitor {
         this.funds = [];
         this.filteredFunds = [];
         this.currentPage = 1;
-        this.pageSize = 50;
+        this.pageSize = 20;
         this.sortField = 'premium_rate';
         this.sortOrder = 'desc';
         this.searchKeyword = '';
