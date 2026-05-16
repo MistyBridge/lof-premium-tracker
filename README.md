@@ -7,10 +7,11 @@
 ![License](https://img.shields.io/badge/license-AGPLv3-red.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 ![DB](https://img.shields.io/badge/data-396%2F538%20funds%20%7C%2097K%20rows-orange.svg)
+![Website](https://img.shields.io/badge/www-jinkuaicha.com-1890ff.svg)
 
 **全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利模拟回测 · 溢价率排行 · PC + 移动端**
 
-[在线使用](https://lof-fund-monitor.pages.dev) · [更新日志](CHANGELOG_USER.md) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md) · [本地版](https://github.com/MistyBridge/get-lof-test)
+[jinkuaicha.com](https://jinkuaicha.com) · [更新日志](CHANGELOG_USER.md) · [技术文档](docs/TECH.md) · [开发指南](docs/DEVELOPMENT.md)
 
 </div>
 
