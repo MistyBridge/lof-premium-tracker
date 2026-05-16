@@ -90,7 +90,6 @@ class LOFDataFetcher:
             cache = {}
             for r in rows:
                 code = r["code"]
-                # float() 转换 PostgreSQL NUMERIC → Decimal，避免与 float 混合运算报错
                 premium = float(r["premium_rate"]) if r["premium_rate"] is not None else None
                 price = float(r["price"] or 0)
                 nav = float(r["nav"] or 0)
@@ -111,6 +110,56 @@ class LOFDataFetcher:
                     "nav_date": latest_date, "is_formal_nav": True,
                     "_from_history": True, "_history_date": latest_date,
                 }
+
+            # 补录 premium_snapshots 中没有的基金（停牌等），从 funds 表和 daily_kline 获取
+            try:
+                from history_db import get_history_db
+                hdb2 = get_history_db()
+                conn2 = hdb2._pool.getconn()
+                try:
+                    with conn2.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                        # 查找不在缓存中的基金代码
+                        cached_codes = list(cache.keys())
+                        if cached_codes:
+                            placeholders = ",".join(["%s"] * len(cached_codes))
+                            cur.execute(
+                                f"SELECT code FROM funds WHERE code NOT IN ({placeholders})",
+                                cached_codes
+                            )
+                        else:
+                            cur.execute("SELECT code FROM funds")
+                        missing = [row["code"] for row in cur.fetchall()]
+                        if missing:
+                            # 从 daily_kline 获取最新价格数据
+                            latest_kline_date = latest_date
+                            placeholders2 = ",".join(["%s"] * len(missing))
+                            cur.execute(
+                                f"SELECT code, price, nav, amount, premium_rate FROM daily_kline WHERE date = %s AND code IN ({placeholders2})",
+                                [latest_kline_date] + missing
+                            )
+                            kline_data = {row["code"]: row for row in cur.fetchall()}
+                            for code in missing:
+                                kd = kline_data.get(code, {})
+                                price = float(kd.get("price") or 0) if kd.get("price") else None
+                                nav = float(kd.get("nav") or 0) if kd.get("nav") else None
+                                premium = float(kd.get("premium_rate")) if kd.get("premium_rate") is not None else None
+                                premium_status = None
+                                if premium is not None:
+                                    premium_status = "溢价" if premium > 0 else "折价" if premium < 0 else "平价"
+                                cache[code] = {
+                                    "code": code, "name": name_map.get(code, code),
+                                    "price": price, "nav": nav,
+                                    "premium_rate": premium, "premium_status": premium_status,
+                                    "amount": float(kd.get("amount") or 0) if kd.get("amount") else None,
+                                    "volume": None, "change_pct": None,
+                                    "nav_date": latest_date, "is_formal_nav": True,
+                                    "_from_history": True, "_history_date": latest_date,
+                                }
+                        logger.info("Supplemented %d missing funds from daily_kline/funds", len(missing))
+                finally:
+                    hdb2._pool.putconn(conn2)
+            except Exception as e2:
+                logger.debug("Supplementary fund load failed (non-fatal): %s", e2)
 
             with self._lock:
                 if not self._cache:
