@@ -19,8 +19,8 @@ class LofFundMonitor {
             this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
             this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
             this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
-            this.showSuspended = localStorage.getItem('lof_showSuspended') === '1';
-            this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') === '1';
+            this.showSuspended = localStorage.getItem('lof_showSuspended_v2') === '1';
+            this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable_v2') === '1';
             this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;
             this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;
             this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;
@@ -746,8 +746,8 @@ class LofFundMonitor {
         const suspendedCheck = document.getElementById('showSuspendedCheck');
         this.showUnpurchasable = unpurchasableCheck?.checked || false;
         this.showSuspended = suspendedCheck?.checked || false;
-        localStorage.setItem('lof_showUnpurchasable', this.showUnpurchasable ? '1' : '0');
-        localStorage.setItem('lof_showSuspended', this.showSuspended ? '1' : '0');
+        localStorage.setItem('lof_showUnpurchasable_v2', this.showUnpurchasable ? '1' : '0');
+        localStorage.setItem('lof_showSuspended_v2', this.showSuspended ? '1' : '0');
         // 保存所有设置到 localStorage（扩展记忆功能）
         localStorage.setItem('lof_threshold', this.threshold);
         localStorage.setItem('lof_avgThreshold', this.avgThreshold);
