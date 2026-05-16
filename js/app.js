@@ -174,9 +174,10 @@ class LofFundMonitor {
         const price = fund.price;
         if (!nav || !price) return null;
 
-        const purchaseLimit = fund.purchase_limit;
+        const purchaseLimit = fund.can_purchase === false ? 0 : fund.purchase_limit;
         const maxCap = overrideCapital !== null ? overrideCapital : this.maxCapital;
         const capital = purchaseLimit ? Math.min(maxCap, purchaseLimit) : maxCap;
+        if (capital <= 0) return { rate: 0, amount: 0, capital: 0, direction: '暂停申购', breakdown: { premiumRate: premium, maxCapital: maxCap } };
 
         const commissionRatePct = this.commissionRate / 10000;
         const rawCommission = capital * commissionRatePct;
