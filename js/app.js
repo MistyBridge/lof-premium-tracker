@@ -166,7 +166,6 @@ class LofFundMonitor {
 
     // ===== 预计收益计算 =====
     calcEstimatedProfit(fund, overrideCapital = null) {
-        if (fund.can_purchase === false) return { rate: 0, amount: 0, capital: 0, direction: '停止申购', breakdown: { maxCapital: 0 } };
         const premium = fund.premium_rate;
         if (premium === null || premium === undefined) return null;
 
@@ -1155,18 +1154,14 @@ class LofFundMonitor {
         // 申购限额
         const limitEl = document.getElementById('fdPurchaseLimit');
         if (limitEl) {
-            if (fund.can_purchase === false) {
-                limitEl.parentElement.style.display = '';
+            limitEl.parentElement.style.display = '';
+            limitEl.className = 'fd-kpi-value';
+            if (fund.purchase_limit != null && fund.purchase_limit > 0) {
+                limitEl.textContent = (fund.purchase_limit / 10000).toFixed(0) + '万';
+            } else if (fund.can_purchase === false) {
                 limitEl.textContent = '暂停申购';
-                limitEl.className = 'fd-kpi-value fd-neg';
             } else {
-                limitEl.parentElement.style.display = '';
-                limitEl.className = 'fd-kpi-value';
-                if (fund.purchase_limit != null && fund.purchase_limit > 0) {
-                    limitEl.textContent = (fund.purchase_limit / 10000).toFixed(0) + '万';
-                } else {
-                    limitEl.textContent = '不限额';
-                }
+                limitEl.textContent = '不限额';
             }
         }
 
