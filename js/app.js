@@ -132,16 +132,16 @@ class LofFundMonitor {
     async loadFunds() {
         this.isLoading = true;
         try {
-            const result = await api.getFunds(1, 600);
+            // 始终从后端获取全部基金（含停牌、停购），由前端 applyFilters 按开关过滤
+            const result = await api.getFunds(1, 600, true, true);
             // 记录服务端数据时间戳，用于刷新按钮时间对齐
             if (result.meta?.last_fetch) {
                 this._lastServerFetch = result.meta.last_fetch;
             }
             // 保存原始数据总数（过滤前）
             const totalFromApi = result.data.length;
-            // 过滤停牌、无溢价率的基金（停购基金动态过滤，不在此处处理）
+            // 仅过滤无溢价率的基金（无效数据），停牌和停购由 applyFilters 处理
             this.funds = result.data.filter(fund => {
-                if (fund.is_suspended) return false;
                 if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
                 return true;
             });

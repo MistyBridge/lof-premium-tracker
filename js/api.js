@@ -87,10 +87,10 @@ class LofApiService {
     }
 
     // 2. 基金列表
-    async getFunds(page, pageSize) {
+    async getFunds(page, pageSize, showSuspended = false, showUnpurchasable = false) {
         page = page || 1;
         pageSize = pageSize || this.config.DEFAULT_PAGE_SIZE;
-        return this.requestWithRetry(`/api/funds?page=${page}&page_size=${pageSize}`);
+        return this.requestWithRetry(`/api/funds?page=${page}&page_size=${pageSize}&suspended=${showSuspended ? '1' : '0'}&unpurchasable=${showUnpurchasable ? '1' : '0'}`);
     }
 
     // 3. 基金详情
