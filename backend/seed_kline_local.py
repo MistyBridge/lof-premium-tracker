@@ -19,13 +19,16 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
 DB_CONFIG = {
-    "host": "yamabiko.proxy.rlwy.net",
-    "port": 53799,
-    "dbname": "railway",
-    "user": "postgres",
-    "password": "REDACTED",
+    "host": os.getenv("DB_HOST", "yamabiko.proxy.rlwy.net"),
+    "port": int(os.getenv("DB_PORT", "53799")),
+    "dbname": os.getenv("DB_NAME", "railway"),
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD"),
     "connect_timeout": 30,
 }
+if not DB_CONFIG["password"]:
+    print("Error: DB_PASSWORD environment variable is required")
+    sys.exit(1)
 
 DAYS_LOOKBACK = 395
 BATCH_SIZE = 500
