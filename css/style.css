@@ -512,6 +512,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 /* 深色模式 ripple 适配 */
 .dark-mode .mobile-card::after { background: rgba(92,158,255,0.2); }
 
+/* ===== 欢迎弹窗 ===== */
+.welcome-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 10000; display: flex; align-items: safe center; justify-content: center; padding: 24px 0; }
+.welcome-modal { background: var(--card); border-radius: 16px; max-width: 520px; width: 95%; max-height: calc(100vh - 48px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overscroll-behavior: contain; }
+.welcome-header { background: linear-gradient(135deg, #1890ff, #096dd9); padding: 30px 28px; border-radius: 16px 16px 0 0; text-align: center; color: #fff; }
+.welcome-header h2 { font-size: 1.5rem; margin-bottom: 4px; }
+.welcome-sub { font-size: 0.85rem; opacity: 0.85; }
+.welcome-body { padding: 24px 28px; }
+.welcome-section { margin-bottom: 18px; }
+.welcome-section:last-child { margin-bottom: 0; }
+.welcome-section h3 { font-size: 0.95rem; color: var(--text); margin-bottom: 8px; }
+.welcome-section p { font-size: 0.85rem; color: var(--text2); line-height: 1.8; }
+.welcome-qq { display: inline-flex; align-items: center; gap: 6px; background: #f0f7ff; border: 1px solid #b3d8ff; border-radius: 8px; padding: 8px 14px; color: #1890ff; font-weight: 600; font-size: 0.9rem; text-decoration: none; transition: background 0.2s; }
+.welcome-qq:hover { background: #e6f3ff; }
+.welcome-footer { padding: 16px 28px 24px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.welcome-agree { width: 100%; padding: 12px; background: #1890ff; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.welcome-agree:hover { background: #096dd9; }
+.welcome-remind { font-size: 0.72rem; color: var(--text2); text-align: center; }
+.dark-mode .welcome-qq { background: #1a2a4a; border-color: #334466; color: #4a90d9; }
+
+@media (max-width: 600px) {
+    .welcome-overlay { padding: 0; align-items: flex-end; }
+    .welcome-modal { max-width: 100%; width: 100%; border-radius: 20px 20px 0 0; margin-bottom: 0; max-height: 92vh; }
+    .welcome-header { padding: 24px 20px; border-radius: 20px 20px 0 0; }
+    .welcome-header h2 { font-size: 1.3rem; }
+    .welcome-body { padding: 18px 16px; }
+    .welcome-footer { padding: 12px 16px 20px; }
+}
+
 /* ===== 基金详情弹窗 ===== */
 .fund-detail-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;

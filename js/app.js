@@ -30,6 +30,19 @@ class LofFundMonitor {
     }
 
     async init() {
+        // 欢迎弹窗 —— 首次访问显示，同意后记录到 localStorage
+        if (!localStorage.getItem('jkc_welcome_accepted')) {
+            const overlay = document.getElementById('welcomeOverlay');
+            const agreeBtn = document.getElementById('welcomeAgreeBtn');
+            if (overlay && agreeBtn) {
+                overlay.style.display = 'flex';
+                agreeBtn.addEventListener('click', () => {
+                    overlay.style.display = 'none';
+                    localStorage.setItem('jkc_welcome_accepted', '1');
+                }, { once: true });
+            }
+        }
+
         this.showLoading(true);
         this.updateStatus('正在连接服务...');
         let retries = 0;
