@@ -18,7 +18,7 @@ class LofFundMonitor {
         this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
         this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
         this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
-        this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') === '1';
+        this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') !== '0';
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
@@ -1157,7 +1157,7 @@ class LofFundMonitor {
         if (limitEl) {
             if (fund.can_purchase === false) {
                 limitEl.parentElement.style.display = '';
-                limitEl.textContent = '停止申购';
+                limitEl.textContent = '暂停申购';
                 limitEl.className = 'fd-kpi-value fd-neg';
             } else {
                 limitEl.parentElement.style.display = '';
