@@ -691,8 +691,8 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-info-icon:hover { border-color: var(--primary); color: var(--primary); background: #e8f4ff; }
 
 .fd-chart-container { width: 100%; height: 320px; margin-top: 4px; position: relative; }
-.fd-chart-container:fullscreen { height: 100vh; background: var(--card); padding: 16px; display: flex; align-items: center; }
-.fd-chart-container:fullscreen canvas { max-height: 100vh; }
+.fd-chart-container:fullscreen { width: 100vw; height: 100vh; background: var(--card); display: flex; align-items: center; justify-content: center; padding: 8px; }
+.fd-chart-container:fullscreen canvas { width: 100% !important; height: 100% !important; max-width: 100vw; max-height: 100vh; }
 .fd-chart-container canvas { width: 100% !important; height: 100% !important; }
 
 /* Arbitrage tooltip */
