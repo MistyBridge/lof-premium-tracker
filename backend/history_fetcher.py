@@ -133,6 +133,97 @@ def fetch_kline_data(session: requests.Session, code: str, beg_date: str, end_da
         return {}
 
 
+def fetch_kline_sina(session: requests.Session, code: str) -> Dict[str, dict]:
+    """新浪财经K线备源。无需注册，HTTP JSONP接口。"""
+    prefix = "sh" if code.startswith(("501", "502")) else "sz"
+    symbol = f"{prefix}{code}"
+    url = f"https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol={symbol}&scale=240&ma=no&datalen=400"
+    try:
+        resp = session.get(url, headers=_KLINE_HEADERS, timeout=10)
+        text = resp.text.strip()
+        if not text or text.startswith("null"):
+            return {}
+        data = json.loads(text)
+        if not isinstance(data, list):
+            return {}
+        result = {}
+        for item in data:
+            date = item.get("day", "")
+            price = _safe_float(item.get("close"))
+            amount = _safe_float(item.get("volume")) * price
+            if price <= 0:
+                continue
+            result[date] = {"price": price, "amount": amount, "change_pct": 0}
+        return result
+    except Exception as e:
+        logger.debug(f"Sina K-line failed for {code}: {e}")
+        return {}
+
+
+def fetch_kline_netease(session: requests.Session, code: str) -> Dict[str, dict]:
+    """网易财经K线备源。无需注册。"""
+    prefix = "0" if code.startswith(("501", "502")) else "1"
+    symbol = f"{prefix}{code}"
+    url = f"https://img1.money.126.net/data/hs/kline/day/history/2026/{symbol}.json"
+    try:
+        resp = session.get(url, headers=_KLINE_HEADERS, timeout=10)
+        data = resp.json()
+        klist = data.get("data", []) or data.get("kline", [])
+        result = {}
+        for item in klist:
+            if isinstance(item, list) and len(item) >= 5:
+                date = str(item[0])
+                price = _safe_float(item[4])
+                amount = _safe_float(item[5]) if len(item) > 5 else 0
+            elif isinstance(item, dict):
+                date = item.get("date", "")
+                price = _safe_float(item.get("close"))
+                amount = _safe_float(item.get("volume", 0)) * price
+            else:
+                continue
+            if price <= 0:
+                continue
+            result[date] = {"price": price, "amount": amount, "change_pct": 0}
+        return result
+    except Exception as e:
+        logger.debug(f"Netease K-line failed for {code}: {e}")
+        return {}
+
+
+def fetch_kline_tushare(code: str, token: str = None) -> Dict[str, dict]:
+    """TuShare K线备源。需设置环境变量 TUSHARE_TOKEN 获取免费token。"""
+    try:
+        import tushare as ts
+        token = token or os.getenv("TUSHARE_TOKEN", "")
+        if not token:
+            logger.debug("TuShare token not set, skipping")
+            return {}
+        ts.set_token(token)
+        pro = ts.pro_api()
+        prefix = "SH" if code.startswith(("501", "502")) else "SZ"
+        ts_code = f"{code}.{prefix}"
+        end_date = datetime.now().strftime("%Y%m%d")
+        beg_date = (datetime.now() - timedelta(days=400)).strftime("%Y%m%d")
+        df = pro.fund_daily(ts_code=ts_code, start_date=beg_date, end_date=end_date)
+        if df is None or df.empty:
+            return {}
+        result = {}
+        for _, row in df.iterrows():
+            date = str(row.get("trade_date", ""))
+            price = _safe_float(row.get("close"))
+            amount = _safe_float(row.get("amount", 0))
+            if price <= 0:
+                continue
+            result[date] = {"price": price, "amount": amount, "change_pct": 0}
+        return result
+    except ImportError:
+        logger.debug("TuShare not installed, skipping")
+        return {}
+    except Exception as e:
+        logger.debug("TuShare K-line failed for %s: %s", code, e)
+        return {}
+
+
 def fetch_kline_tencent(session: requests.Session, code: str) -> Dict[str, dict]:
     """
     腾讯QT K线API备源。返回格式同 fetch_kline_data。
@@ -207,27 +298,43 @@ def fetch_kline_baostock(code: str) -> Dict[str, dict]:
 def fetch_kline_multisource(session: requests.Session, code: str,
                              beg_date: str, end_date: str) -> Dict[str, dict]:
     """
-    多源K线数据抓取：依次尝试 EastMoney → Tencent → Baostock，返回第一个有数据的。
+    多源K线数据抓取：依次尝试 9 个数据源，返回第一个有数据的。
+    顺序: EastMoney → Sina → Netease → Tencent → Baostock → OpenBB → TuShare
     """
     # Source 1: East Money push2his (primary, most complete)
     result = fetch_kline_data(session, code, beg_date, end_date)
     if result:
         return result
 
-    # Source 2: Tencent QT (backup)
+    # Source 2: Sina Finance (free, no auth)
+    result = fetch_kline_sina(session, code)
+    if result:
+        return {d: v for d, v in result.items() if beg_date[:4] <= d[:4] <= end_date[:4]}
+
+    # Source 3: Netease Finance (free, no auth)
+    result = fetch_kline_netease(session, code)
+    if result:
+        return {d: v for d, v in result.items() if beg_date[:4] <= d[:4] <= end_date[:4]}
+
+    # Source 4: Tencent QT
     result = fetch_kline_tencent(session, code)
     if result:
         filtered = {d: v for d, v in result.items() if beg_date[:4] <= d[:4] <= end_date[:4]}
         if filtered:
             return filtered
 
-    # Source 3: Baostock (free, no API key needed)
+    # Source 5: Baostock
     result = fetch_kline_baostock(code)
     if result:
         return result
 
-    # Source 4: OpenBB / Yahoo Finance (last resort for international coverage)
+    # Source 6: OpenBB / Yahoo Finance
     result = fetch_kline_openbb(code)
+    if result:
+        return result
+
+    # Source 7: TuShare
+    result = fetch_kline_tushare(code)
     if result:
         return result
 
