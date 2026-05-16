@@ -200,7 +200,7 @@ class LofFundMonitor {
             const sellCommissionAmount = actualCommission;
             const profitRate = premium - purchaseFeeRate - sellCommissionRate;
             const profitAmount = capital * profitRate / 100;
-            if (profitAmount <= 0) return { rate: 0, amount: 0, capital, direction: '不建议交易' };
+            if (profitAmount <= 0) return { rate: 0, amount: 0, capital, direction: '不建议交易', breakdown: { premiumRate: premium, purchaseLimit, maxCapital: maxCap } };
             return {
                 rate: profitRate, amount: profitAmount, capital,
                 direction: '溢价套利',
@@ -220,7 +220,7 @@ class LofFundMonitor {
             const redemptionFeeAmount = capital * redemptionFeeRate / 100;
             const profitRate = Math.abs(premium) - buyCommissionRate - redemptionFeeRate;
             const profitAmount = capital * profitRate / 100;
-            if (profitAmount <= 0) return { rate: 0, amount: 0, capital, direction: '不建议交易' };
+            if (profitAmount <= 0) return { rate: 0, amount: 0, capital, direction: '不建议交易', breakdown: { discountRate: Math.abs(premium), purchaseLimit, maxCapital: maxCap } };
             return {
                 rate: profitRate, amount: profitAmount, capital,
                 direction: '折价套利',
