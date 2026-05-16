@@ -166,7 +166,7 @@ class LofFundMonitor {
 
     // ===== 预计收益计算 =====
     calcEstimatedProfit(fund, overrideCapital = null) {
-        if (fund.can_purchase === false) return { rate: 0, amount: 0, capital: 0, direction: '停止申购' };
+        if (fund.can_purchase === false) return { rate: 0, amount: 0, capital: 0, direction: '停止申购', breakdown: { maxCapital: 0 } };
         const premium = fund.premium_rate;
         if (premium === null || premium === undefined) return null;
 
