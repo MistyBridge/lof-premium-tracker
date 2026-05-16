@@ -18,6 +18,7 @@ class LofFundMonitor {
         this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
         this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
         this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
+        this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') === '1';
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
@@ -133,7 +134,7 @@ class LofFundMonitor {
             this.funds = result.data.filter(fund => {
                 if (fund.is_suspended) return false;
                 if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
-                if (fund.can_purchase === false) return false;  // 暂停申购
+                if (!this.showUnpurchasable && fund.can_purchase === false) return false;  // 暂停申购
                 return true;
             });
             this.applyFilters();
@@ -166,6 +167,7 @@ class LofFundMonitor {
 
     // ===== 预计收益计算 =====
     calcEstimatedProfit(fund, overrideCapital = null) {
+        if (fund.can_purchase === false) return { rate: 0, amount: 0, capital: 0, direction: '停止申购' };
         const premium = fund.premium_rate;
         if (premium === null || premium === undefined) return null;
 
@@ -688,6 +690,8 @@ class LofFundMonitor {
         if (thresholdInput) thresholdInput.value = this.threshold || 0;
         if (avgThresholdInput) avgThresholdInput.value = this.avgThreshold || 0;
         if (minAmountInput) minAmountInput.value = this.minAmount || 0;
+        const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
+        if (unpurchasableCheck) unpurchasableCheck.checked = this.showUnpurchasable;
         if (commissionRateInput) commissionRateInput.value = this.commissionRate;
         if (commissionMinInput) commissionMinInput.value = this.commissionMin;
         if (maxCapitalInput) maxCapitalInput.value = this.maxCapital;
@@ -714,6 +718,9 @@ class LofFundMonitor {
         this.commissionRate = parseFloat(commissionRateInput?.value) || 1.5;
         this.commissionMin = parseFloat(commissionMinInput?.value) || 5;
         this.maxCapital = parseFloat(maxCapitalInput?.value) || 1000;
+        const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
+        this.showUnpurchasable = unpurchasableCheck?.checked || false;
+        localStorage.setItem('lof_showUnpurchasable', this.showUnpurchasable ? '1' : '0');
         // 保存所有设置到 localStorage（扩展记忆功能）
         localStorage.setItem('lof_threshold', this.threshold);
         localStorage.setItem('lof_avgThreshold', this.avgThreshold);
@@ -744,6 +751,8 @@ class LofFundMonitor {
         if (thresholdInput) thresholdInput.value = 0;
         if (avgThresholdInput) avgThresholdInput.value = 0;
         if (minAmountInput) minAmountInput.value = 100;
+        const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
+        if (unpurchasableCheck) unpurchasableCheck.checked = false;
         if (commissionRateInput) commissionRateInput.value = 1.5;
         if (commissionMinInput) commissionMinInput.value = 5;
         if (maxCapitalInput) maxCapitalInput.value = 1000;
@@ -1145,9 +1154,12 @@ class LofFundMonitor {
         const limitEl = document.getElementById('fdPurchaseLimit');
         if (limitEl) {
             if (fund.can_purchase === false) {
-                limitEl.parentElement.style.display = 'none';
+                limitEl.parentElement.style.display = '';
+                limitEl.textContent = '停止申购';
+                limitEl.className = 'fd-kpi-value fd-neg';
             } else {
                 limitEl.parentElement.style.display = '';
+                limitEl.className = 'fd-kpi-value';
                 if (fund.purchase_limit != null && fund.purchase_limit > 0) {
                     limitEl.textContent = (fund.purchase_limit / 10000).toFixed(0) + '万';
                 } else {
