@@ -18,8 +18,8 @@ class LofFundMonitor {
         this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
         this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
         this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
-        this.showSuspended = localStorage.getItem('lof_showSuspended') !== '0';
-        this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') !== '0';
+        this.showSuspended = localStorage.getItem('lof_showSuspended') === '1';
+        this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') === '1';
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
@@ -763,8 +763,8 @@ class LofFundMonitor {
         if (minAmountInput) minAmountInput.value = 100;
         const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
         const suspendedCheck = document.getElementById('showSuspendedCheck');
-        if (unpurchasableCheck) unpurchasableCheck.checked = true;
-        if (suspendedCheck) suspendedCheck.checked = true;
+        if (unpurchasableCheck) unpurchasableCheck.checked = false;
+        if (suspendedCheck) suspendedCheck.checked = false;
         if (commissionRateInput) commissionRateInput.value = 1.5;
         if (commissionMinInput) commissionMinInput.value = 5;
         if (maxCapitalInput) maxCapitalInput.value = 1000;

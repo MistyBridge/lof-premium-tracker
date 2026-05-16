@@ -307,8 +307,8 @@ def list_funds():
                     if (v.get("premium_rate") or 0) < 0}
 
     # ── 停牌 & 申购状态筛选 ──
-    show_suspended = request.args.get("suspended", "1")
-    show_unpurchasable = request.args.get("unpurchasable", "1")
+    show_suspended = request.args.get("suspended", "0")
+    show_unpurchasable = request.args.get("unpurchasable", "0")
     if show_suspended != "1":
         all_data = {k: v for k, v in all_data.items()
                     if not _is_suspended(v)}
