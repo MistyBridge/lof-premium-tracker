@@ -18,6 +18,7 @@ class LofFundMonitor {
         this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
         this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
         this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
+        this.showSuspended = localStorage.getItem('lof_showSuspended') !== '0';
         this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable') !== '0';
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
@@ -299,6 +300,9 @@ class LofFundMonitor {
 
     applyFilters() {
         let filtered = [...this.funds];
+        if (!this.showSuspended) {
+            filtered = filtered.filter(fund => !fund.is_suspended);
+        }
         if (!this.showUnpurchasable) {
             filtered = filtered.filter(fund => fund.can_purchase !== false);
         }
@@ -692,7 +696,9 @@ class LofFundMonitor {
         if (avgThresholdInput) avgThresholdInput.value = this.avgThreshold || 0;
         if (minAmountInput) minAmountInput.value = this.minAmount || 0;
         const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
+        const suspendedCheck = document.getElementById('showSuspendedCheck');
         if (unpurchasableCheck) unpurchasableCheck.checked = this.showUnpurchasable;
+        if (suspendedCheck) suspendedCheck.checked = this.showSuspended;
         if (commissionRateInput) commissionRateInput.value = this.commissionRate;
         if (commissionMinInput) commissionMinInput.value = this.commissionMin;
         if (maxCapitalInput) maxCapitalInput.value = this.maxCapital;
@@ -720,8 +726,11 @@ class LofFundMonitor {
         this.commissionMin = parseFloat(commissionMinInput?.value) || 5;
         this.maxCapital = parseFloat(maxCapitalInput?.value) || 1000;
         const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
+        const suspendedCheck = document.getElementById('showSuspendedCheck');
         this.showUnpurchasable = unpurchasableCheck?.checked || false;
+        this.showSuspended = suspendedCheck?.checked || false;
         localStorage.setItem('lof_showUnpurchasable', this.showUnpurchasable ? '1' : '0');
+        localStorage.setItem('lof_showSuspended', this.showSuspended ? '1' : '0');
         // 保存所有设置到 localStorage（扩展记忆功能）
         localStorage.setItem('lof_threshold', this.threshold);
         localStorage.setItem('lof_avgThreshold', this.avgThreshold);
@@ -753,7 +762,9 @@ class LofFundMonitor {
         if (avgThresholdInput) avgThresholdInput.value = 0;
         if (minAmountInput) minAmountInput.value = 100;
         const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
-        if (unpurchasableCheck) unpurchasableCheck.checked = false;
+        const suspendedCheck = document.getElementById('showSuspendedCheck');
+        if (unpurchasableCheck) unpurchasableCheck.checked = true;
+        if (suspendedCheck) suspendedCheck.checked = true;
         if (commissionRateInput) commissionRateInput.value = 1.5;
         if (commissionMinInput) commissionMinInput.value = 5;
         if (maxCapitalInput) maxCapitalInput.value = 1000;
