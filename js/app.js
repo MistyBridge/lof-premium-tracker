@@ -72,14 +72,14 @@ class LofFundMonitor {
     }
 
     _showWelcome() {
-        if (localStorage.getItem('jkc_welcome_accepted')) return;
+        if (localStorage.getItem('jkc_welcome_v1')) return;
         const overlay = document.getElementById('welcomeOverlay');
         const agreeBtn = document.getElementById('welcomeAgreeBtn');
         if (overlay && agreeBtn) {
             overlay.style.display = 'flex';
             agreeBtn.addEventListener('click', () => {
                 overlay.style.display = 'none';
-                localStorage.setItem('jkc_welcome_accepted', '1');
+                localStorage.setItem('jkc_welcome_v1', '1');
             }, { once: true });
         }
     }
