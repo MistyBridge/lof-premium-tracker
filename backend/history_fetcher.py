@@ -655,7 +655,7 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
                                  processed[0], total, total_rows[0], worker_id)
             code_queue.task_done()
 
-    workers = 3
+    workers = 6
     threads = []
     for w in range(workers):
         t = threading.Thread(target=worker, args=(w+1,))
