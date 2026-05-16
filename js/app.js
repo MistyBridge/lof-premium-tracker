@@ -75,9 +75,9 @@ class LofFundMonitor {
         const overlay = document.getElementById('welcomeOverlay');
         const agreeBtn = document.getElementById('welcomeAgreeBtn');
         if (overlay && agreeBtn) {
-            overlay.style.display = 'flex';
+            overlay.classList.remove('hidden');
             agreeBtn.addEventListener('click', () => {
-                overlay.style.display = 'none';
+                overlay.classList.add('hidden');
             }, { once: true });
         }
     }

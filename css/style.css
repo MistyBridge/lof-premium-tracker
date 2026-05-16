@@ -514,6 +514,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* ===== 欢迎弹窗 ===== */
 .welcome-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 10000; display: flex; align-items: safe center; justify-content: center; padding: 24px 0; }
+.welcome-overlay.hidden { display: none; }
 .welcome-modal { background: var(--card); border-radius: 16px; max-width: 520px; width: 95%; max-height: calc(100vh - 48px); overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overscroll-behavior: contain; }
 .welcome-header { background: linear-gradient(135deg, #1890ff, #096dd9); padding: 30px 28px; border-radius: 16px 16px 0 0; text-align: center; color: #fff; }
 .welcome-header h2 { font-size: 1.5rem; margin-bottom: 4px; }
