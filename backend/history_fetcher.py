@@ -163,10 +163,51 @@ def fetch_kline_tencent(session: requests.Session, code: str) -> Dict[str, dict]
         return {}
 
 
+def fetch_kline_baostock(code: str) -> Dict[str, dict]:
+    """
+    Baostock(证券宝) K线备源。免费、无需注册。
+    """
+    try:
+        import baostock as bs
+        prefix = "sh." if code.startswith(("501", "502")) else "sz."
+        bs_code = prefix + code
+        lg = bs.login()
+        if lg.error_code != '0':
+            return {}
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        beg_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d")
+        rs = bs.query_history_k_data_plus(
+            bs_code,
+            "date,close,volume,amount",
+            start_date=beg_date, end_date=end_date,
+            frequency="d", adjustflag="2"
+        )
+        if rs.error_code != '0':
+            bs.logout()
+            return {}
+        result = {}
+        while rs.next():
+            row = rs.get_row_data()
+            date = row[0]
+            price = _safe_float(row[1])
+            amount = _safe_float(row[3])
+            if price <= 0:
+                continue
+            result[date] = {"price": price, "amount": amount, "change_pct": 0}
+        bs.logout()
+        return result
+    except ImportError:
+        logger.debug("Baostock not installed, skipping")
+        return {}
+    except Exception as e:
+        logger.debug("Baostock K-line failed for %s: %s", code, e)
+        return {}
+
+
 def fetch_kline_multisource(session: requests.Session, code: str,
                              beg_date: str, end_date: str) -> Dict[str, dict]:
     """
-    多源K线数据抓取：依次尝试 EastMoney → 腾讯QT，返回第一个有数据的。
+    多源K线数据抓取：依次尝试 EastMoney → Tencent → Baostock，返回第一个有数据的。
     """
     # Source 1: East Money push2his (primary, most complete)
     result = fetch_kline_data(session, code, beg_date, end_date)
@@ -176,10 +217,14 @@ def fetch_kline_multisource(session: requests.Session, code: str,
     # Source 2: Tencent QT (backup)
     result = fetch_kline_tencent(session, code)
     if result:
-        # Filter by date range
         filtered = {d: v for d, v in result.items() if beg_date[:4] <= d[:4] <= end_date[:4]}
         if filtered:
             return filtered
+
+    # Source 3: Baostock (free, no API key needed)
+    result = fetch_kline_baostock(code)
+    if result:
+        return result
 
     return {}
 
