@@ -536,6 +536,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .welcome-agree { width: 100%; padding: 12px; background: #1890ff; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
 .welcome-agree:hover { background: #096dd9; }
 .welcome-remind { font-size: 0.72rem; color: var(--text2); text-align: center; }
+.welcome-modal::-webkit-scrollbar { width: 5px; }
+.welcome-modal::-webkit-scrollbar-track { background: transparent; }
+.welcome-modal::-webkit-scrollbar-thumb { background: #c0c4cc; border-radius: 3px; }
+.welcome-modal::-webkit-scrollbar-thumb:hover { background: #909399; }
+.dark-mode .welcome-modal::-webkit-scrollbar-thumb { background: #3a4a6a; }
+.dark-mode .welcome-modal::-webkit-scrollbar-thumb:hover { background: #556688; }
 .dark-mode .welcome-qq { background: #1a2a4a; border-color: #334466; color: #4a90d9; }
 
 @media (max-width: 600px) {
