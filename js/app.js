@@ -17,7 +17,7 @@ class LofFundMonitor {
         // 筛选参数（从 localStorage 恢复或用默认值）
         this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
         this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
-        this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 0;
+        this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
         // 预计收益计算参数（从 localStorage 恢复或用默认值）
         this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;  // 万X
         this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;      // 元
@@ -725,7 +725,7 @@ class LofFundMonitor {
         const maxCapitalInput = document.getElementById('maxCapitalInput');
         if (thresholdInput) thresholdInput.value = 0;
         if (avgThresholdInput) avgThresholdInput.value = 0;
-        if (minAmountInput) minAmountInput.value = 0;
+        if (minAmountInput) minAmountInput.value = 100;
         if (commissionRateInput) commissionRateInput.value = 1.5;
         if (commissionMinInput) commissionMinInput.value = 5;
         if (maxCapitalInput) maxCapitalInput.value = 1000;
