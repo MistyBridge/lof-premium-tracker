@@ -226,7 +226,44 @@ def fetch_kline_multisource(session: requests.Session, code: str,
     if result:
         return result
 
+    # Source 4: OpenBB / Yahoo Finance (last resort for international coverage)
+    result = fetch_kline_openbb(code)
+    if result:
+        return result
+
     return {}
+
+
+def fetch_kline_openbb(code: str) -> Dict[str, dict]:
+    """OpenBB K-line via Yahoo Finance provider. 对部分QDII基金可能有覆盖。"""
+    try:
+        from openbb import obb
+        prefix = code if code.startswith(("501", "502")) else code
+        symbol = f"{prefix}.SZ" if not code.startswith(("501", "502")) else f"{prefix}.SS"
+        import pandas as pd
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        beg_date = (datetime.now() - timedelta(days=400)).strftime("%Y-%m-%d")
+        df = obb.equity.price.historical(
+            symbol=symbol, start_date=beg_date, end_date=end_date,
+            provider="yfinance"
+        ).to_dataframe()
+        if df is None or df.empty:
+            return {}
+        result = {}
+        for idx, row in df.iterrows():
+            date_str = idx.strftime("%Y-%m-%d") if hasattr(idx, 'strftime') else str(idx)[:10]
+            price = _safe_float(row.get("close", 0))
+            amount = _safe_float(row.get("volume", 0)) * _safe_float(row.get("close", 0))
+            if price <= 0:
+                continue
+            result[date_str] = {"price": price, "amount": amount, "change_pct": 0}
+        return result
+    except ImportError:
+        logger.debug("OpenBB not installed, skipping")
+        return {}
+    except Exception as e:
+        logger.debug("OpenBB K-line failed for %s: %s", code, e)
+        return {}
 
 
 # ── 净值历史抓取 ──────────────────────────────────
@@ -454,43 +491,72 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     ds = get_datasource_manager()
     hdb = get_history_db()
     total = len(all_codes)
-    total_rows = 0
+    total_rows = [0]
+    rows_lock = threading.Lock()
+    processed = [0]
+    processed_lock = threading.Lock()
 
-    session_k = _make_session()
-
-    for idx, code in enumerate(all_codes):
-        try:
-            # 多源K线: EastMoney → Tencent → AkShare
-            kline = fetch_kline_multisource(session_k, code, beg_ymd, end_ymd)
-            if not kline:
-                # 多源都失败，尝试datasource manager作为最后手段
-                kline = ds.fetch_kline(code, beg_ymd, end_ymd)
-            if not kline:
-                continue
-            navs = ds.fetch_nav_history(code, beg_dash, end_dash)
-            rows = []
-            for date_str, info in kline.items():
-                nav = navs.get(date_str)
-                price = info["price"]
-                amount = info.get("amount", 0)
-                change_pct = info.get("change_pct", 0)
-                premium_rate = None
-                if nav and nav > 0 and price > 0:
-                    premium_rate = round((price - nav) / nav * 100, 3)
-                rows.append((
-                    date_str, code, price, nav, amount,
-                    change_pct, premium_rate
-                ))
-            if rows:
+    def fetch_one_fund(code: str):
+        """串行尝试所有API源，取第一个有数据的"""
+        # 多源K线链: EastMoney → Tencent → Baostock → AkShare
+        session_k = _make_session()
+        kline = fetch_kline_multisource(session_k, code, beg_ymd, end_ymd)
+        if not kline:
+            kline = ds.fetch_kline(code, beg_ymd, end_ymd)
+        if not kline:
+            return 0
+        navs = ds.fetch_nav_history(code, beg_dash, end_dash)
+        rows = []
+        for date_str, info in kline.items():
+            nav = navs.get(date_str)
+            price = info["price"]
+            amount = info.get("amount", 0)
+            premium_rate = None
+            if nav and nav > 0 and price > 0:
+                premium_rate = round((price - nav) / nav * 100, 3)
+            rows.append((
+                date_str, code, price, nav, amount,
+                0, premium_rate
+            ))
+        if rows:
+            with rows_lock:
                 hdb.save_kline_batch(rows)
-                total_rows += len(rows)
-        except Exception as e:
-            logger.warning("Kline fetch failed for %s: %s", code, e)
+                total_rows[0] += len(rows)
+        return len(rows)
 
-        if (idx + 1) % 50 == 0:
-            logger.info("Kline streaming: %d/%d funds, %d rows saved",
-                         idx + 1, total, total_rows)
+    # 3个工作线程并发：从共享队列取基金，各线程串行处理自己的任务
+    import queue as qmod
+    code_queue = qmod.Queue()
+    for c in all_codes:
+        code_queue.put(c)
+    def worker(worker_id: int):
+        """Worker serially processes funds from shared queue"""
+        while True:
+            try:
+                code = code_queue.get_nowait()
+            except qmod.Empty:
+                break
+            try:
+                rows = fetch_one_fund(code)
+            except Exception as e:
+                logger.warning("Kline fetch failed for %s: %s", code, e)
+                rows = 0
+            with processed_lock:
+                processed[0] += 1
+                if processed[0] % 50 == 0:
+                    logger.info("Kline progress: %d/%d funds, %d rows (worker-%d)",
+                                 processed[0], total, total_rows[0], worker_id)
+            code_queue.task_done()
 
-    logger.info("Kline streaming complete: %d/%d funds, %d rows saved",
-                 total, total, total_rows)
-    return total_rows
+    workers = 3
+    threads = []
+    for w in range(workers):
+        t = threading.Thread(target=worker, args=(w+1,))
+        t.start()
+        threads.append(t)
+    for t in threads:
+        t.join()
+
+    logger.info("Kline complete: %d/%d funds, %d rows (%d workers)",
+                 processed[0], total, total_rows[0], workers)
+    return total_rows[0]
