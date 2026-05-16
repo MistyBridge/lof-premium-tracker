@@ -72,6 +72,9 @@ class LofFundMonitor {
     }
 
     _showWelcome() {
+        // sessionStorage: 浏览器会话内记住，关闭标签页后自动清除
+        if (sessionStorage.getItem('jkc_welcome_shown')) return;
+        sessionStorage.setItem('jkc_welcome_shown', '1');
         const overlay = document.getElementById('welcomeOverlay');
         const agreeBtn = document.getElementById('welcomeAgreeBtn');
         if (overlay && agreeBtn) {
