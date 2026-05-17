@@ -121,7 +121,7 @@
 | 部署 | Railway（RAILPACK 自动构建） |
 | 框架 | Flask 2.3 + Gunicorn |
 | 数据库 | PostgreSQL（`premium_snapshots` 表） |
-| 数据源 | 东方财富 push2delay / push2his / fundgz / 天天基金 |
+| 数据源 | 东方财富 / 腾讯 / 天天基金 / 新浪 / 网易 / Baostock / OpenBB / TuShare / AkShare | 15 个 API 源，K线 8 级串行降级 | 全市场覆盖，熔断保护，NAV 逐基金补缺 |
 | 并发 | `threading`（8 并发信号量，分批抓取） |
 | 缓存 | 内存 `dict` + `threading.RLock` 读写锁 |
 
@@ -145,33 +145,116 @@ backend/
 ```
 fetch_all() [每 5 分钟或手动触发]
     │
-    ├─ Step 1: SSE LOF 价格
-    │   └─ push2delay.eastmoney.com (m:1+t:9, 分页)
-    │      过滤 501xxx / 502xxx 代码
+    ├─ Step 1: 价格行情 (AkShare → Legacy 整体降级)
+    │   ├─ AkShare fund_lof_spot_em() — 全市场 LOF 实时行情
+    │   ├─ 东方财富 push2delay — SSE 沪市 LOF (m:1+t:9, 分页)
+    │   └─ 腾讯 qt.gtimg.cn — SZ 深市 LOF (批量 100 只/次)
     │      → {code: {price, change_pct, volume, amount, name}}
     │
-    ├─ Step 2: SZ LOF 价格
-    │   ├─ 代码列表：sz_lof_codes.json（每周自动刷新）
-    │   │   └─ push2delay (m:0+t:9) 扫描 16xxxx / 184xxx
-    │   └─ 行情：Tencent qt.gtimg.cn（批量 100 只/次）
-    │      → {code: {price, prev_close, change_pct, volume, amount}}
-    │
-    ├─ Step 3: 合并去重（SSE 优先）
-    │
-    ├─ Step 4: NAV 净值（批量 25 只/次）
-    │   └─ fundgz.1234567.com.cn（天天基金估值 API）
+    ├─ Step 2: NAV 净值 (AkShare → Legacy 逐基金降级)
+    │   ├─ 天天基金 fundgz.1234567.com.cn — 盘中估算/盘后正式净值
+    │   └─ 东方财富 lsjz — 历史净值兜底 (每页 20 条分页)
     │      → {code: {nav, nav_date, is_formal_nav, name}}
     │
-    ├─ Step 5: 溢价率计算
+    ├─ Step 3: 溢价率计算
     │   premium_rate = (price - nav) / nav × 100
     │   premium_status = 溢价 | 折价 | 平价
     │
-    ├─ Step 6: 费率数据（异步，不阻塞）
-    │   └─ fee_fetcher: 天天基金 HTML 解析
-    │      → {code: {purchase_fee_rate, redemption_fee_rate, ...}}
+    ├─ Step 4: 申购状态 (lsjz API, 15 并发)
+    │   └─ api.fund.eastmoney.com/f10/lsjz → SGZT 字段
+    │      → {code: can_purchase (bool)}
     │
-    └─ Step 7: 快照存储
-        └─ save_snapshot() → PostgreSQL premium_snapshots
+    ├─ Step 5: 费率数据 (缓存优先，80%命中率跳过爬虫)
+    │   └─ 东方财富 fundf10 — 申购/赎回费率 + 申购限额 HTML 解析
+    │      → {code: {purchase_fee_rate, redemption_fee_rate, purchase_limit}}
+    │
+    └─ Step 6: 快照存储
+        └─ save_snapshot() → PostgreSQL premium_snapshots + daily_kline
+            (周末触发器拦截，防止非交易日数据错位)
+```
+
+### 3.4 全部数据源
+
+本项目对接 **15 个数据源**，按用途分为行情、K线、净值、费率、代码五类。
+
+#### 3.4.1 行情价格（实时）
+
+| # | 数据源 | API 端点 | 方法 | 覆盖 | 说明 |
+|---|--------|----------|------|------|------|
+| 1 | **AkShare** | `akshare.fund_lof_spot_em()` | Python 库 | 全市场 | 一站式 LOF 实时行情，主源 |
+| 2 | **东方财富 push2delay** | `push2delay.eastmoney.com/api/qt/clist/get` | GET | 沪市 LOF | 参数 `fs=m:1+t:9`，分页 `pn/pz` |
+| 3 | **腾讯 QT** | `web.ifzq.gtimg.cn/appstock/app/fqkline/get` | GET | 深市 LOF | 批量查询，前缀 `sz` |
+
+**降级策略**：AkShare 失败/返回空 → 整体切换至 Legacy（push2delay + 腾讯 QT）。AkShare 连续失败 3 次触发熔断，5 分钟冷却后自动重试。
+
+#### 3.4.2 K线历史（日线）
+
+9 个数据源按优先级串行降级，首个返回有效数据的源即被采用。
+
+| 优先级 | 数据源 | API 端点 | 参数 | 说明 |
+|--------|--------|----------|------|------|
+| 1 | **东方财富 push2his** | `push2his.eastmoney.com/api/qt/stock/kline/get` | `secid={m}.{code}&klt=101&fqt=0&beg={}&end={}` | 日K线 OHLC + 成交额，官方数据 |
+| 2 | **新浪财经** | `money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData` | `symbol={pfx}{code}&scale=240&datalen=400` | JSONP 日K线，240 日历史 |
+| 3 | **网易财经** | `img1.money.126.net/data/hs/kline/day/history/{year}/{code}.json` | 按年分文件 | JSON 日K线 |
+| 4 | **腾讯 QT K线** | `web.ifzq.gtimg.cn/appstock/app/fqkline/get` | `param={pfx}{code},day,,,400` | 前复权日K线，400 日历史 |
+| 5 | **Baostock** | `baostock.query_history_k_data_plus()` | Python 库，需 `bs.login()` | 证券宝，覆盖 A 股全市场 |
+| 6 | **OpenBB / Yahoo** | `openbb` / `yfinance` | Python 库 | 海外备源 |
+| 7 | **TuShare** | `tushare.pro_bar()` | Python 库，需 token | 宽度覆盖 |
+| 8 | **AkShare K线** | `akshare.fund_lof_hist_em()` | Python 库 | 全量日K线，主源兜底 |
+
+> **沪市前缀** `m="1"`（501/502xxx），**深市前缀** `m="0"`（16xxxx/18xxxx）
+> **新浪/腾讯前缀**：`pfx="sh"`（501/502xxx），`pfx="sz"`（16xxxx/18xxxx）
+
+#### 3.4.3 净值数据
+
+| # | 数据源 | API 端点 | 方法 | 说明 |
+|---|--------|----------|------|------|
+| 9 | **天天基金 fundgz** | `fundgz.1234567.com.cn/js/{code}.js` | GET | 盘中估算净值（gsz）+ 盘后正式净值（dwjz），含 jzrq 净值日期 |
+| 10 | **东方财富 lsjz** | `api.fund.eastmoney.com/f10/lsjz` | GET | 历史单位净值，参数 `fundCode={code}&pageIndex={}&pageSize=20&startDate={}&endDate={}`，分页拉取 |
+
+> 实时净值优先取 fundgz（区分 jzrq 净值日期与 gsz 估算值），历史净值回填走 lsjz（每页最多 20 条，需翻页）。NAV 缺失时逐基金降级补缺，不整体切换。
+
+#### 3.4.4 费率与申购状态
+
+| # | 数据源 | API 端点 | 方法 | 说明 |
+|---|--------|----------|------|------|
+| 11 | **东方财富 fundf10** | `fundf10.eastmoney.com/jjjz_{code}.html` | GET | HTML 页面解析，提取申购费率、赎回费率、申购限额 |
+| 12 | **东方财富 lsjz** | `api.fund.eastmoney.com/f10/lsjz` | GET | 申购状态（SGZT 字段），15 并发 |
+
+> 费率本地缓存为 JSON，命中率 > 80% 时跳过爬虫；lsjz 同时提供净值历史和申购状态，一个 API 两种用途。
+
+#### 3.4.5 基金代码
+
+| # | 数据源 | API 端点 | 方法 | 说明 |
+|---|--------|----------|------|------|
+| 13 | **东方财富 push2delay** | `push2delay.eastmoney.com/api/qt/clist/get` | GET | 沪市 LOF 全量扫描（参数 `fs=m:1+t:9`），分页遍历 |
+| — | **本地缓存** | `sz_lof_codes.json` | 文件 | 深市 LOF 代码缓存，每周自动刷新 |
+
+#### 3.4.6 数据源优先级总览
+
+```
+实时行情:  AkShare fund_lof_spot_em (主)
+          → 东方财富 push2delay + 腾讯 QT (备)
+
+K线日线:  东方财富 push2his (1) → 新浪 (2) → 网易 (3) → 腾讯 QT (4)
+          → Baostock (5) → OpenBB/Yahoo (6) → TuShare (7) → AkShare (8)
+
+净值:     天天基金 fundgz (主) → 东方财富 lsjz (备)
+
+费率:     东方财富 fundf10 (缓存 80%命中率跳过)
+
+代码:     sz_lof_codes.json 缓存 + 东方财富 push2delay SSE 扫描
+```
+
+#### 3.4.7 熔断保护
+
+```
+AkShare 主源
+  ├── 连续失败计数 < 3 → 正常使用
+  ├── 连续失败计数 ≥ 3 → 触发熔断，降级 Legacy
+  └── 熔断后 300s → 自动重试 AkShare
+       ├── 成功 → 恢复 AkShare，重置计数
+       └── 失败 → 继续降级 Legacy
 ```
 
 ### 3.4 API 端点
@@ -187,23 +270,45 @@ fetch_all() [每 5 分钟或手动触发]
 
 ### 3.5 PostgreSQL 数据库
 
-**表：`premium_snapshots`**
+**表 1：`funds`**
 
 | 列 | 类型 | 说明 |
 |----|------|------|
-| `id` | SERIAL | 自增主键 |
-| `date` | DATE | 日期 YYYY-MM-DD |
-| `code` | VARCHAR(6) | 基金代码 |
-| `premium_rate` | DOUBLE PRECISION | 溢价率 % |
-| `price` | DOUBLE PRECISION | 场内价格 |
-| `nav` | DOUBLE PRECISION | 场外净值 |
-| `amount` | DOUBLE PRECISION | 成交额 |
+| `code` | VARCHAR(6) PK | 基金代码 |
 | `name` | VARCHAR(100) | 基金名称 |
+| `updated_at` | TIMESTAMPTZ | 最后更新时间 |
 
-- 联合唯一约束：`(date, code)`
-- `INSERT ... ON CONFLICT ... DO UPDATE` 幂等写入
-- 保留 21 天，超期自动清理
-- Railway 重启后从 PostgreSQL 加载最新日期数据恢复缓存
+**表 2：`premium_snapshots`**（实时快照，每 5 分钟更新）
+
+| 列 | 类型 | 说明 |
+|----|------|------|
+| `date` | DATE PK | 日期 YYYY-MM-DD |
+| `code` | VARCHAR(6) PK | 基金代码 |
+| `premium_rate` | NUMERIC(10,4) | 溢价率 % |
+| `price` | NUMERIC(12,4) | 场内价格 |
+| `nav` | NUMERIC(12,4) | 场外净值 |
+| `amount` | NUMERIC(16,2) | 成交额 |
+| `created_at` | TIMESTAMPTZ | 写入时间 |
+
+**表 3：`daily_kline`**（日线数据，365 天保留）
+
+| 列 | 类型 | 说明 |
+|----|------|------|
+| `date` | DATE PK | 日期 |
+| `code` | VARCHAR(6) PK | 基金代码 |
+| `price` | NUMERIC(12,4) | 场内收盘价 |
+| `nav` | NUMERIC(12,4) | 场外净值 |
+| `amount` | NUMERIC(16,2) | 成交额 |
+| `change_pct` | NUMERIC(10,4) | 涨跌幅 % |
+| `premium_rate` | NUMERIC(10,4) | 溢价率 % |
+| `created_at` | TIMESTAMPTZ | 写入时间 |
+
+**关键特性**：
+- 联合唯一约束 `(date, code)`，幂等 upsert
+- `daily_kline` 保留 365 天，超期自动清理
+- PostgreSQL 触发器拦截周六日写入，防止非交易日数据错位
+- Railway 重启后从 `premium_snapshots` 最新日期恢复缓存
+- `save_snapshot()` 每次调用同时写入 `premium_snapshots` + `daily_kline`
 - psycopg2 ThreadedConnectionPool（2-10 连接）
 
 ### 3.6 懒更新机制
@@ -275,12 +380,13 @@ Cloudflare Functions 位于 `functions/` 目录，作为前端与 Railway 之间
                           │
                           ▼
 ┌─────────────────────────────────────────────┐
-│               外部数据源                      │
-│  push2delay.eastmoney.com  (SSE + SZ 行情)   │
-│  push2his.eastmoney.com    (K 线历史)        │
-│  qt.gtimg.cn               (SZ 行情批量)     │
-│  fundgz.1234567.com.cn     (NAV 净值/估值)   │
-│  fund.eastmoney.com        (费率 HTML)       │
+│               外部数据源 (15 个)              │
+│  行情: AkShare / push2delay / 腾讯 QT        │
+│  K 线: push2his → 新浪 → 网易 → 腾讯 QT     │
+│        → Baostock → OpenBB → TuShare         │
+│        → AkShare (8 级串行降级)              │
+│  净值: fundgz / lsjz (分页)                  │
+│  费率: fundf10 / lsjz (申购状态)              │
 └─────────────────────────────────────────────┘
 ```
 
@@ -331,18 +437,17 @@ premium_rate = (场内价格 - 场外净值) / 场外净值 × 100
 | 排序 | 前端排序，支持 8 个字段 |
 | 分页 | 前端分页 50/100/200 条/页 |
 
-### 6.5 历史数据
+### 6.5 历史数据与图表
 
-- 每日懒更新自动保存当日快照到 PostgreSQL
-- 手动触发 `/init-history` 补填过去 7 交易日数据
-- K 线数据来自 `push2his.eastmoney.com`（日线 `klt=101`）
-- 净值历史来自 `api.fund.eastmoney.com/f10/lsjz`
-- 保留 21 天，自动清理过期数据
+- 每日懒更新自动保存当日快照到 `premium_snapshots` + `daily_kline`
+- 手动触发 `/init-kline-history` 补填 365 天 K 线数据（任务队列调度）
+- 手动触发 `/api/nav-backfill` 回填缺失净值（lsjz 分页拉取）
+- K 线数据来自 9 个 API 源，8 级串行降级（详见 3.4.2）
+- 净值历史来自 `api.fund.eastmoney.com/f10/lsjz`（每页 20 条）
+- `daily_kline` 保留 365 天，超期自动清理
 - Railway 重启时从 PostgreSQL 恢复缓存
-
-- 首页：LOF 基金列表
-- 详情页：基金详情 + 套利计算器
-- 工具函数：`utils/format.js`（金额格式化）、`utils/request.js`（网络请求）
+- 图表 API 支持 7/30/90/180/365 日五种时间范围
+- 热门基金图表预渲染缓存（Top5 溢价 + Top5 折价，每 5 分钟刷新）
 
 ---
 
@@ -354,9 +459,12 @@ premium_rate = (场内价格 - 场外净值) / 场外净值 × 100
 |------|--------|------|
 | `REQUEST_TIMEOUT` | 10s | 单次 API 请求超时 |
 | `REFRESH_INTERVAL` | 300s | 懒更新间隔 |
-| `RETENTION_DAYS` | 21 | 历史数据保留天数 |
+| `KLIN_RETENTION_DAYS` | 365 | 日线数据保留天数 |
+| `SNAPSHOT_RETENTION_DAYS` | 21 | 快照数据保留天数 |
 | `DEFAULT_AMOUNT_LIMIT` | 10000 元 | 默认金额阈值 |
 | `DEFAULT_UNIT_AMOUNT` | 1000 元 | 默认每份金额 |
+| `AKSHARE_FAILURE_THRESHOLD` | 3 | AkShare 熔断连续失败次数 |
+| `AKSHARE_COOLDOWN_SECONDS` | 300 | 熔断冷却时间 |
 
 ### `config.js`
 
