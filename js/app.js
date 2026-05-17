@@ -120,13 +120,9 @@ class LofFundMonitor {
         }
     }
 
-    async loadRankings() {
-        try {
-            const result = await api.getRankings('premium', 20);
-            this.renderRankings(result.data);
-        } catch (error) {
-            console.warn('排行榜加载失败:', error.message);
-        }
+    loadRankings() {
+        // 从客户端已过滤数据中计算排行榜，遵从用户的停牌/停购筛选设置
+        this.renderPremiumRankings();
     }
 
     async loadFunds() {
@@ -147,7 +143,6 @@ class LofFundMonitor {
             });
             this.applyFilters();
             this.renderTable();
-            this.renderDiscountRankings();
             this.updatePaginationInfo();
             // 用 API 返回的原始总数更新基金总数
             if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
@@ -378,6 +373,9 @@ class LofFundMonitor {
         if (this.filteredFunds.length === 0) {
             if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="empty-state"><i class="icon">📭</i><p>暂无数据</p><p class="loading-hint">尝试调整筛选条件</p></td></tr>`;
             if (cardList) cardList.innerHTML = `<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>`;
+            // 清空排行榜
+            this.renderPremiumRankings();
+            this.renderDiscountRankings();
             return;
         }
         const start = (this.currentPage - 1) * this.pageSize;
@@ -385,6 +383,9 @@ class LofFundMonitor {
         const pageData = this.filteredFunds.slice(start, end);
         if (tbody) tbody.innerHTML = pageData.map(fund => this.createFundRow(fund)).join('');
         if (cardList) cardList.innerHTML = pageData.map(fund => this.createMobileCard(fund)).join('');
+        // 排行榜跟随筛选更新
+        this.renderPremiumRankings();
+        this.renderDiscountRankings();
     }
 
     createFundRow(fund) {
@@ -448,10 +449,12 @@ class LofFundMonitor {
         </tr>`;
     }
 
-    renderRankings(funds) {
+    renderPremiumRankings() {
+        // 从客户端过滤后的数据中取溢价 Top
+        const sorted = [...this.filteredFunds].sort((a, b) => (b.premium_rate ?? 0) - (a.premium_rate ?? 0));
         const container = document.getElementById('rankingsContainer');
         if (container) {
-            container.innerHTML = funds.slice(0, 5).map((fund, index) => `
+            container.innerHTML = sorted.slice(0, 5).map((fund, index) => `
                 <div class="ranking-item">
                     <span class="rank-num rank-${index + 1}">${index + 1}</span>
                     <div class="rank-card">
@@ -463,7 +466,7 @@ class LofFundMonitor {
         }
         const mobileScroll = document.getElementById('mobileRankingScroll');
         if (mobileScroll) {
-            mobileScroll.innerHTML = funds.slice(0, 10).map(fund => `
+            mobileScroll.innerHTML = sorted.slice(0, 10).map(fund => `
                 <div class="strip-item">
                     <span class="si-code">${fund.code}</span>
                     <span class="si-rate">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
@@ -473,8 +476,8 @@ class LofFundMonitor {
     }
 
     renderDiscountRankings() {
-        if (!this.funds.length) return;
-        const sorted = [...this.funds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
+        // 从客户端过滤后的数据中取折价 Top
+        const sorted = [...this.filteredFunds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
         const discountContainer = document.getElementById('discountContainer');
         if (discountContainer) {
             discountContainer.innerHTML = sorted.slice(0, 5).map((fund, index) => `
