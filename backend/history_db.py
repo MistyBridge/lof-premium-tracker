@@ -271,6 +271,12 @@ class HistoryDB:
         date: 保存日期，默认为今天
         """
         snapshot_date = date or datetime.now().strftime("%Y-%m-%d")
+
+        # 跳过非交易日（周末不写入，避免数据错位）
+        dt = datetime.strptime(snapshot_date, "%Y-%m-%d")
+        if dt.weekday() >= 5:  # 5=Saturday, 6=Sunday
+            logger.debug("Skipping snapshot for %s (weekend)", snapshot_date)
+            return
         fund_rows = []
         snap_rows = []
         for code, fund in funds.items():
