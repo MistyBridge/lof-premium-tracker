@@ -10,7 +10,7 @@
 | 里程碑 | 目标 | 状态 | 预计完成 |
 |--------|------|------|----------|
 | [M1 体验打磨](#m1-体验打磨) | 导航页 + 移动端可用性 + 加载体验优化 | 🟡 进行中 | — |
-| [M2 性能与基础设施](#m2-性能与基础设施) | 缓存策略 + API 版本化 + 限流 + 测试 + 日志 + 依赖管理 | ⚪ 待排期 | M1 完成后 |
+| [M2 性能与基础设施](#m2-性能与基础设施) | 缓存 + API 版本化 + 限流 + 测试 + 日志 + 依赖管理 + PWA | ⚪ 待排期 | M1 完成后 |
 | [M3a 功能开发·网页](#m3a-功能开发网页) | 自选基金、数据导出、用户系统 | ⚪ 待排期 | M2 完成后 |
 | [M3b 功能开发·平台扩展](#m3b-功能开发平台扩展) | 微信小程序、订阅服务（邮件+微信提醒+大模型） | ⚪ 待排期 | M3a 完成 + 积累用户量后 |
 | [M4 代码重构](#m4-代码重构) | JS 模块拆分 + 模板化 + 构建压缩 + Chart.js 优化 | ⚪ 待排期 | M3b 后期或完成后 |
@@ -1062,6 +1062,55 @@ pg_dump $DATABASE_URL --format=custom --file=backups/lof_$(date +%Y%m%d).dump
 
 ---
 
+### 2.8 PWA 化
+
+**需求：** 用户可将金快查"安装"到手机/电脑桌面，像原生 App 一样打开，无需经过应用商店。
+
+**方案：** 添加 `manifest.json` + Service Worker：
+
+**manifest.json（新建）：**
+```json
+{
+  "name": "金快查",
+  "short_name": "金快查",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f7fa",
+  "theme_color": "#3C5DFF",
+  "icons": [
+    { "src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+```
+
+**Service Worker（新建 `sw.js`）：**
+- 缓存静态资源（CSS/JS/图标），离线时使用缓存
+- 缓存策略：Cache-First（静态资源） + Network-First（API 请求，不缓存数据）
+- PWA 更新时自动刷新缓存
+
+**涉及文件：**
+- `manifest.json`（新建）
+- `sw.js`（新建）
+- `index.html` + `lof.html` — 添加 `<link rel="manifest">` 和 Service Worker 注册
+- `assets/icon-192.png` + `assets/icon-512.png` — PWA 图标（可基于现有 icon.jpg 生成）
+
+**验收标准：**
+- [ ] Chrome DevTools → Application → Manifest 检查无报错
+- [ ] Lighthouse PWA 评分 ≥ 80
+- [ ] Android Chrome 弹出"添加到主屏幕"提示
+- [ ] 安装后桌面图标打开为独立窗口（无浏览器地址栏）
+- [ ] iOS Safari "添加到主屏幕"可用
+- [ ] 离线时导航页可正常显示（缓存生效）
+- [ ] 不影响 LOF 数据页的正常联网功能
+
+**预计耗时：** 1.5h
+**依赖：** 需要生成 192×192 和 512×512 的 PNG 图标
+
+**备注：** PWA 和微信小程序互为补充——PWA 覆盖 iOS + Android 非微信场景，微信小程序覆盖微信生态。PWA 无需审核、无需备案变更，可先行上线。
+
+---
+
 ## M3a 功能开发·网页
 
 > 目标：补全网页端核心功能短板，建立用户体系。此阶段专注于 Web 端，不做平台扩展。
@@ -1398,3 +1447,4 @@ pg_dump $DATABASE_URL --format=custom --file=backups/lof_$(date +%Y%m%d).dump
 | 自动化测试 | pytest，优先覆盖溢价率计算和 API 端点 | 金融工具数据准确性保障 | 2026-05-18 |
 | 日志 | structlog 结构化 JSON 输出 | 提升排查效率，支持日志搜索 | 2026-05-18 |
 | 数据库备份 | 本地 `pg_dump` 定期备份，脚本存放 `backend/backup/` | 平台备份之外的额外保障 | 2026-05-18 |
+| PWA | manifest.json + Service Worker，桌面安装，无审核 | 微信小程序之前的过渡方案，覆盖 iOS + Android 非微信场景 | 2026-05-18 |
