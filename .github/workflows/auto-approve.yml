@@ -1,0 +1,13 @@
+name: Auto Approve PR
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve PR
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
