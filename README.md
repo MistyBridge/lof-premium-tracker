@@ -2,11 +2,11 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20API-green.svg)
 ![License](https://img.shields.io/badge/license-AGPLv3-red.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
-![DB](https://img.shields.io/badge/data-396%2F538%20funds%20%7C%2097K%20rows-orange.svg)
+![DB](https://img.shields.io/badge/data-538%20funds%20%7C%2091K%20rows-orange.svg)
 ![Website](https://img.shields.io/badge/www-jinkuaicha.com-1890ff.svg)
 
 **全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利模拟回测 · 溢价率排行 · PC + 移动端**
@@ -107,9 +107,10 @@ lof-premium-tracker/
                             └──→ Railway (Flask + Gunicorn)
                                      │
                                      ├──→ PostgreSQL (历史快照存储)
-                                     └──→ 分级数据源
-                                           ├── AKShare（主）: fund_lof_spot_em / fund_lof_hist_em
-                                           └── Legacy（备）: 东方财富 push2delay + 腾讯 qt + 天天基金 fundgz
+                                     └──→ 15 个数据源 (详见下方「全部数据源」章节)
+                                           ├── AKShare（主）: fund_lof_spot_em / fund_lof_hist_em / fund_open_fund_info_em
+                                           └── Legacy（备）: 东方财富 push2delay/push2his + 腾讯 qt + 天天基金 fundgz + lsjz
+                                                              + 新浪 + 网易 + Baostock + OpenBB + TuShare
 ```
 
 | 层级 | 平台 | 技术栈 | 职责 |
@@ -117,9 +118,10 @@ lof-premium-tracker/
 | 前端 | Cloudflare Pages | HTML5 + CSS3 + Vanilla JS + Chart.js | 页面渲染、数据可视化、用户交互 |
 | 代理 | Cloudflare Functions | JavaScript (Service Worker) | 同源 API 代理，解决跨境网络访问 |
 | 后端 | Railway | Python Flask + Gunicorn | 数据聚合、缓存、API 服务 |
-| 数据库 | Railway PostgreSQL | PostgreSQL | 历史净值/价格快照，21 天滚动保留 |
+| 数据库 | Railway PostgreSQL | PostgreSQL | 历史净值/价格日线，365 天滚动保留，91,697 行 |
 | 数据源(主) | AKShare | akshare Python 库 | 全量 LOF 行情、日K线、历史净值 |
-| 数据源(备) | 东方财富 / 腾讯 / 天天基金 | push2delay / qt / fundgz / lsjz | 主源故障时整体降级，NAV 缺失时逐基金补缺 |
+| 数据源(备) | 东方财富 / 腾讯 / 新浪 / 网易 / 天天基金 等 | push2delay/push2his / qt / fundgz / lsjz 等 | 主源故障时整体降级，NAV 缺失时逐基金补缺，K线 8 级串行降级 |
+| 数据源(爬虫) | 东方财富 fundf10 | fundf10.eastmoney.com | 申购/赎回费率、申购限额 |
 
 ### 分级数据源策略
 
@@ -148,6 +150,68 @@ Legacy (后备数据源)
 | K线/历史净值整体降级 | AKShare 对应接口失败 | 整体切换至 Legacy 的东方财富 push2his / lsjz |
 
 > **设计意图**：AKShare 提供一站式全量数据，简化日常抓取流程；Legacy 直连东方财富/腾讯/天天基金 API，在主源不可用时保障核心数据不中断。NAV 采用逐基金降级而非整体切换，最大化保留主源有效数据，仅对缺失项精准补缺。
+
+---
+
+## 全部数据源
+
+本项目对接 **13 个数据源**，按用途分为行情价格、K线历史、净值、费率四类：
+
+### 行情价格（实时）
+
+| # | 数据源 | API / 库 | 覆盖 | 用途 |
+|---|--------|----------|------|------|
+| 1 | **东方财富 push2delay** | `push2delay.eastmoney.com` | 沪市 LOF | 实时价格、涨跌幅、成交额 |
+| 2 | **腾讯 QT** | `web.ifzq.gtimg.cn` | 深市 LOF | 实时价格、涨跌幅、成交额 |
+| 3 | **AkShare** | `akshare.fund_lof_spot_em()` | 全市场 | 一站式 LOF 实时行情（主源） |
+
+### K线历史（日线）
+
+| # | 数据源 | API / 库 | 优先级 | 说明 |
+|---|--------|----------|--------|------|
+| 4 | **东方财富 push2his** | `push2his.eastmoney.com` | 第1顺位 | 日K线 OHLC + 成交量额，官方数据 |
+| 5 | **新浪财经** | `money.finance.sina.com.cn` | 第2顺位 | JSONP 日K线，240日历史 |
+| 6 | **网易财经** | `img1.money.126.net` | 第3顺位 | JSON 日K线，按年分文件 |
+| 7 | **腾讯 QT K线** | `web.ifzq.gtimg.cn` | 第4顺位 | 前复权日K线，400日历史 |
+| 8 | **Baostock** | `baostock` Python 库 | 第5顺位 | 证券宝，需登录 session |
+| 9 | **OpenBB / Yahoo** | `openbb` / `yfinance` | 第6顺位 | 海外数据源备选 |
+| 10 | **TuShare** | `tushare` Python 库 | 第7顺位 | 需 token，宽度覆盖 |
+| 11 | **AkShare K线** | `akshare.fund_lof_hist_em()` | 第8顺位 | 全量日K线（主源） |
+
+> K线数据采用 **多源串行降级**：9 个数据源按优先级依次尝试，首个返回有效数据的源即被采用，其余跳过。单只基金最多被 1 个源命中，避免重复拉取。
+
+### 净值数据
+
+| # | 数据源 | API / 库 | 说明 |
+|---|--------|----------|------|
+| 12 | **天天基金 fundgz** | `fundgz.1234567.com.cn` | 盘中估算净值 + 盘后正式净值（实时） |
+| 13 | **东方财富 lsjz** | `api.fund.eastmoney.com/f10/lsjz` | 历史单位净值（分页拉取，每页 20 条） |
+
+> 实时净值优先取 fundgz（区分 jzrq 净值日期与 gsz 估算值），历史净值回填走 lsjz。NAV 缺失时逐基金降级补缺，不整体切换。
+
+### 费率数据
+
+| # | 数据源 | API | 说明 |
+|---|--------|-----|------|
+| 14 | **东方财富 fundf10** | `fundf10.eastmoney.com` | 申购费率、赎回费率、申购限额 |
+
+### 基金代码
+
+| # | 数据源 | API | 说明 |
+|---|--------|-----|------|
+| 15 | **东方财富 push2delay** | `push2delay.eastmoney.com` | 沪市 LOF 代码扫描（全量分页） |
+| — | **本地缓存** | `sz_lof_codes.json` | 深市 LOF 代码缓存（每周刷新） |
+
+### 数据源优先级总览
+
+```
+实时行情:  AkShare (主) → 东方财富 push2delay + 腾讯 QT (备)
+K线日线:  东方财富 push2his → 新浪 → 网易 → 腾讯 QT → Baostock
+           → OpenBB/Yahoo → TuShare → AkShare (8级降级)
+净值:     天天基金 fundgz (主) → 东方财富 lsjz (备)
+费率:     东方财富 fundf10 (缓存 80%命中率以上跳过爬虫)
+代码:     本地缓存 sz_lof_codes.json + 东方财富 SSE 扫描
+```
 
 ---
 
@@ -194,7 +258,7 @@ git push origin main
 |------|------|------|------|
 | `GET` | `/api/funds` | `page`, `page_size`, `sort`, `order`, `keyword`, `min_premium`, `min_amount` | 全量基金列表（分页 + 排序 + 搜索 + 多条件筛选） |
 | `GET` | `/api/funds/<code>` | — | 单只基金详情（含申购/赎回费率） |
-| `GET` | `/api/funds/<code>/chart` | — | 近 7 交易日价格/净值双线曲线数据 |
+| `GET` | `/api/funds/<code>/chart` | `days` (7/30/90/180/365) | 价格/净值双线 + 溢价率曲线，支持 5 种时间范围 |
 | `GET` | `/health` | — | 服务健康检查（缓存状态、最后更新时间） |
 | `POST` | `/refresh` | — | 手动触发全量数据刷新 |
 | `POST` | `/init-history` | — | 手动补填历史快照数据 |
@@ -208,8 +272,8 @@ git push origin main
 | 场内实时价格 / 净值 / 溢价率 | 每 5 分钟 | 用户访问时懒更新 |
 | 基金申购/赎回费率 | 按需 | 首次查看某基金时抓取并缓存 |
 | 深市 LOF 代码列表 | 每周 | 自动扫描 push2delay 全表 |
-| 历史 K 线 / 历史净值 | 每日 | 懒更新时自动保存当日快照 |
-| 历史数据保留期 | 21 天 | 超期数据自动清理 |
+| 历史 K 线 / 历史净值 | 每日 | 懒更新时自动保存当日快照，周末触发器拦截 |
+| 历史数据保留期 | 365 天 | 超期数据自动清理 |
 
 ---
 
