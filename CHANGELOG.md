@@ -1,5 +1,30 @@
 # 金快查 更新日志
 
+## 2026-05-17
+
+| 原方案 | 更新方案 | 影响范围 |
+|--------|----------|----------|
+| 日线数据仅靠一次性批量补填，NAV 大量缺失（79%为空） | lsjz API 分页串行回填 327 只基金 72,567 行净值，缺失率降至 0%，溢价率同步重算 | 数据库 daily_kline、图表净值曲线 |
+| save_snapshot 不区分交易日/非交易日，周末数据写入导致图表日期错位 | 数据库触发器拦截周六日写入，Python 层增加周末检测双重保护 | 数据库写入可靠性 |
+| K线数据源仅 3 个（EastMoney/Tencent/AkShare） | 扩展至 9 数据源：EastMoney / 新浪 / 网易 / 腾讯 / Baostock / OpenBB / TuShare / AkShare / 管理器编排 | K线补填覆盖率 |
+| K线补填单线程批量 | 3 线程并发，流式即时写入，共享基金队列 | K线补填速度 |
+| 后端默认隐藏停牌和暂停申购基金（suspended=0, unpurchasable=0） | 后端始终返回全部基金（suspended=1, unpurchasable=1），由前端 applyFilters 按用户设置筛选 | API、前端筛选逻辑 |
+| 前端 loadFunds() 硬过滤 is_suspended | 移除硬过滤，仅过滤无溢价率的数据，停牌/停购完全由开关控制 | 前端数据加载 |
+| 溢价/折价排行榜调用后端 API，独立过滤停牌/停购 | 改为客户端从 filteredFunds 排序取 Top，跟随用户筛选设置实时联动 | Web 排行榜 |
+| 预计收益 ≤0 时 calcEstimatedProfit 返回无 breakdown 字段 | 补充完整 breakdown，移动端 createMobileCard 不再崩溃 | 前端稳定性 |
+| Chart.js 从 jsdelivr CDN 加载（国内被墙） | 切换至 cdnjs.cloudflare.com，确认 200 OK | 前端图表加载 |
+| 用户设置无持久化 | 所有设置写入 localStorage（含 lof_showSuspended_v2 / lof_showUnpurchasable_v2 等），跨会话复用 | 前端用户体验 |
+| 无欢迎弹窗 | 首次访问显示欢迎页面，包含使用协议确认、功能简介、QQ 交流群入口，sessionStorage 控制每会话一次 | Web 前端 |
+| 无隐私/协议页面 | 新增隐私政策和使用协议独立页面，联系邮箱替换为 GitHub Issues | Web 前端、合规 |
+| 移动端图表无全屏 | 新增全屏按钮（仅移动端显示），点击全屏并自动旋转横屏 | 移动端图表交互 |
+| 无数据源熔断 | AkShare 连续 3 次故障自动降级 Legacy，5 分钟冷却后自动重试 | 后端数据源调度 |
+| 所有预计收益无免责声明 | 所有收益展示处添加"不产生任何收益保证"声明 | Web 前端合规 |
+| 页面使用 Emoji 图标 | 全部移除 Emoji，替换为文本或 CSS 样式 | 跨平台字体兼容 |
+| PC 端默认 50 条/页 | 新增 20 条/页选项并设为默认 | Web 翻页 |
+| 成交额默认 0（不过滤） | 调整为 100 万，减少噪音数据 | Web 筛选默认值 |
+| 仓库中 hardcode 数据库密码、个人邮箱 | 密码脱敏并轮换，邮箱改为 GitHub Issues，.wrangler 缓存移除 Git 追踪 | 安全合规 |
+| Git 仓库无更新日志 | 新增 CHANGELOG.md（技术向）和 CHANGELOG_USER.md（用户向） | 文档 |
+
 ## 2026-05-16
 
 | 原方案 | 更新方案 | 影响范围 |
@@ -29,17 +54,14 @@
 
 ## 数据概览
 
-- **版本**: v1.1.0
+- **版本**: v1.2.0
 - **活跃基金**: 538 只
-- **K线数据覆盖**: 396/538 只基金，97,630 行
-- **数据源**: AkShare(主) + 东方财富(Legacy) + 腾讯QT(备) + 熔断保护
+- **日线数据**: 91,697 行，净值覆盖率 100%
+- **数据源**: 9 源（EastMoney / 新浪 / 网易 / 腾讯 / Baostock / OpenBB / TuShare / AkShare / 管理器编排）+ 熔断保护
 - **数据库**: Railway PostgreSQL, 500MB 存储卷
-- **前端**: Cloudflare Pages (lof-fund-monitor.pages.dev)
+- **前端**: Cloudflare Pages (jinkuaicha.com)
 - **后端**: Railway (lof-premium-tracker-production.up.railway.app)
 
-- **活跃基金**: 538 只
-- **K线数据覆盖**: 396/538 只基金，97,630 行
-- **数据源**: AkShare(主) + 东方财富(Legacy) + 腾讯QT(备)
-- **数据库**: Railway PostgreSQL, 500MB 存储卷
-- **前端**: Cloudflare Pages (lof-fund-monitor.pages.dev)
-- **后端**: Railway (lof-premium-tracker-production.up.railway.app)
+---
+
+**贡献者**：尝渝（dy：54441956916）、恬贝乐（dy：tianbeile）
