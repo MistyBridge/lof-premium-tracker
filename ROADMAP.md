@@ -10,7 +10,7 @@
 | 里程碑 | 目标 | 状态 | 预计完成 |
 |--------|------|------|----------|
 | [M1 体验打磨](#m1-体验打磨) | 导航页 + 移动端可用性 + 加载体验优化 | 🟡 进行中 | — |
-| [M2 性能与缓存](#m2-性能与缓存) | 浏览器缓存策略 + API 响应优化 | ⚪ 待排期 | M1 完成后 |
+| [M2 性能与基础设施](#m2-性能与基础设施) | 缓存策略 + API 版本化 + 限流 + 测试 + 日志 + 依赖管理 | ⚪ 待排期 | M1 完成后 |
 | [M3a 功能开发·网页](#m3a-功能开发网页) | 自选基金、数据导出、用户系统 | ⚪ 待排期 | M2 完成后 |
 | [M3b 功能开发·平台扩展](#m3b-功能开发平台扩展) | 微信小程序、订阅服务（邮件+微信提醒+大模型） | ⚪ 待排期 | M3a 完成 + 积累用户量后 |
 | [M4 代码重构](#m4-代码重构) | JS 模块拆分 + 模板化 + 构建压缩 + Chart.js 优化 | ⚪ 待排期 | M3b 后期或完成后 |
@@ -804,9 +804,9 @@ index.html
 
 ---
 
-## M2 性能与缓存
+## M2 性能与基础设施
 
-> 目标：浏览器缓存策略优化，重复访问不再全量下载。
+> 目标：提升系统可靠性、可扩展性和可观测性。大部分改动在后端，前端仅涉及缓存。
 
 ### 2.1 静态资源缓存策略
 
@@ -814,9 +814,9 @@ index.html
 
 ```
 CF Pages（静态资源 + _headers 文件）    Railway（API + CORS 已在 Functions 层处理）
-├── index.html                         ├── /api/funds
+├── index.html                         ├── /api/v1/funds
 ├── css/style.css                      ├── /health
-├── js/*.js                            └── /api/funds/<code>/chart
+├── js/*.js                            └── /api/v1/funds/<code>/chart
 └── assets/*
 ```
 
@@ -845,23 +845,220 @@ CORS 已通过 `functions/api/[[path]].js` 在每个响应中设置了 `Access-C
 保留现有的 `?v=X` 版本号机制作为缓存强制刷新手段。
 
 **Railway 侧（API 响应头）：** 在 `backend/app.py` 中对各端点添加 `Cache-Control` 响应头：
-- `/api/funds` → `max-age=60`（1 分钟，后端数据每 5 分钟刷新一次）
+- `/api/v1/funds` → `max-age=60`
 - `/health` → `max-age=30`
-- `/api/funds/<code>/chart` → `max-age=300`（5 分钟）
+- `/api/v1/funds/<code>/chart` → `max-age=300`
 
-**涉及文件：**
-- `_headers`（新建，项目根目录）
-- `backend/app.py`（各路由添加响应头）
+**涉及文件：** `_headers`（新建）、`backend/app.py`
 
 **验收标准：**
 - [ ] 浏览器 DevTools Network 面板确认静态资源返回 `Cache-Control` 头
 - [ ] 重复访问时 JS/CSS 从缓存加载（200 from disk cache）
 - [ ] API 响应有合理的缓存时间
 - [ ] `index.html` 不会被过度缓存导致用户看不到更新
-- [ ] 版本号 `?v=X` 升级后缓存失效正常
 
 **预计耗时：** 1h
 **依赖：** 无
+
+---
+
+### 2.2 依赖管理优化
+
+#### 2.2.1 删除未使用的 tushare 依赖
+
+tushare 需要 token 才能使用，当前未在代码中调用。从 `requirements.txt` 中移除。
+
+**涉及文件：** `backend/requirements.txt`
+**验收标准：** [ ] Railway 构建成功，无 tushare 相关的 import 错误
+**预计耗时：** 5 min
+
+#### 2.2.2 添加 requirements.lock
+
+当前所有依赖使用 `>=` 宽松约束，每次构建拉取最新版，存在上游依赖更新导致构建失败的风险。
+
+**方案：** `pip freeze > requirements.lock`，Railway 构建时使用 lock 文件安装。
+
+**验收标准：**
+- [ ] `requirements.lock` 文件存在，包含精确版本号
+- [ ] Railway 构建使用 lock 文件
+- [ ] 定期更新 lock 文件的流程已文档化
+
+**预计耗时：** 10 min
+
+#### 2.2.3 指定 Python 版本
+
+Railway 默认 Python 版本可能随平台更新变化，缺乏确定性。
+
+**方案：** 在项目根目录新增 `runtime.txt`，指定 `python-3.11`。
+
+**涉及文件：** `runtime.txt`（新建）
+
+**验收标准：**
+- [ ] Railway 构建日志确认使用 Python 3.11
+- [ ] 所有依赖在 3.11 上正常安装和运行
+
+**预计耗时：** 5 min
+
+---
+
+### 2.3 API 版本化
+
+**当前问题：** API 端点直接挂载在 `/api/funds`、`/health` 等路径下。未来接口变更时无法平滑过渡——改即破坏。
+
+**方案：** 所有 API 端点加 `/v1` 前缀：
+
+```
+/api/funds           →  /api/v1/funds
+/api/funds/<code>    →  /api/v1/funds/<code>
+/api/funds/<code>/chart → /api/v1/funds/<code>/chart
+/api/rankings        →  /api/v1/rankings
+/health              →  /health（保持不变，非业务 API）
+/refresh             →  /refresh（保持不变）
+/init-history        →  /init-history（保持不变）
+```
+
+**涉及文件：**
+- `backend/app.py` — 所有路由前缀
+- `functions/api/[[path]].js` — 代理路径如需调整
+- `js/api.js` — 前端 API 调用路径更新
+
+**验收标准：**
+- [ ] 旧路径 `/api/funds` 返回 301 重定向到 `/api/v1/funds`（保留向后兼容至少一个版本周期）
+- [ ] 前端所有 API 调用使用 v1 路径
+- [ ] `/health` 不受影响
+
+**预计耗时：** 1h
+**依赖：** 无
+
+---
+
+### 2.4 API 限流
+
+**当前问题：** 无任何请求频率限制。用户增多或前端 bug 导致死循环请求时，后端无防护。
+
+**方案：** 引入 Flask-Limiter，设置全局限流和按端点限流：
+
+```python
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["60 per minute"],
+    storage_uri="memory://",
+)
+
+# 个别端点的自定义限制
+# /api/v1/funds: "30 per minute"（列表查询较重）
+# /refresh: "5 per minute"（手动刷新更重）
+```
+
+**涉及文件：**
+- `backend/requirements.txt`（新增 `Flask-Limiter`）
+- `backend/app.py`（初始化 + 路由装饰器）
+
+**验收标准：**
+- [ ] 超过限制的请求返回 HTTP 429 Too Many Requests
+- [ ] 429 响应包含 `Retry-After` 头
+- [ ] 正常使用不受影响
+- [ ] 前端收到 429 时显示友好提示而非通用错误
+
+**预计耗时：** 30 min
+**依赖：** 无
+
+---
+
+### 2.5 自动化测试框架
+
+**当前问题：** 无任何自动化测试。金融数据工具的数据准确性完全依赖手工验证。
+
+**方案：** 引入 pytest 作为测试框架，优先覆盖核心数据逻辑：
+
+| 优先级 | 测试范围 | 示例 |
+|--------|----------|------|
+| 高 | 溢价率计算公式 | 已知价格+净值 → 验证溢价率输出 |
+| 高 | 预计收益计算 | 已知参数 → 验证费率扣除逻辑 |
+| 高 | 数据过滤逻辑 | 给定基金数据 → 验证异常值过滤 |
+| 中 | API 端点响应 | 端点返回 200 + 正确 JSON 结构 |
+| 低 | 前端渲染逻辑 | 待 M4 JS 拆分后 |
+
+**涉及文件：**
+- `backend/tests/`（新建目录）
+- `backend/tests/test_calculations.py`
+- `backend/tests/test_api.py`
+- `backend/requirements.txt`（新增 `pytest`）
+
+**验收标准：**
+- [ ] `pytest` 命令可运行，无配置错误
+- [ ] 核心计算函数有单元测试覆盖
+- [ ] API 端点有至少一个 happy-path 测试
+- [ ] Railway 构建不因 test 依赖失败
+
+**预计耗时：** 2-3h
+**依赖：** 2.3（API 版本化完成后写 API 测试更稳定）
+
+---
+
+### 2.6 日志系统升级
+
+**当前问题：** 日志通过 Python 标准 `print()` 或基础 `logging` 输出，无结构化格式，排查问题效率低。
+
+**方案：** 引入 structlog，结构化日志输出为 JSON 格式：
+
+```python
+import structlog
+
+logger = structlog.get_logger()
+
+# 使用
+logger.info("fund_data_fetched", count=538, source="akshare", elapsed_ms=1234)
+logger.error("data_source_failed", source="akshare", error=str(e))
+```
+
+Railway 日志收集 JSON 格式后可自然搜索和过滤。
+
+**涉及文件：**
+- `backend/requirements.txt`（新增 `structlog`）
+- `backend/config.py`（日志配置）
+- `backend/app.py`、`backend/data_fetcher.py`、`backend/datasource/*.py`（替换现有 print/logging）
+
+**验收标准：**
+- [ ] 日志以 JSON 格式输出
+- [ ] 每条日志包含 `timestamp`、`level`、`event` 字段
+- [ ] 关键数据流节点有日志（抓取开始/结束、数据量、耗时）
+- [ ] 错误日志包含足够的上下文信息用于排查
+
+**预计耗时：** 1.5h
+**依赖：** 无
+
+---
+
+### 2.7 本地 PostgreSQL 备份
+
+Railway Postgres 有备份能力但依赖平台配置。在本地保留一份定期备份作为额外保障。
+
+**方案：** 编写备份脚本，使用 `pg_dump` 导出到本地文件：
+
+```
+backend/backup/
+├── backup.sh          # pg_dump 脚本
+└── backups/           # 备份文件目录（加入 .gitignore）
+```
+
+脚本定期执行（手动或 cron）：
+```bash
+pg_dump $DATABASE_URL --format=custom --file=backups/lof_$(date +%Y%m%d).dump
+```
+
+**验收标准：**
+- [ ] `backup.sh` 可成功连接 Railway PostgreSQL 并导出
+- [ ] `.dump` 文件可用 `pg_restore` 恢复
+- [ ] `backups/` 目录已加入 `.gitignore`
+- [ ] README 或 DEVELOPMENT.md 中注明备份和恢复步骤
+
+**预计耗时：** 30 min
+**依赖：** 本地已安装 PostgreSQL 客户端工具
 
 ---
 
@@ -1194,3 +1391,10 @@ CORS 已通过 `functions/api/[[path]].js` 在每个响应中设置了 `Access-C
 | QQ 群入口放右下角悬浮 | 圆角胶囊按钮，固定定位，PC/移动端适配 | 不影响核心浏览体验 | 2026-05-18 |
 | Header 配色改为 DeepSeek 科技蓝 | `#3C5DFF` → `#1a3fcc` 渐变，LOF 页同步更新 | 去除紫色卡通感，增强金融科技感 | 2026-05-18 |
 | 导航页右上角「用户中心」| 灰色半透明，不可点击，待用户系统开发后激活 | 预留位置，给用户未来预期 | 2026-05-18 |
+| Python 版本固定 | `runtime.txt` 指定 3.11 | 避免 Railway 默认版本变化导致兼容问题 | 2026-05-18 |
+| 依赖管理 | `requirements.lock` 锁定精确版本，删除未使用的 tushare | 防止上游依赖更新导致构建失败 | 2026-05-18 |
+| API 版本化 | 所有业务端点加 `/v1` 前缀，`/health` 等不变 | 未来接口变更可平滑过渡 | 2026-05-18 |
+| API 限流 | Flask-Limiter，全局限流 60/min，刷新端点 5/min | 防意外请求洪峰 | 2026-05-18 |
+| 自动化测试 | pytest，优先覆盖溢价率计算和 API 端点 | 金融工具数据准确性保障 | 2026-05-18 |
+| 日志 | structlog 结构化 JSON 输出 | 提升排查效率，支持日志搜索 | 2026-05-18 |
+| 数据库备份 | 本地 `pg_dump` 定期备份，脚本存放 `backend/backup/` | 平台备份之外的额外保障 | 2026-05-18 |
