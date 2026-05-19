@@ -276,7 +276,7 @@ class LegacySource(LOFDataSource):
                 f"&ut=bd1d9ddb04089700cf9c27f6f7426281"
                 f"&fltt=2&invt=2&fid=f3"
                 f"&fs=m:1+t:9"
-                f"&fields=f12,f14,f2,f3,f5,f20"
+                f"&fields=f12,f14,f2,f3,f5,f6"
             )
             resp = None
             for attempt in range(3):
@@ -322,7 +322,7 @@ class LegacySource(LOFDataSource):
                     "price": price,
                     "change_pct": round(_safe_float(item.get("f3"), 0), 3),
                     "volume": int(_safe_float(item.get("f5"), 0)),
-                    "amount": round(_safe_float(item.get("f20"), 0), 2),
+                    "amount": round(_safe_float(item.get("f6"), 0), 2),
                 }
             if len(seen) >= total:
                 break
@@ -522,18 +522,7 @@ class LegacySource(LOFDataSource):
                 "is_formal_nav": True,
             }
 
-        # Step 3: 盘中估算净值 gsz
-        if gsz and _safe_float(gsz) > 0:
-            nav = _safe_float(gsz)
-            prev = _safe_float(dwjz, nav) if dwjz else _safe_float(prev_str, nav)
-            return {
-                "nav": round(nav, 4),
-                "prev_nav": round(prev, 4),
-                "nav_date": str(gztime) if gztime else today,
-                "is_formal_nav": False,
-            }
-
-        # Step 4: fundgz 昨日官方净值（兜底）
+        # Step 3: fundgz 最近正式净值（优先于估算净值）
         if dwjz:
             nav = _safe_float(dwjz)
             prev = _safe_float(prev_str, nav)
@@ -542,6 +531,17 @@ class LegacySource(LOFDataSource):
                 "prev_nav": round(prev, 4),
                 "nav_date": jzrq,
                 "is_formal_nav": True,
+            }
+
+        # Step 4: 盘中估算净值 gsz（最后兜底）
+        if gsz and _safe_float(gsz) > 0:
+            nav = _safe_float(gsz)
+            prev = _safe_float(prev_str, _safe_float(dwjz or prev_str, nav))
+            return {
+                "nav": round(nav, 4),
+                "prev_nav": round(prev, 4),
+                "nav_date": str(gztime) if gztime else today,
+                "is_formal_nav": False,
             }
 
         # Step 5: lsjz 兜底
