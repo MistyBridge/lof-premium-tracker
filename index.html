@@ -6,9 +6,9 @@
     <meta name="baidu-site-verification" content="codeva-uWUjZhtcFc" />
     <meta name="sogou_site_verification" content="Ti2yzeOZ5t" />
     <meta name="shenma-site-verification" content="579f9369e67a467b09cb4d0c31183913_1778905831" />
-    <title>金快查 - LOF基金实时折溢价监控 | 套利收益计算 | 溢价率排行</title>
+    <title>金快查 - LOF基金实时折溢价监控 | 套利收益计算</title>
     <meta name="description" content="金快查是全市场LOF基金实时折溢价监控工具，覆盖深沪两市全部LOF基金，提供实时溢价率、折价率、套利收益计算、日线走势图。支持PC和移动端，数据5分钟自动刷新。">
-    <meta name="keywords" content="LOF基金,溢价率,折价率,套利,基金溢价,场内基金,LOF套利,基金监控,溢价排行,实时净值">
+    <meta name="keywords" content="LOF基金,溢价率,折价率,套利,基金溢价,场内基金,LOF套利,基金监控,实时净值">
     <meta name="author" content="MistyBridge">
     <link rel="canonical" href="https://jinkuaicha.com">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -30,7 +30,7 @@
       "@type": "WebApplication",
       "name": "金快查",
       "url": "https://jinkuaicha.com",
-      "description": "全市场LOF基金实时折溢价监控系统，提供溢价率排行、套利收益计算、历史走势图",
+      "description": "全市场LOF基金实时折溢价监控系统，提供套利收益计算、历史走势图",
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Web, Mobile",
       "author": { "@type": "Person", "name": "MistyBridge" }
@@ -108,42 +108,30 @@
             </div>
         </header>
 
-        <div class="status-bar">
-            <div class="status-item"><span class="status-label">基金总数</span><span id="totalFunds" class="status-value">-</span></div>
-            <div class="status-item"><span class="status-label">缓存数据</span><span id="cacheCount" class="status-value">-</span></div>
-            <div class="status-item"><span class="status-label">最后更新</span><span id="lastFetch" class="status-value">-</span></div>
-            <div class="status-item"><span class="status-label">刷新间隔</span><span id="refreshInterval" class="status-value">-</span></div>
-        </div>
-
         <div class="main-content">
-            <aside class="sidebar">
-                <div class="panel ranking-panel">
-                    <div class="ranking-dual">
-                        <div class="ranking-col">
-                            <h3 class="panel-title">🔥 溢价 TOP5</h3>
-                            <div id="rankingsContainer" class="rankings-list"><div class="loading-mini">加载中...</div></div>
-                        </div>
-                        <div class="ranking-col">
-                            <h3 class="panel-title panel-title-neg">🧊 折价 TOP5</h3>
-                            <div id="discountContainer" class="rankings-list"><div class="loading-mini">加载中...</div></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel legend-panel">
-                    <h3 class="panel-title">📖 图例说明</h3>
-                    <div class="legend-items">
-                        <div class="legend-item"><span class="legend-color premium-positive"></span><span>溢价（价格 &gt; 净值）</span></div>
-                        <div class="legend-item"><span class="legend-color premium-negative"></span><span>折价（价格 &lt; 净值）</span></div>
-                        <div class="legend-item"><span class="legend-color premium-zero"></span><span>平价（价格 ≈ 净值）</span></div>
-                        <div class="legend-item"><span class="nav-badge">正式</span><span>= 收盘后净值</span></div>
-                        <div class="legend-item"><span class="nav-badge">估算</span><span>= 盘中估算净值</span></div>
-                    </div>
-                </div>
-            </aside>
-
             <main class="content">
                 <div class="toolbar">
-                    <div class="search-box"><input type="text" id="searchInput" placeholder="代码/名称"><button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button></div>
+                    <div class="search-box">
+                        <div class="fund-type-select" id="fundTypeSelect">
+                            <span class="ft-current-label">LOF基金</span>
+                            <span class="ft-arrow">▾</span>
+                        </div>
+                        <div class="search-input-wrap">
+                            <input type="text" id="searchInput" placeholder="(--) 代码/名称">
+                        </div>
+                        <button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button>
+                        <div class="fund-type-dropdown" id="fundTypeDropdown" style="display:none">
+                            <div class="ft-option active" data-type="lof">
+                                <span class="ft-opt-name">LOF基金</span>
+                                <span class="ft-opt-count" id="ftOptLofCount">--</span>
+                            </div>
+                            <div class="ft-option disabled" data-type="etf">
+                                <span class="ft-opt-name">ETF基金</span>
+                                <span class="ft-opt-status">暂未开放</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span class="toolbar-timestamp" id="toolbarTimestamp">--</span>
                     <div class="mobile-sort-btns">
                         <div class="sort-btn-row">
                             <button id="premiumModeBtn" class="btn-sort-mode active" data-mode="premium">溢价模式</button>
@@ -171,7 +159,7 @@
                                 <th class="sortable" data-field="amount_w">成交额 ↕</th>
                                 <th class="sortable" data-field="est_profit_rate">预计收益率 ↕</th>
                                 <th class="sortable" data-field="est_profit_amount">预计收益额 ↕</th>
-                                <th>状态</th>
+                                <th>申购状态</th>
                                 <th>净值时间</th>
                             </tr>
                         </thead>

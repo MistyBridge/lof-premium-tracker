@@ -325,6 +325,79 @@ AkShare 主源
 - 是 → 调用 push2delay `m:0+t:9` 扫描全量 SZ LOF（16xxxx + 184xxx）
 - 新代码合并写入 JSON，Railway 重启不丢失
 
+### 3.8 线程池设计
+
+项目使用分层线程模型，按任务类型区分调度策略：
+
+#### 3.8.1 TaskQueue — 后台任务调度
+
+全局单例，`max_workers=4`，负责耗时后台任务（K线回填、净值回填）。
+
+```
+TaskQueue
+├── Semaphore(4)         控制并发上限
+├── _running_types: dict 每种类型最多 1 个运行实例（去重）
+├── _pending: list       超出 worker 数的任务排队
+└── daemon Thread        每个 worker 一个守护线程
+```
+
+| 特性 | 实现 |
+|------|------|
+| 同类型去重 | `submit("nav_backfill", ...)` 再次调用返回已有 Task，不重复执行 |
+| 排队唤醒 | 任务完成后 `_process_pending()` 自动取下一个 |
+| 状态查询 | `GET /api/tasks` 返回运行中/排队中任务列表 |
+| 自动清理 | `cleanup_old(3600)` 每小时清理已完成/失败的任务记录 |
+| 任务类型 | `kline_backfill`（K线补填）、`nav_backfill`（净值回填） |
+
+```
+submit(task_type, ...)
+  ├── 同类型已在运行? → 返回已有 Task（去重）
+  ├── 有空闲 worker?  → 启动 daemon Thread 立即执行
+  └── 无空闲 worker?  → 加入 _pending 排队，等待唤醒
+```
+
+#### 3.8.2 数据抓取 — 阶段内并发
+
+`data_fetcher.fetch_all()` 主流程同步，各阶段内部并发：
+
+| 阶段 | 并发模型 | 参数 |
+|------|----------|------|
+| 价格行情 | datasource manager 主备切换，单次调用 | — |
+| NAV 净值 | datasource manager 逐基金降级 | 内部并发 |
+| 申购状态 | `threading.Thread` 分批 | `Semaphore(15)`，50 只/批 |
+| 费率爬虫 | `fee_fetcher.fetch_fees_batch()` | `concurrency=10` |
+
+#### 3.8.3 K线历史回填 — 共享队列并发
+
+```python
+WORKERS = 3
+code_queue = Queue()  # 所有基金代码入队
+
+def worker(wid):
+    while True:
+        code = code_queue.get_nowait()  # 无锁抢占
+        fetch_one_fund(code)            # 9源串行降级
+        stream_write_to_db()            # 流式即时写入
+```
+
+3 个 worker 共享同一个 `queue.Queue`，各自抢占基金代码。每个 worker 对单只基金做 9 源串行降级，拿到数据后立即 `INSERT ... ON CONFLICT DO UPDATE` 写入 PostgreSQL，不积攒内存。
+
+#### 3.8.4 Gunicorn 进程模型
+
+```
+railway.json:
+  gunicorn --workers 1 --threads 4 --timeout 120
+```
+
+| 层级 | 数量 | 职责 |
+|------|------|------|
+| Gunicorn worker 进程 | 1 | 处理 HTTP 请求 |
+| Gunicorn 线程 | 4 | 并发处理请求 |
+| TaskQueue worker | 4 | 后台任务（进程中独立线程） |
+
+> 线程池总数 = 4（请求处理）+ 4（后台任务）= 8 线程。
+> 瓶颈在 Gunicorn workers=1，改为 2 即可翻倍吞吐量。
+
 ---
 
 ## 四、CF Functions 代理层

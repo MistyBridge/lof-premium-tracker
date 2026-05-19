@@ -32,6 +32,7 @@ class LofFundMonitor {
             this.darkMode = 'light';
         }
         this.bindEvents();
+        this._initFundTypeDropdown();
         this.applyDarkMode(false); // 不保存，仅应用
         this.init();
     }
@@ -120,10 +121,7 @@ class LofFundMonitor {
         }
     }
 
-    loadRankings() {
-        // 从客户端已过滤数据中计算排行榜，遵从用户的停牌/停购筛选设置
-        this.renderPremiumRankings();
-    }
+    loadRankings() {}
 
     async loadFunds() {
         this.isLoading = true;
@@ -133,6 +131,13 @@ class LofFundMonitor {
             // 记录服务端数据时间戳，用于刷新按钮时间对齐
             if (result.meta?.last_fetch) {
                 this._lastServerFetch = result.meta.last_fetch;
+                // 同步更新工具栏时间戳
+                const ts = document.getElementById('toolbarTimestamp');
+                if (ts) {
+                    const time = this.formatTime(result.meta.last_fetch);
+                    const interval = (result.meta.refresh_interval_sec || 300) / 60;
+                    ts.textContent = time + ' · ' + interval + '分钟刷新';
+                }
             }
             // 保存原始数据总数（过滤前）
             const totalFromApi = result.data.length;
@@ -144,8 +149,8 @@ class LofFundMonitor {
             this.applyFilters();
             this.renderTable();
             this.updatePaginationInfo();
-            // 用 API 返回的原始总数更新基金总数
-            if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = totalFromApi;
+            // 更新基金类型选择器的计数
+            this._updateFundTypeCounts(totalFromApi, result.data.length);
             // Check if data is from history (market closed)
             const firstFund = result.data[0];
             if (firstFund && firstFund.data_date) {
@@ -373,9 +378,6 @@ class LofFundMonitor {
         if (this.filteredFunds.length === 0) {
             if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="empty-state"><i class="icon">📭</i><p>暂无数据</p><p class="loading-hint">尝试调整筛选条件</p></td></tr>`;
             if (cardList) cardList.innerHTML = `<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>`;
-            // 清空排行榜
-            this.renderPremiumRankings();
-            this.renderDiscountRankings();
             return;
         }
         const start = (this.currentPage - 1) * this.pageSize;
@@ -383,9 +385,6 @@ class LofFundMonitor {
         const pageData = this.filteredFunds.slice(start, end);
         if (tbody) tbody.innerHTML = pageData.map(fund => this.createFundRow(fund)).join('');
         if (cardList) cardList.innerHTML = pageData.map(fund => this.createMobileCard(fund)).join('');
-        // 排行榜跟随筛选更新
-        this.renderPremiumRankings();
-        this.renderDiscountRankings();
     }
 
     createFundRow(fund) {
@@ -444,62 +443,13 @@ class LofFundMonitor {
             <td class="col-amount">${amountText}</td>
             <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}${estProfitInfoBtn}</td>
             <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}${estProfitInfoBtn}</td>
-            <td class="col-status"><span class="status-badge ${fund.premium_status || ''}">${fund.premium_status || '未知'}</span></td>
+            <td class="col-status">${this._purchaseStatusCell(fund)}</td>
             <td class="col-time">${fund.nav_date || '-'}</td>
         </tr>`;
     }
 
-    renderPremiumRankings() {
-        // 从客户端过滤后的数据中取溢价 Top
-        const sorted = [...this.filteredFunds].sort((a, b) => (b.premium_rate ?? 0) - (a.premium_rate ?? 0));
-        const container = document.getElementById('rankingsContainer');
-        if (container) {
-            container.innerHTML = sorted.slice(0, 5).map((fund, index) => `
-                <div class="ranking-item">
-                    <span class="rank-num rank-${index + 1}">${index + 1}</span>
-                    <div class="rank-card">
-                        <span class="rank-code">${fund.code}</span>
-                        <span class="rank-premium premium-high">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-        const mobileScroll = document.getElementById('mobileRankingScroll');
-        if (mobileScroll) {
-            mobileScroll.innerHTML = sorted.slice(0, 10).map(fund => `
-                <div class="strip-item">
-                    <span class="si-code">${fund.code}</span>
-                    <span class="si-rate">${fund.premium_rate != null ? '+' + fund.premium_rate.toFixed(2) + '%' : '--'}</span>
-                </div>
-            `).join('');
-        }
-    }
-
-    renderDiscountRankings() {
-        // 从客户端过滤后的数据中取折价 Top
-        const sorted = [...this.filteredFunds].sort((a, b) => (a.premium_rate ?? 0) - (b.premium_rate ?? 0));
-        const discountContainer = document.getElementById('discountContainer');
-        if (discountContainer) {
-            discountContainer.innerHTML = sorted.slice(0, 5).map((fund, index) => `
-                <div class="ranking-item">
-                    <span class="rank-num rank-${index + 1}">${index + 1}</span>
-                    <div class="rank-card">
-                        <span class="rank-code">${fund.code}</span>
-                        <span class="rank-premium rank-discount">${fund.premium_rate != null ? fund.premium_rate.toFixed(2) + '%' : '--'}</span>
-                    </div>
-                </div>
-            `).join('');
-        }
-        const mobileDiscountScroll = document.getElementById('mobileDiscountScroll');
-        if (mobileDiscountScroll) {
-            mobileDiscountScroll.innerHTML = sorted.slice(0, 10).map(fund => `
-                <div class="strip-item">
-                    <span class="si-code">${fund.code}</span>
-                    <span class="si-rate">${fund.premium_rate != null ? fund.premium_rate.toFixed(2) + '%' : '--'}</span>
-                </div>
-            `).join('');
-        }
-    }
+    renderPremiumRankings() {}
+    renderDiscountRankings() {}
 
     createMobileCard(fund) {
         const pr = fund.premium_rate;
@@ -531,6 +481,15 @@ class LofFundMonitor {
                 <button class="mc-profit-help" data-code="${fund.code}" title="查看计算详情">?</button>
             </div>
         </div>`;
+    }
+
+    _purchaseStatusCell(fund) {
+        if (fund.can_purchase === false) return '暂停申赎';
+        if (fund.purchase_limit > 0) {
+            const limitWan = fund.purchase_limit / 10000;
+            return limitWan >= 1 ? `限${limitWan.toFixed(0)}万` : `限${Math.round(fund.purchase_limit)}元`;
+        }
+        return '开放申赎';
     }
 
     truncateName(name, maxLen = 12) {
@@ -909,11 +868,44 @@ class LofFundMonitor {
     }
 
     updateStatusInfo(data) {
-        if (document.getElementById('cacheCount')) document.getElementById('cacheCount').textContent = data.cache_count ?? '-';
-        if (document.getElementById('lastFetch')) document.getElementById('lastFetch').textContent = this.formatTime(data.last_fetch);
-        if (document.getElementById('refreshInterval')) document.getElementById('refreshInterval').textContent = (data.refresh_interval_sec || 300) / 60 + '分钟';
         const total = data.total ?? data.cache_count ?? this.funds.length;
-        if (document.getElementById('totalFunds')) document.getElementById('totalFunds').textContent = total;
+        const cache = data.cache_count ?? '-';
+        this._updateFundTypeCounts(total, cache);
+        const ts = document.getElementById('toolbarTimestamp');
+        if (ts) {
+            const time = data.last_fetch ? this.formatTime(data.last_fetch) : null;
+            const interval = (data.refresh_interval_sec || 300) / 60;
+            ts.textContent = time ? time + ' · ' + interval + '分钟刷新' : '等待首次刷新...';
+        }
+    }
+
+    _updateFundTypeCounts(total, cache) {
+        const input = document.getElementById('searchInput');
+        const optLabel = document.getElementById('ftOptLofCount');
+        const text = '(缓存' + cache + '只 共' + total + '只)';
+        if (input) input.placeholder = text + ' 代码/名称';
+        if (optLabel) optLabel.textContent = '缓存' + cache + ' · 共' + total + '只';
+    }
+
+    _initFundTypeDropdown() {
+        const select = document.getElementById('fundTypeSelect');
+        const dropdown = document.getElementById('fundTypeDropdown');
+        if (!select || !dropdown) { console.warn('[LOF] fund type dropdown elements not found'); return; }
+        select.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = dropdown.style.display === 'block';
+            dropdown.style.display = isOpen ? 'none' : 'block';
+        });
+        document.addEventListener('click', (e) => {
+            if (!select.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+        dropdown.addEventListener('click', (e) => {
+            const opt = e.target.closest('.ft-option');
+            if (!opt || opt.classList.contains('disabled')) return;
+            dropdown.style.display = 'none';
+        });
     }
 
     updatePaginationInfo() {
