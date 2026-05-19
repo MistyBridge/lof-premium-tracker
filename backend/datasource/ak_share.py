@@ -112,7 +112,49 @@ class AkShareSource(LOFDataSource):
             }
 
         logger.info("AkShare: %d LOF prices fetched", len(result))
+
+        # ── Amount correction: push2 clist API for accurate SSE amounts ──
+        try:
+            self._correct_sse_amounts(result)
+        except Exception as e:
+            logger.debug("SSE amount correction skipped: %s", e)
+
         return result
+
+    def _correct_sse_amounts(self, result: Dict[str, dict]) -> None:
+        """用 push2 clist API 修正 SSE 基金的成交额（AkShare 可能返回总市值）"""
+        corrected = 0
+        for pn in range(1, 25):
+            url = (
+                "https://push2delay.eastmoney.com/api/qt/clist/get"
+                f"?pn={pn}&pz=100&po=1&np=1"
+                f"&ut=bd1d9ddb04089700cf9c27f6f7426281"
+                f"&fltt=2&invt=2&fid=f3"
+                f"&fs=m:1+t:9"
+                f"&fields=f12,f6"
+            )
+            try:
+                resp = self._sess().get(url, headers={
+                    "User-Agent": "Mozilla/5.0",
+                    "Referer": "https://fundf10.eastmoney.com/",
+                }, timeout=Config.REQUEST_TIMEOUT)
+                if resp.status_code != 200:
+                    break
+                data = resp.json()
+                items = (data.get("data") or {}).get("diff", [])
+                if not items:
+                    break
+                for item in items:
+                    code = str(item.get("f12", "")).strip()
+                    amt = _safe_float(item.get("f6"), 0)
+                    if code in result and amt > 0:
+                        result[code]["amount"] = round(amt, 2)
+                        corrected += 1
+            except Exception:
+                break
+            time.sleep(0.15)
+        if corrected:
+            logger.info("AkShare: corrected amounts for %d SSE funds", corrected)
 
     def fetch_single_nav(self, code: str) -> Dict[str, Any]:
         """
