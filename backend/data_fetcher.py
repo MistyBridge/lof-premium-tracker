@@ -2,7 +2,7 @@
 """
 LOF Fund Data Fetcher — 缓存管理 + 数据源编排
 
-数据抓取委托给 datasource 包（主: AkShare, 备: Legacy），
+数据抓取委托给 datasource 包（主: 东方财富+腾讯+天天基金, 降级: 新浪→网易），
 本模块负责缓存管理、溢价率计算、费率加载和历史数据降级。
 """
 import json
@@ -218,8 +218,8 @@ class LOFDataFetcher:
     def fetch_all(self) -> bool:
         """
         数据抓取主流程（使用 DataSourceManager 主备切换）：
-          1. 价格行情 → datasource (AkShare → Legacy)
-          2. NAV 净值  → datasource (AkShare → Legacy, 逐基金降级)
+          1. 价格行情 → datasource (东方财富+腾讯 → 新浪 → 网易)
+          2. NAV 净值  → datasource (天天基金 fundgz/lsjz)
           3. 溢价率计算
           4. 申购状态  → lsjz API
           5. 费率数据  → fee_fetcher (缓存 + 爬虫)

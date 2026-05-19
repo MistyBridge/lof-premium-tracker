@@ -228,6 +228,7 @@ class LegacySource(LOFDataSource):
     # ── Public API ──────────────────────────────────
 
     def fetch_all_prices(self) -> Dict[str, dict]:
+        # Level 1: 东方财富 (SSE) + 腾讯 (SZ)
         sse = self._fetch_sse_from_em()
         sz_codes = self._maybe_refresh_sz_codes()
         sz = self._fetch_sz_from_qt(sz_codes)
@@ -237,7 +238,44 @@ class LegacySource(LOFDataSource):
         for code, price_data in sz.items():
             if code not in all_prices:
                 all_prices[code] = price_data
-        logger.info("Legacy: %d prices (SSE=%d, SZ=%d)", len(all_prices), len(sse), len(sz))
+        got = len(all_prices)
+        logger.info("Legacy: %d prices (SSE=%d, SZ=%d)", got, len(sse), len(sz))
+
+        # Level 2-3: 新浪 → 网易 补缺
+        all_codes = set(sse.keys()) | set(sz_codes)
+        missing = [c for c in all_codes if c not in all_prices]
+        if missing:
+            try:
+                from datasource.sina import SinaSource
+                sina = SinaSource()
+                filled = 0
+                for code in missing:
+                    r = sina.fetch_single_price(code)
+                    if r:
+                        all_prices[code] = r
+                        filled += 1
+                if filled:
+                    logger.info("Legacy: Sina filled %d missing prices", filled)
+                missing = [c for c in missing if c not in all_prices]
+            except Exception as e:
+                logger.debug("Sina fallback unavailable: %s", e)
+
+        if missing:
+            try:
+                from datasource.netease import NeteaseSource
+                netease = NeteaseSource()
+                filled = 0
+                for code in missing:
+                    r = netease.fetch_single_price(code)
+                    if r:
+                        all_prices[code] = r
+                        filled += 1
+                if filled:
+                    logger.info("Legacy: Netease filled %d missing prices", filled)
+            except Exception as e:
+                logger.debug("Netease fallback unavailable: %s", e)
+
+        logger.info("Legacy: %d total prices after fallback", len(all_prices))
         return all_prices
 
     def fetch_single_nav(self, code: str) -> Dict[str, Any]:

@@ -210,13 +210,12 @@ _instance: Optional[DataSourceManager] = None
 
 
 def get_datasource_manager() -> DataSourceManager:
-    """获取全局数据源管理器单例（主=AkShare, 备=Legacy）"""
+    """获取全局数据源管理器单例（主=东方财富Legacy, 无AkShare）"""
     global _instance
     if _instance is None:
-        from datasource.ak_share import AkShareSource
         from datasource.legacy import LegacySource
         _instance = DataSourceManager(
-            primary=AkShareSource(),
-            fallback=LegacySource(),
+            primary=LegacySource(),
+            fallback=None,  # Legacy 内部已有 东财→腾讯→天天基金 降级
         )
     return _instance

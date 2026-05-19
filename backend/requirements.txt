@@ -4,6 +4,6 @@ flask-cors>=4.0.0
 gunicorn>=21.0.0
 urllib3>=2.0.0
 psycopg2-binary>=2.9.0
-akshare>=1.14.0
+# akshare 已弃用，改用东方财富+腾讯+新浪+网易+天天基金多源降级
 baostock>=0.8.8
 tushare>=1.4.0

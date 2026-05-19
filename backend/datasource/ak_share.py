@@ -117,12 +117,14 @@ class AkShareSource(LOFDataSource):
         try:
             self._correct_sse_amounts(result)
         except Exception as e:
-            logger.debug("SSE amount correction skipped: %s", e)
+            logger.warning("SSE amount correction failed: %s", e)
 
         return result
 
     def _correct_sse_amounts(self, result: Dict[str, dict]) -> None:
         """用 push2 clist API 修正 SSE 基金的成交额（AkShare 可能返回总市值）"""
+        import re
+        sse_prefixes = ("50", "51", "52", "53", "54", "55", "56", "58", "59")
         corrected = 0
         for pn in range(1, 25):
             url = (
@@ -139,6 +141,7 @@ class AkShareSource(LOFDataSource):
                     "Referer": "https://fundf10.eastmoney.com/",
                 }, timeout=Config.REQUEST_TIMEOUT)
                 if resp.status_code != 200:
+                    logger.debug("SSE amount page %d HTTP %d", pn, resp.status_code)
                     break
                 data = resp.json()
                 items = (data.get("data") or {}).get("diff", [])
@@ -146,15 +149,22 @@ class AkShareSource(LOFDataSource):
                     break
                 for item in items:
                     code = str(item.get("f12", "")).strip()
+                    if not re.match(r'^\d{6}$', code):
+                        continue
+                    if not code.startswith(sse_prefixes):
+                        continue
                     amt = _safe_float(item.get("f6"), 0)
                     if code in result and amt > 0:
-                        result[code]["amount"] = round(amt, 2)
-                        corrected += 1
-            except Exception:
+                        old = result[code].get("amount", 0)
+                        if old != round(amt, 2):
+                            result[code]["amount"] = round(amt, 2)
+                            corrected += 1
+            except Exception as ex:
+                logger.debug("SSE amount page %d failed: %s", pn, ex)
                 break
             time.sleep(0.15)
         if corrected:
-            logger.info("AkShare: corrected amounts for %d SSE funds", corrected)
+            logger.info("AkShare: corrected amounts for %d SSE LOFs", corrected)
 
     def fetch_single_nav(self, code: str) -> Dict[str, Any]:
         """
