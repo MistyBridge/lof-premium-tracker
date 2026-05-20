@@ -18,3 +18,4 @@ __pycache__/
 *.pyc
 *.pyo
 .env
+backend/fee_cache.json

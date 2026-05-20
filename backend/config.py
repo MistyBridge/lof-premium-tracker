@@ -3,7 +3,13 @@
 配置文件
 """
 import os
+from dotenv import load_dotenv
 from urllib.parse import urlparse
+
+# 加载 .env 文件（如果存在）
+# 本地开发：读取 .env 中的变量
+# Railway/生产环境：.env 不存在时，load_dotenv 不会报错，继续使用系统环境变量
+load_dotenv()
 
 
 def _parse_db_url(url: str) -> dict:
