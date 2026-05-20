@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.4.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20API-green.svg)
 ![License](https://img.shields.io/badge/license-AGPLv3-red.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
@@ -47,6 +47,7 @@
 ### 体验设计
 | 功能 | 说明 |
 |------|------|
+| 自定义表头 | 列显隐切换、拖拽排序、表头存档/切换、表头库，偏好持久化到本地 |
 | 暗色模式 | 手动切换，偏好自动持久化 |
 | 响应式布局 | PC 端表格式数据看板 + 移动端卡片式信息流 |
 | 多端支持 | Web 网页 + 移动端 H5，响应式设计自适应屏幕 |
@@ -64,6 +65,7 @@ lof-premium-tracker/
 ├── js/
 │   ├── config.js              # 环境配置（API 地址、刷新间隔等）
 │   ├── api.js                 # 网络层（请求封装、自动重试、超时处理）
+│   ├── columns.js             # 表头注册中心（列元数据 + 用户偏好管理）
 │   └── app.js                 # 业务逻辑（排序、筛选、弹窗、Chart.js 图表）
 ├── assets/icon.jpg            # 品牌图标
 ├── pages/
@@ -219,7 +221,7 @@ K线日线:  东方财富 push2his → 新浪 → 网易 → 腾讯 QT → Baost
 
 ### 在线使用（无需部署）
 
-访问 **[lof-fund-monitor.pages.dev](https://lof-fund-monitor.pages.dev)** 即可直接使用。
+访问 **[jinkuaicha.com](https://jinkuaicha.com)** 即可直接使用。
 
 ### 本地开发
 
@@ -244,7 +246,7 @@ flask run --port 5000
 
 ```bash
 # 前端 — Cloudflare Pages
-npx wrangler pages deploy . --project-name lof-fund-monitor --branch main
+npx wrangler pages deploy . --project-name lof-premium-tracker --branch main
 
 # 后端 — 推送 GitHub 后 Railway 自动部署
 git push origin main
@@ -305,7 +307,7 @@ git push origin main
 
 | 项目 | 说明 |
 |------|------|
-| [在线 Demo](https://lof-fund-monitor.pages.dev) | 生产环境在线实例 |
+| [在线 Demo](https://jinkuaicha.com) | 生产环境在线实例 |
 
 ---
 
