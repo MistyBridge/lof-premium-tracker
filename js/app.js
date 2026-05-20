@@ -33,6 +33,8 @@ class LofFundMonitor {
         }
         this.bindEvents();
         this._initFundTypeDropdown();
+        this._buildTableHead();
+        this._initColumnEditor();
         this.applyDarkMode(false); // 不保存，仅应用
         this.init();
     }
@@ -375,77 +377,169 @@ class LofFundMonitor {
     renderTable() {
         const tbody = document.getElementById('fundTableBody');
         const cardList = document.getElementById('mobileCardList');
+        var allCols = (typeof getActiveColumns === 'function') ? getActiveColumns() : [];
+        var frozen = allCols.filter(function(c) { return c.frozen; });
+        var pages = this._columnPages || [];
+        var pageCols = pages[this._columnPage || 0] || [];
+        var colCount = frozen.length + pageCols.length + 2; // +2 for arrow columns
         if (this.filteredFunds.length === 0) {
-            if (tbody) tbody.innerHTML = `<tr><td colspan="12" class="empty-state"><i class="icon">📭</i><p>暂无数据</p><p class="loading-hint">尝试调整筛选条件</p></td></tr>`;
-            if (cardList) cardList.innerHTML = `<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>`;
+            if (tbody) tbody.innerHTML = '<tr><td colspan="' + colCount + '" class="empty-state"><i class="icon">📭</i><p>暂无数据</p><p class="loading-hint">尝试调整筛选条件</p></td></tr>';
+            if (cardList) cardList.innerHTML = '<div class="mobile-empty"><i class="icon">📭</i><p>暂无数据</p></div>';
             return;
         }
-        const start = (this.currentPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        const pageData = this.filteredFunds.slice(start, end);
+        var start = (this.currentPage - 1) * this.pageSize;
+        var end = start + this.pageSize;
+        var pageData = this.filteredFunds.slice(start, end);
         if (tbody) tbody.innerHTML = pageData.map(fund => this.createFundRow(fund)).join('');
         if (cardList) cardList.innerHTML = pageData.map(fund => this.createMobileCard(fund)).join('');
     }
 
     createFundRow(fund) {
-        const pr = fund.premium_rate;
-        const premiumClass = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
-        const premiumSign = pr > 0 ? '+' : '';
-        const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
+        if (typeof getActiveColumns !== 'function') return this._createFundRowFallback(fund);
+        var allCols = getActiveColumns();
+        if (allCols.length === 0) return this._createFundRowFallback(fund);
+        var frozen = allCols.filter(function(c) { return c.frozen; });
+        var pages = this._columnPages || [];
+        var page = this._columnPage || 0;
+        var pageCols = pages[page] || [];
+        var html = '<tr class="fund-row" data-code="' + fund.code + '">';
+        html += '<td class="col-page-arrow"></td>'; // 左箭头占位
+        var self = this;
+        frozen.forEach(function(c) { html += self._renderCell(c.id, fund); });
+        pageCols.forEach(function(c) { html += self._renderCell(c.id, fund); });
+        html += '<td class="col-page-arrow"></td>'; // 右箭头占位
+        html += '</tr>';
+        return html;
+    }
 
-        const avg3d = fund.avg_premium_3d;
-        const avgPremiumClass = avg3d > 0 ? 'premium-positive' : avg3d < 0 ? 'premium-negative' : 'premium-zero';
-        const avgPremiumSign = avg3d > 0 ? '+' : '';
-        const avgPremiumText = avg3d !== null && avg3d !== undefined ? avgPremiumSign + avg3d.toFixed(2) + '%' : '--';
-
-        const changeClass = fund.change_pct >= 0 ? 'up' : 'down';
-        const changeSign = fund.change_pct >= 0 ? '+' : '';
-        const changeText = fund.change_pct !== null && fund.change_pct !== undefined ? changeSign + fund.change_pct.toFixed(2) + '%' : '--';
-
-        const navType = fund.is_formal_nav ? '正式' : '估算';
-        const navText = fund.nav !== null && fund.nav !== undefined ? fund.nav.toFixed(3) : '--';
-        const priceText = fund.price !== null && fund.price !== undefined ? fund.price.toFixed(3) : '--';
-
-        let amountText = '--';
-        if (fund.amount !== null && fund.amount !== undefined) {
-            const amountWan = fund.amount / 10000;
-            amountText = amountWan >= 10000 ? (amountWan / 10000).toFixed(2) + '亿' : amountWan.toFixed(2) + '万';
+    _renderCell(colId, fund) {
+        var infoBtn;
+        switch (colId) {
+            case 'code':
+                return '<td class="col-code frozen" style="left:36px">' + fund.code + '</td>';
+            case 'name':
+                return '<td class="col-name frozen" style="left:134px" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>';
+            case 'price':
+                var p = (fund.price != null) ? fund.price.toFixed(3) : '--';
+                return '<td class="col-price">' + p + '</td>';
+            case 'nav':
+                var n = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
+                var badge = fund.nav ? '<span class="nav-badge">' + (fund.is_formal_nav ? '正式' : '估算') + '</span>' : '';
+                return '<td class="col-nav">' + n + badge + '</td>';
+            case 'change_pct':
+                var cp = fund.change_pct;
+                var cls = cp >= 0 ? 'up' : 'down';
+                var s = cp >= 0 ? '+' : '';
+                var txt = (cp != null) ? s + cp.toFixed(2) + '%' : '--';
+                return '<td class="col-change ' + cls + '">' + txt + '</td>';
+            case 'premium_rate':
+                var pr = fund.premium_rate;
+                var prCls = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
+                var prS = pr > 0 ? '+' : '';
+                var prTxt = (pr != null) ? prS + pr.toFixed(2) + '%' : '--';
+                return '<td class="col-premium ' + prCls + '">' + prTxt + '</td>';
+            case 'avg_premium_3d':
+                var avg = fund.avg_premium_3d;
+                var avgCls = avg > 0 ? 'premium-positive' : avg < 0 ? 'premium-negative' : 'premium-zero';
+                var avgS = avg > 0 ? '+' : '';
+                var avgTxt = (avg != null) ? avgS + avg.toFixed(2) + '%' : '--';
+                return '<td class="col-avg-premium ' + avgCls + '">' + avgTxt + '</td>';
+            case 'amount':
+                var amt = '--';
+                if (fund.amount != null) {
+                    var aW = fund.amount / 10000;
+                    amt = aW >= 10000 ? (aW / 10000).toFixed(2) + '亿' : aW.toFixed(2) + '万';
+                }
+                return '<td class="col-amount">' + amt + '</td>';
+            case 'est_profit_rate':
+                var est = this.calcEstimatedProfit(fund);
+                infoBtn = (est && est.rate != null) ? '<button class="btn-profit-info" data-code="' + fund.code + '" title="查看收益构成">?</button>' : '';
+                if (est) {
+                    var erS = est.rate > 0 ? '+' : '';
+                    var erTxt = erS + est.rate.toFixed(2) + '%';
+                    var erCls = est.rate > 0 ? 'premium-positive' : est.rate < 0 ? 'premium-negative' : 'premium-zero';
+                    return '<td class="col-est-profit-rate ' + erCls + '">' + erTxt + infoBtn + '</td>';
+                }
+                return '<td class="col-est-profit-rate premium-zero">--</td>';
+            case 'est_profit_amount':
+                var est2 = this.calcEstimatedProfit(fund);
+                infoBtn = (est2 && est2.amount != null) ? '<button class="btn-profit-info" data-code="' + fund.code + '" title="查看收益构成">?</button>' : '';
+                if (est2) {
+                    var eaTxt, eaCls;
+                    if (est2.amount >= 10000) { eaTxt = (est2.amount / 10000).toFixed(2) + '万'; }
+                    else { eaTxt = est2.amount.toFixed(2) + '元'; }
+                    var eaS = est2.amount > 0 ? '+' : '';
+                    eaTxt = eaS + eaTxt;
+                    eaCls = est2.amount > 0 ? 'premium-positive' : est2.amount < 0 ? 'premium-negative' : 'premium-zero';
+                    return '<td class="col-est-profit-amount ' + eaCls + '">' + eaTxt + infoBtn + '</td>';
+                }
+                return '<td class="col-est-profit-amount premium-zero">--</td>';
+            case 'purchase_status':
+                return '<td class="col-status">' + this._purchaseStatusCell(fund) + '</td>';
+            case 'nav_date':
+                return '<td class="col-time">' + (fund.nav_date || '-') + '</td>';
+            case 'volume':
+                var vol = (fund.volume != null) ? (fund.volume / 10000).toFixed(2) + '万手' : '--';
+                return '<td class="col-volume">' + vol + '</td>';
+            case 'change_amount':
+                var ca = (fund.change_amount != null) ? fund.change_amount.toFixed(4) : '--';
+                return '<td class="col-change-amount">' + ca + '</td>';
+            case 'is_suspended':
+                var sus = fund.is_suspended ? '停牌' : '正常';
+                return '<td class="col-suspended">' + sus + '</td>';
+            case 'purchase_fee_rate':
+                var fee = (fund.purchase_fee_rate != null) ? fund.purchase_fee_rate.toFixed(3) + '%' : '--';
+                return '<td class="col-purchase-fee">' + fee + '</td>';
+            case 'data_date':
+                return '<td class="col-data-date">' + (fund.data_date || '-') + '</td>';
+            default:
+                return '<td class="col-unknown">--</td>';
         }
+    }
 
-        const estProfit = this.calcEstimatedProfit(fund);
-        let estProfitRateText = '--';
-        let estProfitRateClass = 'premium-zero';
-        let estProfitAmountText = '--';
-        let estProfitAmountClass = 'premium-zero';
-        let estProfitInfoBtn = '';
-        if (estProfit) {
-            const sign = estProfit.rate > 0 ? '+' : '';
-            estProfitRateText = sign + estProfit.rate.toFixed(2) + '%';
-            estProfitRateClass = estProfit.rate > 0 ? 'premium-positive' : estProfit.rate < 0 ? 'premium-negative' : 'premium-zero';
-            if (estProfit.amount >= 10000) {
-                estProfitAmountText = (estProfit.amount / 10000).toFixed(2) + '万';
-            } else {
-                estProfitAmountText = estProfit.amount.toFixed(2) + '元';
-            }
-            const amtSign = estProfit.amount > 0 ? '+' : '';
-            estProfitAmountText = amtSign + estProfitAmountText;
-            estProfitAmountClass = estProfit.amount > 0 ? 'premium-positive' : estProfit.amount < 0 ? 'premium-negative' : 'premium-zero';
-            estProfitInfoBtn = `<button class="btn-profit-info" data-code="${fund.code}" title="查看收益构成">?</button>`;
+    // 回退：columns.js 未加载时保留原始硬编码 12 列渲染
+    _createFundRowFallback(fund) {
+        var pr = fund.premium_rate;
+        var premiumClass = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
+        var premiumText = (pr != null) ? (pr > 0 ? '+' : '') + pr.toFixed(2) + '%' : '--';
+        var avg3d = fund.avg_premium_3d;
+        var avgClass = avg3d > 0 ? 'premium-positive' : avg3d < 0 ? 'premium-negative' : 'premium-zero';
+        var avgText = (avg3d != null) ? (avg3d > 0 ? '+' : '') + avg3d.toFixed(2) + '%' : '--';
+        var changeClass = fund.change_pct >= 0 ? 'up' : 'down';
+        var changeText = (fund.change_pct != null) ? (fund.change_pct >= 0 ? '+' : '') + fund.change_pct.toFixed(2) + '%' : '--';
+        var navType = fund.is_formal_nav ? '正式' : '估算';
+        var navText = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
+        var priceText = (fund.price != null) ? fund.price.toFixed(3) : '--';
+        var amountText = '--';
+        if (fund.amount != null) {
+            var aW = fund.amount / 10000;
+            amountText = aW >= 10000 ? (aW / 10000).toFixed(2) + '亿' : aW.toFixed(2) + '万';
         }
-        return `<tr class="fund-row" data-code="${fund.code}">
-            <td class="col-code">${fund.code}</td>
-            <td class="col-name" title="${fund.name}">${this.truncateName(fund.name)}</td>
-            <td class="col-price">${priceText}</td>
-            <td class="col-nav">${navText}${fund.nav ? '<span class="nav-badge">' + navType + '</span>' : ''}</td>
-            <td class="col-change ${changeClass}">${changeText}</td>
-            <td class="col-premium ${premiumClass}">${premiumText}</td>
-            <td class="col-avg-premium ${avgPremiumClass}">${avgPremiumText}</td>
-            <td class="col-amount">${amountText}</td>
-            <td class="col-est-profit-rate ${estProfitRateClass}">${estProfitRateText}${estProfitInfoBtn}</td>
-            <td class="col-est-profit-amount ${estProfitAmountClass}">${estProfitAmountText}${estProfitInfoBtn}</td>
-            <td class="col-status">${this._purchaseStatusCell(fund)}</td>
-            <td class="col-time">${fund.nav_date || '-'}</td>
-        </tr>`;
+        var est = this.calcEstimatedProfit(fund);
+        var erText = '--', erClass = 'premium-zero', eaText = '--', eaClass = 'premium-zero', infoBtn = '';
+        if (est) {
+            erText = (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%';
+            erClass = est.rate > 0 ? 'premium-positive' : est.rate < 0 ? 'premium-negative' : 'premium-zero';
+            if (est.amount >= 10000) { eaText = (est.amount / 10000).toFixed(2) + '万'; }
+            else { eaText = est.amount.toFixed(2) + '元'; }
+            eaText = (est.amount > 0 ? '+' : '') + eaText;
+            eaClass = est.amount > 0 ? 'premium-positive' : est.amount < 0 ? 'premium-negative' : 'premium-zero';
+            infoBtn = '<button class="btn-profit-info" data-code="' + fund.code + '" title="查看收益构成">?</button>';
+        }
+        return '<tr class="fund-row" data-code="' + fund.code + '">' +
+            '<td class="col-code frozen">' + fund.code + '</td>' +
+            '<td class="col-name frozen" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>' +
+            '<td class="col-price">' + priceText + '</td>' +
+            '<td class="col-nav">' + navText + (fund.nav ? '<span class="nav-badge">' + navType + '</span>' : '') + '</td>' +
+            '<td class="col-change ' + changeClass + '">' + changeText + '</td>' +
+            '<td class="col-premium ' + premiumClass + '">' + premiumText + '</td>' +
+            '<td class="col-avg-premium ' + avgClass + '">' + avgText + '</td>' +
+            '<td class="col-amount">' + amountText + '</td>' +
+            '<td class="col-est-profit-rate ' + erClass + '">' + erText + infoBtn + '</td>' +
+            '<td class="col-est-profit-amount ' + eaClass + '">' + eaText + infoBtn + '</td>' +
+            '<td class="col-status">' + this._purchaseStatusCell(fund) + '</td>' +
+            '<td class="col-time">' + (fund.nav_date || '-') + '</td>' +
+        '</tr>';
     }
 
     renderPremiumRankings() {}
@@ -497,11 +591,17 @@ class LofFundMonitor {
     }
 
     bindEvents() {
-        document.querySelectorAll('.sortable').forEach(th => {
-            th.addEventListener('click', () => this.handleSort(th.dataset.field));
-        });
         const searchInput = document.getElementById('searchInput');
         if (searchInput) searchInput.addEventListener('input', e => this.handleSearch(e.target.value));
+        // 点击搜索栏任意空白区域聚焦输入框
+        const searchBox = document.querySelector('.search-box');
+        if (searchBox && searchInput) {
+            searchBox.addEventListener('click', e => {
+                if (!e.target.closest('.fund-type-select') && !e.target.closest('.fund-type-dropdown') && !e.target.closest('#settingsBtn')) {
+                    searchInput.focus();
+                }
+            });
+        }
         const retryBtn = document.getElementById('retryBtn');
         if (retryBtn) retryBtn.addEventListener('click', () => this.init());
         const manualRefreshBtn = document.getElementById('manualRefreshBtn');
@@ -571,9 +671,6 @@ class LofFundMonitor {
                 return;
             }
         });
-        // 标记初始排序列
-        const initTh = document.querySelector(`.sortable[data-field="${this.sortField}"]`);
-        if (initTh) initTh.classList.add('sort-desc', 'active');
         // 通用点击事件委托（移动端 ? 图标 / 详情弹窗 / 卡片→弹窗）
         document.addEventListener('click', (e) => {
             // 移动端 ? 按钮
@@ -756,9 +853,9 @@ class LofFundMonitor {
             this.sortField = field;
             this.sortOrder = 'desc';
         }
-        document.querySelectorAll('.sortable').forEach(th => {
+        document.querySelectorAll('#tableHeaderRow .sortable').forEach(th => {
             th.classList.remove('sort-asc', 'sort-desc', 'active');
-            if (th.dataset.field === field) th.classList.add(`sort-${this.sortOrder}`, 'active');
+            if (th.dataset.field === field) th.classList.add('sort-' + this.sortOrder, 'active');
         });
         this.currentPage = 1;
         this.applyFilters();
@@ -768,18 +865,16 @@ class LofFundMonitor {
     setSortMode(mode) {
         this.sortField = 'premium_rate';
         this.sortOrder = mode === 'discount' ? 'asc' : 'desc';
-        // 更新按钮样式
-        const premiumBtn = document.getElementById('premiumModeBtn');
-        const discountBtn = document.getElementById('discountModeBtn');
+        var premiumBtn = document.getElementById('premiumModeBtn');
+        var discountBtn = document.getElementById('discountModeBtn');
         if (premiumBtn && discountBtn) {
             premiumBtn.classList.toggle('active', mode === 'premium');
             discountBtn.classList.toggle('active', mode === 'discount');
         }
-        // 同步PC端表头
-        document.querySelectorAll('.sortable').forEach(th => {
+        document.querySelectorAll('#tableHeaderRow .sortable').forEach(th => {
             th.classList.remove('sort-asc', 'sort-desc', 'active');
             if (th.dataset.field === 'premium_rate') {
-                th.classList.add(`sort-${this.sortOrder}`, 'active');
+                th.classList.add('sort-' + this.sortOrder, 'active');
             }
         });
         this.currentPage = 1;
@@ -908,6 +1003,379 @@ class LofFundMonitor {
         });
     }
 
+    // ── 动态表头渲染（分页模式）──
+    _buildTableHead() {
+        if (typeof getActiveColumns !== 'function') return;
+        var allCols = getActiveColumns();
+        var frozen = allCols.filter(function(c) { return c.frozen; });
+        var nonFrozen = allCols.filter(function(c) { return !c.frozen; });
+        var arrowW = 72;
+        var frozenW = frozen.reduce(function(s, c) { return s + c.width; }, 0);
+        var viewW = document.getElementById('tableViewport')?.clientWidth || 1200;
+        var availW = Math.max(viewW - frozenW - arrowW, 200);
+        var pages = [];
+        var curPage = [];
+        var curW = 0;
+        nonFrozen.forEach(function(c) {
+            if (curW + c.width > availW && curPage.length > 0) {
+                pages.push(curPage);
+                curPage = [];
+                curW = 0;
+            }
+            curPage.push(c);
+            curW += c.width;
+        });
+        if (curPage.length > 0) pages.push(curPage);
+        this._columnPages = pages;
+        this._columnPage = Math.min(this._columnPage || 0, Math.max(pages.length - 1, 0));
+        if (pages.length === 0) this._columnPage = 0;
+
+        var pageCols = pages[this._columnPage] || [];
+
+        var colHTML = '<col style="width:36px">';
+        frozen.forEach(function(c) { colHTML += '<col style="width:' + c.width + 'px">'; });
+        pageCols.forEach(function(c) { colHTML += '<col style="width:' + c.width + 'px">'; });
+        colHTML += '<col style="width:36px">';
+        document.getElementById('tableColgroup').innerHTML = colHTML;
+
+        var hasLeft = this._columnPage > 0;
+        var hasRight = this._columnPage < pages.length - 1;
+        var thHTML = '<th class="col-page-arrow' + (hasLeft ? ' active' : '') + '" id="colPageLeft">' + (hasLeft ? '&lsaquo;' : '') + '</th>';
+        frozen.forEach(function(c) {
+            var cls = ['frozen'];
+            if (c.sortable) cls.push('sortable');
+            var leftPx = 36 + frozen.filter(function(f) { return frozen.indexOf(f) < frozen.indexOf(c); }).reduce(function(s, f) { return s + f.width; }, 0);
+            thHTML += '<th class="' + cls.join(' ') + '" data-field="' + (c.sortField || c.id) + '" style="left:' + leftPx + 'px">' + c.label + ' ↕</th>';
+        });
+        pageCols.forEach(function(c) {
+            var cls = c.sortable ? 'sortable' : '';
+            thHTML += '<th class="' + cls + '" data-field="' + (c.sortField || c.id) + '">' + c.label + ' ↕</th>';
+        });
+        thHTML += '<th class="col-page-arrow' + (hasRight ? ' active' : '') + '" id="colPageRight">' + (hasRight ? '&rsaquo;' : '') + '</th>';
+        document.getElementById('tableHeaderRow').innerHTML = thHTML;
+
+        var self = this;
+        document.querySelectorAll('#tableHeaderRow .sortable').forEach(function(th) {
+            th.addEventListener('click', function() { self.handleSort(th.dataset.field); });
+        });
+        var la = document.getElementById('colPageLeft');
+        var ra = document.getElementById('colPageRight');
+        if (la) la.addEventListener('click', function() { self._prevColumnPage(); });
+        if (ra) ra.addEventListener('click', function() { self._nextColumnPage(); });
+        var initTh = document.querySelector('#tableHeaderRow .sortable[data-field="' + this.sortField + '"]');
+        if (initTh) initTh.classList.add('sort-' + this.sortOrder, 'active');
+    }
+
+    _prevColumnPage() {
+        if (this._columnPage > 0) { this._columnPage--; this._buildTableHead(); this.renderTable(); }
+    }
+    _nextColumnPage() {
+        if (this._columnPage < (this._columnPages?.length || 1) - 1) { this._columnPage++; this._buildTableHead(); this.renderTable(); }
+    }
+
+    // ── 表头编辑面板 ──
+    _initColumnEditor() {
+        var self = this;
+        var colBtn = document.getElementById('colConfigBtn');
+        if (colBtn) colBtn.addEventListener('click', function(e) { e.stopPropagation(); self._openColumnEditor(); });
+        var closeBtn = document.getElementById('ceCloseBtn');
+        if (closeBtn) closeBtn.addEventListener('click', function() { self._closeColumnEditor(); });
+        var editor = document.getElementById('columnEditor');
+        if (editor) {
+            editor.addEventListener('click', function(e) {
+                if (e.target === editor) self._closeColumnEditor();
+            });
+        }
+        var applyBtn = document.getElementById('ceApplyBtn');
+        if (applyBtn) applyBtn.addEventListener('click', function() {
+            self._applyColumnPrefs();
+            self._closeColumnEditor();
+        });
+        var resetBtn = document.getElementById('ceResetBtn');
+        if (resetBtn) resetBtn.addEventListener('click', function() {
+            if (typeof resetColumnPrefs === 'function') resetColumnPrefs();
+            self._buildColumnEditorList();
+        });
+        var libBtn = document.getElementById('ceLibBtn');
+        if (libBtn) libBtn.addEventListener('click', function() {
+            self._editorView = (self._editorView === 'library') ? 'active' : 'library';
+            self._buildColumnEditorList();
+        });
+        var presetsBtn = document.getElementById('cePresetsBtn');
+        if (presetsBtn) presetsBtn.addEventListener('click', function() {
+            self._editorView = (self._editorView === 'presets') ? 'active' : 'presets';
+            self._buildColumnEditorList();
+        });
+    }
+
+    _openColumnEditor() {
+        var editor = document.getElementById('columnEditor');
+        if (!editor) return;
+        this._editorView = 'active';
+        this._buildColumnEditorList();
+        editor.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+
+    _closeColumnEditor() {
+        var editor = document.getElementById('columnEditor');
+        if (editor) editor.style.display = 'none';
+        document.body.style.overflow = '';
+        if (this._sortable) { this._sortable.destroy(); this._sortable = null; }
+        if (this._rankTimer) { clearInterval(this._rankTimer); this._rankTimer = null; }
+    }
+
+    _buildColumnEditorList() {
+        var list = document.getElementById('columnEditorList');
+        if (!list || typeof COLUMN_REGISTRY === 'undefined') return;
+        if (this._sortable) { this._sortable.destroy(); this._sortable = null; }
+        var prefs = (typeof loadColumnPrefs === 'function') ? loadColumnPrefs() : {};
+        var order = prefs.order || COLUMN_REGISTRY.map(function(c) { return c.id; });
+        var visible = prefs.visible || {};
+        var isActive = (this._editorView !== 'library');
+        var self = this;
+
+        // 更新表头库按钮状态
+        var libBtn = document.getElementById('ceLibBtn');
+        if (libBtn) { libBtn.style.display = (self._editorView === 'presets') ? 'none' : ''; libBtn.textContent = isActive ? '表头库' : '← 返回可见列'; libBtn.classList.toggle('active', !isActive); }
+        var hintSpan = document.querySelector('.ce-hint span');
+        if (hintSpan) hintSpan.textContent = (self._editorView === 'presets') ? '表头存档管理' : (isActive ? '拖动 ≡ 调整顺序' : '勾选控制显隐');
+
+        // 更新存档按钮状态
+        var presetsBtn = document.getElementById('cePresetsBtn');
+        if (presetsBtn) presetsBtn.classList.toggle('active', self._editorView === 'presets');
+
+        var html = '';
+        if (self._editorView === 'presets') {
+            // === 存档视图 ===
+            var presets = (typeof loadPresets === 'function') ? loadPresets() : [];
+            if (presets.length === 0) {
+                html += '<div class="ce-preset-empty">暂无存档<br>在下方输入名称保存当前表头配置</div>';
+            } else {
+                presets.forEach(function(preset, i) {
+                    html += '<div class="ce-preset-item">';
+                    html += '<span class="ce-preset-name">' + preset.name + '</span>';
+                    html += '<button class="ce-preset-btn apply" data-idx="' + i + '">应用</button>';
+                    html += '<button class="ce-preset-btn overwrite" data-idx="' + i + '">存档</button>';
+                    html += '<button class="ce-preset-btn delete" data-idx="' + i + '">删除</button>';
+                    html += '</div>';
+                });
+            }
+            html += '<div class="ce-preset-new">';
+            html += '<input type="text" id="cePresetNameInput" placeholder="输入存档名称...">';
+            html += '<button class="btn-primary" id="cePresetSaveBtn" style="padding:6px 14px;font-size:0.82rem">保存为新存档</button>';
+            html += '</div>';
+        } else if (isActive) {
+            // === 可见列视图：仅展示当前活跃的列（按 order 排序）===
+            var activeIds = (typeof getActiveColumns === 'function') ? getActiveColumns().map(function(c) { return c.id; }) : [];
+            var activeCols = COLUMN_REGISTRY.filter(function(c) { return activeIds.indexOf(c.id) >= 0 && !c.frozen; });
+            activeCols.sort(function(a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+            activeCols.forEach(function(col, idx) {
+                html += '<div class="ce-item" data-col-id="' + col.id + '"' + (col.id === 'code' ? ' style="opacity:0.55"' : '') + '>';
+                html += '<span class="drag-handle">&#9776;</span>';
+                html += '<span class="ce-item-label">' + col.label + '</span>';
+                if (col.id !== 'code') html += '<input class="ce-rank" type="number" min="2" value="' + (idx + 1) + '" data-col-id="' + col.id + '">';
+                if (col.id !== 'code') html += '<button class="ce-trash" title="移除此列">&#128465;</button>';
+                html += '</div>';
+            });
+        } else {
+            // === 表头库视图：左侧已勾选 + 右侧未勾选 ===
+            var checkedCols = [], uncheckedCols = [];
+            COLUMN_REGISTRY.filter(function(c) { return !c.frozen; }).forEach(function(col) {
+                var checked = !(col.id in visible) ? col.defaultVisible : visible[col.id];
+                (checked ? checkedCols : uncheckedCols).push(col);
+            });
+            html += '<div class="ce-lib-panels">';
+            // 左侧：已勾选
+            html += '<div class="ce-lib-panel"><div class="ce-lib-panel-title">已显示</div>';
+            checkedCols.forEach(function(col) {
+                var disabled = col.id === 'code' ? ' disabled' : '';
+                html += '<div class="ce-item" data-col-id="' + col.id + '">';
+                html += '<span class="drag-handle" style="visibility:hidden">&#9776;</span>';
+                html += '<input type="checkbox" checked' + disabled + ' data-col-id="' + col.id + '">';
+                html += '<span class="ce-item-label">' + col.label + '</span>';
+                html += '</div>';
+            });
+            html += '</div>';
+            // 右侧：未勾选
+            html += '<div class="ce-lib-panel"><div class="ce-lib-panel-title">已隐藏</div>';
+            uncheckedCols.forEach(function(col) {
+                html += '<div class="ce-item" data-col-id="' + col.id + '" style="opacity:0.45">';
+                html += '<span class="drag-handle" style="visibility:hidden">&#9776;</span>';
+                html += '<input type="checkbox" data-col-id="' + col.id + '">';
+                html += '<span class="ce-item-label">' + col.label + '</span>';
+                html += '</div>';
+            });
+            html += '</div></div>';
+        }
+        list.innerHTML = html;
+
+        if (self._editorView === 'presets') {
+            // 存档按钮事件
+            list.querySelectorAll('.ce-preset-btn.apply').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var idx = parseInt(this.dataset.idx);
+                    if (typeof applyPreset === 'function') applyPreset(idx);
+                    self._editorView = 'active';
+                    self._buildTableHead();
+                    self.renderTable();
+                    self._closeColumnEditor();
+                });
+            });
+            list.querySelectorAll('.ce-preset-btn.overwrite').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var idx = parseInt(this.dataset.idx);
+                    if (typeof overwritePreset === 'function') overwritePreset(idx);
+                    self.showToast('已覆盖存档');
+                    self._buildColumnEditorList();
+                });
+            });
+            list.querySelectorAll('.ce-preset-btn.delete').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var idx = parseInt(this.dataset.idx);
+                    if (typeof deletePreset === 'function') deletePreset(idx);
+                    self._buildColumnEditorList();
+                });
+            });
+            var saveBtn = document.getElementById('cePresetSaveBtn');
+            var nameInput = document.getElementById('cePresetNameInput');
+            if (saveBtn && nameInput) {
+                saveBtn.addEventListener('click', function() {
+                    var name = nameInput.value.trim();
+                    if (!name) { self.showToast('请输入存档名称'); return; }
+                    if (typeof saveCurrentAsPreset === 'function') saveCurrentAsPreset(name);
+                    self.showToast('已保存: ' + name);
+                    self._buildColumnEditorList();
+                });
+            }
+        } else if (isActive) {
+            // 序号输入：手动移动列到指定位置
+            list.querySelectorAll('.ce-rank').forEach(function(input) {
+                input.addEventListener('click', function(e) { e.stopPropagation(); });
+                input.addEventListener('mousedown', function(e) { e.stopPropagation(); });
+                input.addEventListener('change', function() {
+                    var targetIdx = parseInt(this.value) - 1; // 0-based
+                    var items = Array.from(list.querySelectorAll('.ce-item'));
+                    var currentIdx = items.indexOf(this.closest('.ce-item'));
+                    if (isNaN(targetIdx) || targetIdx < 1 || targetIdx >= items.length || targetIdx === currentIdx) {
+                        // 无效或不变 → 恢复原值
+                        this.value = currentIdx + 1;
+                        return;
+                    }
+                    // 移动 DOM 元素
+                    var movingItem = items[currentIdx];
+                    if (currentIdx < targetIdx) {
+                        list.insertBefore(movingItem, items[targetIdx].nextSibling);
+                    } else {
+                        list.insertBefore(movingItem, items[targetIdx]);
+                    }
+                    // 更新所有序号显示
+                    var newItems = list.querySelectorAll('.ce-item');
+                    newItems.forEach(function(item, i) {
+                        var rankInput = item.querySelector('.ce-rank');
+                        if (rankInput) rankInput.value = i + 1;
+                    });
+                    // 保存顺序
+                    var newOrder = Array.from(newItems).map(function(el) { return el.dataset.colId; });
+                    var p = (typeof loadColumnPrefs === 'function') ? loadColumnPrefs() : {};
+                    p.order = newOrder;
+                    if (typeof saveColumnPrefs === 'function') saveColumnPrefs(p);
+                });
+            });
+            // 垃圾桶点击
+            list.querySelectorAll('.ce-trash').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var colId = this.closest('.ce-item').dataset.colId;
+                    var p = (typeof loadColumnPrefs === 'function') ? loadColumnPrefs() : {};
+                    p.visible = p.visible || {};
+                    p.visible[colId] = false;
+                    if (typeof saveColumnPrefs === 'function') saveColumnPrefs(p);
+                    self._buildColumnEditorList();
+                });
+            });
+            // SortableJS 拖拽
+            if (typeof Sortable !== 'undefined') {
+                this._sortable = new Sortable(list, {
+                    handle: '.drag-handle',
+                    animation: 180,
+                    easing: 'cubic-bezier(0.25, 0.8, 0.25, 1.2)',
+                    ghostClass: 'ce-ghost',
+                    dragClass: 'ce-sort-dragging',
+                    forceFallback: true,
+                    scroll: true,
+                    scrollSensitivity: 30,
+                    scrollSpeed: 5,
+                    bubbleScroll: false,
+                    onStart: function() {
+                        document.body.classList.add('col-dragging');
+                        // 持续刷新序号
+                        self._rankTimer = setInterval(function() {
+                            list.querySelectorAll('.ce-item').forEach(function(item, i) {
+                                var rankInput = item.querySelector('.ce-rank');
+                                if (rankInput) rankInput.value = i + 1;
+                            });
+                        }, 100);
+                    },
+                    onEnd: function() {
+                        if (self._rankTimer) { clearInterval(self._rankTimer); self._rankTimer = null; }
+                        document.body.classList.remove('col-dragging');
+                        var newOrder = Array.from(list.querySelectorAll('.ce-item')).map(function(el) { return el.dataset.colId; });
+                        // 合并：当前可见列保持新顺序，不可见列追加到末尾保持原序
+                        var fullOrder = newOrder.slice();
+                        var p = (typeof loadColumnPrefs === 'function') ? loadColumnPrefs() : {};
+                        var oldOrder = p.order || COLUMN_REGISTRY.map(function(c) { return c.id; });
+                        oldOrder.forEach(function(id) { if (fullOrder.indexOf(id) < 0) fullOrder.push(id); });
+                        p.order = fullOrder;
+                        if (typeof saveColumnPrefs === 'function') saveColumnPrefs(p);
+                    }
+                });
+            }
+        } else {
+            // 表头库：点击整行切换 checkbox
+            list.querySelectorAll('.ce-item').forEach(function(item) {
+                item.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'INPUT') return;
+                    var cb = item.querySelector('input[type="checkbox"]');
+                    if (cb && !cb.disabled) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change', { bubbles: true })); }
+                });
+            });
+            // checkbox change → 保存并重建（让项在左右面板间移动）
+            list.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+                if (cb.disabled) return;
+                cb.addEventListener('change', function() {
+                    var colId = cb.dataset.colId;
+                    var p = (typeof loadColumnPrefs === 'function') ? loadColumnPrefs() : {};
+                    p.visible = p.visible || {};
+                    p.visible[colId] = cb.checked;
+                    if (typeof saveColumnPrefs === 'function') saveColumnPrefs(p);
+                    self._buildColumnEditorList(); // 立即重建，项移到对面面板
+                });
+            });
+        }
+    }
+
+    _applyColumnPrefs() {
+        // 从 localStorage prefs 读取可见性（已在操作中即时保存），顺序从当前列表 DOM 读取
+        var list = document.getElementById('columnEditorList');
+        var prefs = (typeof loadColumnPrefs === 'function') ? loadColumnPrefs() : {};
+        var visible = prefs.visible || {};
+        if (list) {
+            // 如果当前在表头库视图，从 checkbox 同步到 prefs
+            list.querySelectorAll('input[type="checkbox"]').forEach(function(cb) {
+                visible[cb.dataset.colId] = cb.checked;
+            });
+            // 如果当前在可见列视图，顺序从 DOM 读取
+            if (this._editorView !== 'library') {
+                var fullOrder = Array.from(list.querySelectorAll('.ce-item')).map(function(el) { return el.dataset.colId; });
+                prefs.order = fullOrder;
+            }
+        }
+        if (typeof updateColumnPrefs === 'function') updateColumnPrefs(visible, prefs.order);
+        this._buildTableHead();
+        this.renderTable();
+    }
+
     updatePaginationInfo() {
         const totalPages = Math.max(1, Math.ceil(this.filteredFunds.length / this.pageSize));
         if (document.getElementById('totalRecords')) document.getElementById('totalRecords').textContent = this.filteredFunds.length;
@@ -936,7 +1404,7 @@ class LofFundMonitor {
         this.currentPage = newPage;
         this.renderTable();
         this.updatePaginationInfo();
-        document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelector('.table-viewport')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     goToPage(page) {
@@ -945,7 +1413,7 @@ class LofFundMonitor {
         this.currentPage = page;
         this.renderTable();
         this.updatePaginationInfo();
-        document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelector('.table-viewport')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     goToLastPage() {
@@ -953,7 +1421,7 @@ class LofFundMonitor {
         this.currentPage = totalPages;
         this.renderTable();
         this.updatePaginationInfo();
-        document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelector('.table-viewport')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     changePageSize(size) {

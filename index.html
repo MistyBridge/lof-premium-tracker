@@ -36,7 +36,7 @@
       "author": { "@type": "Person", "name": "MistyBridge" }
     }
     </script>
-    <link rel="stylesheet" href="css/style.css?v=fs1">
+    <link rel="stylesheet" href="css/style.css?v=10">
 </head>
 <body>
     <!-- 欢迎弹窗 -->
@@ -120,6 +120,7 @@
                             <input type="text" id="searchInput" placeholder="(--) 代码/名称">
                         </div>
                         <button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button>
+                        <button id="colConfigBtn" class="btn-settings btn-col-config" title="表头管理" style="margin-left:0">⚙</button>
                         <div class="fund-type-dropdown" id="fundTypeDropdown" style="display:none">
                             <div class="ft-option active" data-type="lof">
                                 <span class="ft-opt-name">LOF基金</span>
@@ -145,42 +146,34 @@
                     <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
                 </div>
                 <!-- PC端表格 -->
-                <div class="table-container">
-                    <table class="fund-table">
-                        <colgroup>
-                            <col style="width:5%">
-                            <col style="width:13%">
-                            <col style="width:7%">
-                            <col style="width:9%">
-                            <col style="width:7%">
-                            <col style="width:7%">
-                            <col style="width:7%">
-                            <col style="width:9%">
-                            <col style="width:9%">
-                            <col style="width:9%">
-                            <col style="width:9%">
-                            <col style="width:9%">
-                        </colgroup>
-                        <thead>
-                            <tr>
-                                <th class="sortable" data-field="code">代码 ↕</th>
-                                <th class="sortable" data-field="name">名称 ↕</th>
-                                <th class="sortable" data-field="price">现价 ↕</th>
-                                <th class="sortable" data-field="nav">净值 ↕</th>
-                                <th class="sortable" data-field="change_pct">涨跌幅 ↕</th>
-                                <th class="sortable" data-field="premium_rate">溢价率 ↕</th>
-                                <th class="sortable" data-field="avg_premium_3d">三日均溢 ↕</th>
-                                <th class="sortable" data-field="amount_w">成交额 ↕</th>
-                                <th class="sortable" data-field="est_profit_rate">预计收益率 ↕</th>
-                                <th class="sortable" data-field="est_profit_amount">预计收益额 ↕</th>
-                                <th>申购状态</th>
-                                <th>净值时间</th>
-                            </tr>
-                        </thead>
+                <div class="table-viewport" id="tableViewport">
+                    <table class="fund-table" id="fundTable">
+                        <colgroup id="tableColgroup"></colgroup>
+                        <thead><tr id="tableHeaderRow"></tr></thead>
                         <tbody id="fundTableBody">
                             <tr><td colspan="12" class="empty-state"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p><p class="loading-hint">首次连接可能需要 10-30 秒</p></td></tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- 表头编辑面板 -->
+                <div class="modal-overlay" id="columnEditor" style="display:none">
+                    <div class="modal-content ce-modal">
+                        <div class="modal-header">
+                            <h3>表头管理</h3>
+                            <button class="modal-close" id="ceCloseBtn">&times;</button>
+                        </div>
+                        <div class="modal-body" style="padding:0">
+                            <div class="ce-hint"><span>拖动 ≡ 调整顺序</span><button class="ce-lib-btn" id="ceLibBtn">表头库</button></div>
+                            <div class="ce-list" id="columnEditorList"></div>
+                        </div>
+                        <div class="modal-footer ce-footer-row">
+                            <button class="btn-secondary" id="cePresetsBtn">存档</button>
+                            <div class="ce-footer-right">
+                                <button class="btn-secondary" id="ceResetBtn">恢复默认</button>
+                                <button class="btn-primary" id="ceApplyBtn">应用</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <!-- 移动端卡片 -->
                 <div id="mobileCardList" class="mobile-card-list">
@@ -368,9 +361,11 @@
         </div>
     </div>
 
-    <script src="js/config.js?v=9"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="js/columns.js?v=10"></script>
+    <script src="js/config.js?v=10"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <script src="js/api.js?v=9"></script>
-    <script src="js/app.js?v=9"></script>
+    <script src="js/api.js?v=10"></script>
+    <script src="js/app.js?v=10"></script>
 </body>
 </html>
