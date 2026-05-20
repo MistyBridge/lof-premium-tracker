@@ -3,23 +3,23 @@
  * 所有可显示列的元数据 + localStorage 用户偏好管理
  */
 const COLUMN_REGISTRY = [
-    { id: 'code',               label: '代码',       width: 98,  defaultVisible: true,  frozen: true,  sortable: true,  sortField: 'code' },
-    { id: 'name',               label: '名称',       width: 169, defaultVisible: true,  frozen: true,  sortable: true,  sortField: 'name' },
-    { id: 'price',              label: '现价',       width: 104, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'price' },
-    { id: 'nav',                label: '净值',       width: 137, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'nav' },
-    { id: 'change_pct',         label: '涨跌幅',      width: 104, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'change_pct' },
-    { id: 'premium_rate',       label: '溢价率',      width: 111, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'premium_rate' },
-    { id: 'avg_premium_3d',     label: '三日均溢',    width: 117, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'avg_premium_3d' },
-    { id: 'amount',             label: '成交额',      width: 124, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'amount_w' },
-    { id: 'est_profit_rate',    label: '预计收益率',   width: 137, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'est_profit_rate' },
-    { id: 'est_profit_amount',  label: '预计收益额',   width: 137, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'est_profit_amount' },
-    { id: 'purchase_status',    label: '申购状态',    width: 117, defaultVisible: false, frozen: false, sortable: false, sortField: null },
-    { id: 'nav_date',           label: '净值时间',    width: 130, defaultVisible: false, frozen: false, sortable: false, sortField: null },
-    { id: 'volume',             label: '成交量',      width: 117, defaultVisible: false, frozen: false, sortable: false, sortField: null },
-    { id: 'change_amount',      label: '涨跌额',      width: 104, defaultVisible: false, frozen: false, sortable: false, sortField: null },
-    { id: 'is_suspended',       label: '停牌状态',    width: 111, defaultVisible: false, frozen: false, sortable: false, sortField: null },
-    { id: 'purchase_fee_rate',  label: '申购费率',    width: 111, defaultVisible: false, frozen: false, sortable: false, sortField: null },
-    { id: 'data_date',          label: '数据日期',    width: 130, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'code',               label: '代码',       width: 99,  defaultVisible: true,  frozen: true,  sortable: true,  sortField: 'code' },
+    { id: 'name',               label: '名称',       width: 170, defaultVisible: true,  frozen: true,  sortable: true,  sortField: 'name' },
+    { id: 'price',              label: '现价',       width: 103, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'price' },
+    { id: 'nav',                label: '净值',       width: 136, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'nav' },
+    { id: 'change_pct',         label: '涨跌幅',      width: 103, defaultVisible: false, frozen: false, sortable: true,  sortField: 'change_pct' },
+    { id: 'premium_rate',       label: '溢价率',      width: 110, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'premium_rate' },
+    { id: 'avg_premium_3d',     label: '三日均溢',    width: 116, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'avg_premium_3d' },
+    { id: 'amount',             label: '成交额',      width: 123, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'amount_w' },
+    { id: 'est_profit_rate',    label: '预计收益率',   width: 136, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'est_profit_rate' },
+    { id: 'est_profit_amount',  label: '预计收益额',   width: 136, defaultVisible: true,  frozen: false, sortable: true,  sortField: 'est_profit_amount' },
+    { id: 'purchase_status',    label: '申购状态',    width: 116, defaultVisible: true,  frozen: false, sortable: false, sortField: null },
+    { id: 'nav_date',           label: '净值时间',    width: 129, defaultVisible: true,  frozen: false, sortable: false, sortField: null },
+    { id: 'volume',             label: '成交量',      width: 116, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'change_amount',      label: '涨跌额',      width: 103, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'is_suspended',       label: '停牌状态',    width: 110, defaultVisible: true,  frozen: false, sortable: false, sortField: null },
+    { id: 'purchase_fee_rate',  label: '申购费率',    width: 110, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'data_date',          label: '数据日期',    width: 129, defaultVisible: false, frozen: false, sortable: false, sortField: null },
 ];
 if (typeof window !== 'undefined') { window.COLUMN_REGISTRY = COLUMN_REGISTRY; }
 
@@ -43,16 +43,13 @@ function getActiveColumns() {
     var prefs = loadColumnPrefs();
     var userOrder = prefs.order || null;
     var userVisible = prefs.visible || {};
-    // 构建 id → 可见 映射：默认按 defaultVisible，用户可覆盖
     var visible = {};
     COLUMN_REGISTRY.forEach(function(c) {
         if (c.id === 'code') { visible[c.id] = true; return; }
         if (c.id in userVisible) { visible[c.id] = userVisible[c.id]; }
         else { visible[c.id] = c.defaultVisible; }
     });
-    // 排序：code 始终第一，其余按 userOrder（或注册表默认顺序）
     var order = userOrder || COLUMN_REGISTRY.map(function(c) { return c.id; });
-    // 确保 code 在 order 最前
     var codeIdx = order.indexOf('code');
     if (codeIdx > 0) { order.splice(codeIdx, 1); order.unshift('code'); }
     var active = [];
@@ -68,11 +65,6 @@ function getActiveColumns() {
     return active;
 }
 
-/**
- * 更新用户列偏好
- * visible: { colId: true/false, ... }
- * order:   [colId, ...] 全量顺序
- */
 function updateColumnPrefs(visible, order) {
     var prefs = loadColumnPrefs();
     if (visible !== undefined) {
@@ -99,7 +91,6 @@ function savePresets(presets) {
     localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
 }
 
-/** 保存当前配置为新存档 */
 function saveCurrentAsPreset(name) {
     var prefs = loadColumnPrefs();
     var visible = prefs.visible || {};
@@ -109,7 +100,6 @@ function saveCurrentAsPreset(name) {
     savePresets(presets);
 }
 
-/** 用当前配置覆盖指定存档 */
 function overwritePreset(index) {
     var presets = loadPresets();
     if (index < 0 || index >= presets.length) return;
@@ -121,7 +111,6 @@ function overwritePreset(index) {
     savePresets(presets);
 }
 
-/** 应用存档 */
 function applyPreset(index) {
     var presets = loadPresets();
     if (index < 0 || index >= presets.length) return;
@@ -129,7 +118,6 @@ function applyPreset(index) {
     updateColumnPrefs(preset.visible, preset.order);
 }
 
-/** 删除存档 */
 function deletePreset(index) {
     var presets = loadPresets();
     if (index < 0 || index >= presets.length) return;

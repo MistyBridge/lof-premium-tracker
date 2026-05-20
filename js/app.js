@@ -418,7 +418,7 @@ class LofFundMonitor {
             case 'code':
                 return '<td class="col-code frozen" style="left:36px">' + fund.code + '</td>';
             case 'name':
-                return '<td class="col-name frozen" style="left:134px" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>';
+                return '<td class="col-name frozen" style="left:135px" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>';
             case 'price':
                 var p = (fund.price != null) ? fund.price.toFixed(3) : '--';
                 return '<td class="col-price">' + p + '</td>';
@@ -1143,7 +1143,10 @@ class LofFundMonitor {
 
         // 更新存档按钮状态
         var presetsBtn = document.getElementById('cePresetsBtn');
-        if (presetsBtn) presetsBtn.classList.toggle('active', self._editorView === 'presets');
+        if (presetsBtn) {
+            presetsBtn.textContent = (self._editorView === 'presets') ? '返回可见列' : '存档';
+            presetsBtn.classList.toggle('active', self._editorView === 'presets');
+        }
 
         var html = '';
         if (self._editorView === 'presets') {
