@@ -1,0 +1,81 @@
+/* ── 导航页容器：全屏 flex，footer 沉底 ── */
+.landing-container { max-width: 1600px; margin: 0 auto; padding: 20px;
+                     min-height: 100vh; display: flex; flex-direction: column; }
+
+/* ── 标语：φ体系 ── */
+.hero { display: flex; align-items: center; justify-content: flex-start; flex-direction: column;
+        margin: 0 -20px; }
+.hero-tagline { margin: 0; text-align: left; width: 100%;
+                font-family: 'Source Han Sans SC', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif; }
+.hl-line { display: block; }
+.hl-text { color: var(--text); font-weight: 500; }
+.hl-dim { color: var(--text2); font-weight: 400; opacity: 0.85; margin-left: 15px; }
+.hl-focus { color: #4F46E5; font-weight: 700; margin-left: 15px; }
+.dark-mode .hl-focus { color: #818cf8; }
+
+/* ── 移动端：375px 像素级精确 · hero=344px ── */
+@media (max-width: 768px) {
+    .hero { padding-top: 56px; padding-bottom: 146px; margin: 0; }
+    /* L1: 65+203+106=374  L2: 100+213+62=375 */
+    .hl-line { padding-left: 17.33%; }             /* 65/375 */
+    .hl-line--gap { margin-top: 5px; padding-left: 26.67%; }  /* 100/375 */
+    .hl-line .hl-text { font-size: 25px; letter-spacing: 0; }
+    .hl-dim { font-size: 19px; letter-spacing: 0; }
+    .hl-line--gap .hl-text { font-size: 25px; letter-spacing: 0; }
+    .hl-focus { font-size: 31px; letter-spacing: 0; }
+}
+
+/* ── PC：居中错位 ── */
+@media (min-width: 769px) {
+    .hero { padding-top: 100px; padding-bottom: 220px; }
+    .hero-tagline { text-align: center; }
+    .hl-line { padding-left: 0; }
+    .hl-line--gap { margin-top: 5px; position: relative; left: 3em; }
+    .hl-line .hl-text { font-size: 47px; letter-spacing: 0; }
+    .hl-dim { font-size: 36px; letter-spacing: 0; }
+    .hl-line--gap .hl-text { font-size: 47px; letter-spacing: 0; }
+    .hl-focus { font-size: 59px; letter-spacing: 0; }
+}
+
+/* ── 入口列表：flex:1 推 footer 到底 ── */
+.entry-list { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px;
+              flex: 1; justify-content: center; padding-bottom: 40px; }
+.entry-item { display: flex; align-items: center; padding: 18px 24px; border-radius: 10px;
+              background: var(--card); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+              border: 1px solid var(--border); transition: all 0.2s; min-height: 56px; }
+.entry-item.entry-active { cursor: pointer; }
+.entry-item.entry-active:hover { background: #f0f4ff; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.entry-left { display: flex; align-items: center; gap: 16px; }
+.entry-title { font-size: 1.15rem; font-weight: 600; color: var(--text); }
+.entry-desc { font-size: 0.88rem; color: var(--text2); }
+
+/* ── 数据页导航条 ── */
+.spa-nav { display: flex; align-items: center; justify-content: space-between;
+           padding: 8px 30px; background: var(--card); border-bottom: 1px solid var(--border);
+           margin-bottom: 16px; border-radius: 0 0 8px 8px; }
+.spa-nav-back { color: var(--primary); text-decoration: none; font-size: 0.85rem; cursor: pointer; }
+.spa-nav-back:hover { text-decoration: underline; }
+.spa-nav-tabs { display: flex; gap: 4px; }
+.spa-nav-tab { padding: 6px 16px; border-radius: 6px; font-size: 0.85rem; text-decoration: none;
+              color: var(--text2); cursor: pointer; transition: all 0.2s; }
+.spa-nav-tab:hover { background: #f0f4ff; color: var(--primary); }
+.spa-nav-tab.active { background: var(--primary); color: #fff; }
+.dark-mode .spa-nav-tab:hover { background: #1e2a4a; }
+.dark-mode .spa-nav-tab.active { background: var(--primary); color: #fff; }
+
+/* ── 用户中心 ── */
+.user-center-link { color: rgba(255,255,255,0.5); font-size: 0.85rem; cursor: default; }
+
+/* ── 暗色模式 ── */
+.dark-mode .entry-item.entry-active:hover { background: #1e2a4a; }
+
+/* ── 响应式：移动端通用 ── */
+@media (max-width: 768px) {
+  .entry-list { width: calc(100vw - 48px); }
+  .entry-item { padding: 14px 18px; }
+  .user-center-link { display: none; }
+  .landing-container { padding: 0; }
+  .spa-nav { padding: 6px 12px; border-radius: 0; margin-bottom: 10px; }
+  .spa-nav-tab { padding: 5px 12px; font-size: 0.78rem; }
+  .spa-nav-back { font-size: 0.78rem; }
+}

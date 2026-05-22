@@ -24,22 +24,11 @@
     <meta name="twitter:title" content="金快查 - LOF基金实时折溢价监控">
     <meta name="twitter:description" content="全市场LOF基金实时溢价率、折价率、套利收益计算。">
 
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebApplication",
-      "name": "金快查",
-      "url": "https://jinkuaicha.com",
-      "description": "全市场LOF基金实时折溢价监控系统，提供套利收益计算、历史走势图",
-      "applicationCategory": "FinanceApplication",
-      "operatingSystem": "Web, Mobile",
-      "author": { "@type": "Person", "name": "MistyBridge" }
-    }
-    </script>
-    <link rel="stylesheet" href="css/style.css?v=10">
+    <link rel="stylesheet" href="css/style.css?v=15">
+    <link rel="stylesheet" href="css/landing.css?v=5">
 </head>
 <body>
-    <!-- 欢迎弹窗 -->
+    <!-- ═══════════════════════════════════════════ 全局：欢迎弹窗 ═══════════════════════════════════════════ -->
     <div class="welcome-overlay hidden" id="welcomeOverlay" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.55);z-index:10000;align-items:center;justify-content:center;padding:24px 0;">
         <div class="welcome-modal">
             <div class="welcome-header">
@@ -69,238 +58,266 @@
         </div>
     </div>
 
-    <div class="container">
-        <header class="header">
-            <div class="header-brand">
-                <img src="assets/icon.jpg" alt="金快查" class="brand-icon">
-                <h1>金快查</h1>
-            </div>
-            <div class="header-info">
-                <button id="darkModeBtn" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
-                <span id="statusText" class="status-text">加载中...</span>
-                <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
-                    <svg class="refresh-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- 元宝主体 -->
-                        <ellipse cx="16" cy="20" rx="12" ry="8" fill="url(#goldGradient)"/>
-                        <ellipse cx="16" cy="18" rx="10" ry="6" fill="url(#goldLight)"/>
-                        <!-- 元宝顶部凸起 -->
-                        <ellipse cx="16" cy="14" rx="6" ry="4" fill="url(#goldGradient)"/>
-                        <ellipse cx="16" cy="13" rx="4" ry="2.5" fill="url(#goldHighlight)"/>
-                        <!-- 渐变定义 -->
-                        <defs>
-                            <linearGradient id="goldGradient" x1="8" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#FFD700"/>
-                                <stop offset="50%" stop-color="#FFA500"/>
-                                <stop offset="100%" stop-color="#FF8C00"/>
-                            </linearGradient>
-                            <linearGradient id="goldLight" x1="10" y1="14" x2="22" y2="24" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#FFEC8B"/>
-                                <stop offset="100%" stop-color="#FFD700"/>
-                            </linearGradient>
-                            <linearGradient id="goldHighlight" x1="12" y1="11" x2="20" y2="15" gradientUnits="userSpaceOnUse">
-                                <stop offset="0%" stop-color="#FFF8DC"/>
-                                <stop offset="100%" stop-color="#FFEC8B"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </button>
-                <span id="refreshStatus" class="refresh-status"></span>
-            </div>
-        </header>
+    <!-- ═══════════════════════════════════════════ 视图1：导航页 ═══════════════════════════════════════════ -->
+    <div id="view-landing">
+        <div class="landing-container">
+            <header class="header">
+                <div class="header-brand">
+                    <img src="assets/icon.jpg" class="brand-icon" alt="金快查">
+                    <h1>金快查</h1>
+                </div>
+                <div class="header-info">
+                    <button id="darkModeBtnLanding" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
+                    <span class="user-center-link">用户中心</span>
+                </div>
+            </header>
 
-        <div class="main-content">
-            <main class="content">
-                <div class="toolbar">
-                    <div class="search-box">
-                        <div class="fund-type-select" id="fundTypeSelect">
-                            <span class="ft-current-label">LOF基金</span>
-                            <span class="ft-arrow">▾</span>
-                        </div>
-                        <div class="search-input-wrap">
-                            <input type="text" id="searchInput" placeholder="(--) 代码/名称">
-                        </div>
-                        <button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button>
-                        <button id="colConfigBtn" class="btn-settings btn-col-config" title="表头管理" style="margin-left:0">⚙</button>
-                        <div class="fund-type-dropdown" id="fundTypeDropdown" style="display:none">
-                            <div class="ft-option active" data-type="lof">
-                                <span class="ft-opt-name">LOF基金</span>
-                                <span class="ft-opt-count" id="ftOptLofCount">--</span>
-                            </div>
-                            <div class="ft-option disabled" data-type="etf">
-                                <span class="ft-opt-name">ETF基金</span>
-                                <span class="ft-opt-status">暂未开放</span>
-                            </div>
-                        </div>
-                    </div>
-                    <span class="toolbar-timestamp" id="toolbarTimestamp">--</span>
-                    <div class="mobile-sort-btns">
-                        <div class="sort-btn-row">
-                            <button id="premiumModeBtn" class="btn-sort-mode active" data-mode="premium">溢价模式</button>
-                            <button class="btn-arb-help" data-type="premium" title="溢价套利流程">?</button>
-                        </div>
-                        <div class="sort-btn-row">
-                            <button id="discountModeBtn" class="btn-sort-mode" data-mode="discount">折价模式</button>
-                            <button class="btn-arb-help" data-type="discount" title="折价套利流程">?</button>
-                        </div>
-                    </div>
-                    <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
-                </div>
-                <!-- PC端表格 -->
-                <div class="table-viewport" id="tableViewport">
-                    <table class="fund-table" id="fundTable">
-                        <colgroup id="tableColgroup"></colgroup>
-                        <thead><tr id="tableHeaderRow"></tr></thead>
-                        <tbody id="fundTableBody">
-                            <tr><td colspan="12" class="empty-state"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p><p class="loading-hint">首次连接可能需要 10-30 秒</p></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <!-- 表头编辑面板 -->
-                <div class="modal-overlay" id="columnEditor" style="display:none">
-                    <div class="modal-content ce-modal">
-                        <div class="modal-header">
-                            <h3>表头管理</h3>
-                            <button class="modal-close" id="ceCloseBtn">&times;</button>
-                        </div>
-                        <div class="modal-body" style="padding:0">
-                            <div class="ce-hint"><span>拖动 ≡ 调整顺序</span><button class="ce-lib-btn" id="ceLibBtn">表头库</button></div>
-                            <div class="ce-list" id="columnEditorList"></div>
-                        </div>
-                        <div class="modal-footer ce-footer-row">
-                            <button class="btn-secondary" id="cePresetsBtn">存档</button>
-                            <div class="ce-footer-right">
-                                <button class="btn-secondary" id="ceResetBtn">恢复默认</button>
-                                <button class="btn-primary" id="ceApplyBtn">应用</button>
-                            </div>
-                        </div>
+            <section class="hero">
+                <h2 class="hero-tagline">
+                    <span class="hl-line"><span class="hl-text">让理财不再</span><span class="hl-dim">小众</span></span>
+                    <span class="hl-line hl-line--gap"><span class="hl-text">让金融普惠</span><span class="hl-focus">大众</span></span>
+                </h2>
+            </section>
+
+            <section class="entry-list">
+                <div class="entry-item entry-active" onclick="SPA.navigate('lof')">
+                    <div class="entry-left">
+                        <span class="entry-title">基金数据</span>
+                        <span class="entry-desc">全市场基金折溢价监控</span>
                     </div>
                 </div>
-                <!-- 移动端卡片 -->
-                <div id="mobileCardList" class="mobile-card-list">
-                    <div class="mobile-empty"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p></div>
+                <div class="entry-item entry-active" onclick="SPA.navigate('favorites')">
+                    <div class="entry-left">
+                        <span class="entry-title">基金收藏</span>
+                        <span class="entry-desc">关注基金追踪，自选列表管理</span>
+                    </div>
                 </div>
-                <div id="paginationBar" class="pagination-bar">
-                    <button id="firstPageBtn" class="page-btn">首页</button>
-                    <button id="prevPageBtn" class="page-btn">上一页</button>
-                    <span id="pageInfo" class="page-info">第 1 页 / 共 1 页</span>
-                    <button id="nextPageBtn" class="page-btn">下一页</button>
-                    <button id="lastPageBtn" class="page-btn">末页</button>
-                    <select id="pageSizeSelect" class="page-size-select">
-                        <option value="20" selected>20条/页</option>
-                        <option value="50">50条/页</option>
-                        <option value="100">100条/页</option>
-                        <option value="200">200条/页</option>
-                    </select>
-                </div>
-            </main>
+            </section>
+
+            <footer class="footer">
+                <p>数据来源：东方财富、天天基金、上交所、深交所</p>
+                <p class="risk-warning">本站所有收费以及免费的信息和数据仅供参考。<br>所有信息均不构成投资建议，金快查不承担因此导致的任何责任。</p>
+                <p class="legal-links">
+                    <a href="pages/agreement.html">用户协议</a>
+                    <span class="divider">|</span>
+                    <a href="pages/privacy.html">隐私政策</a>
+                </p>
+                <p class="footer-credit">@金快查 2026 | @MistyBridge</p>
+            </footer>
         </div>
-
-        <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在连接服务器...</p><p class="loader-hint">首次加载可能需要 10-30 秒，请耐心等待</p></div></div>
-        <div id="errorContainer" class="error-container" style="display:none">
-            <div class="error-content"><div class="error-icon">⚠️</div><p id="errorMessage">加载失败</p><button id="retryBtn" class="btn-retry">重试</button></div>
-        </div>
-
-        <!-- 设置弹窗 -->
-        <div id="settingsModal" class="modal-overlay" style="display:none">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3>筛选设置</h3>
-                    <button id="closeSettingsBtn" class="modal-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label>溢价率/折价率绝对值阈值</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="thresholdInput" min="0" max="50" step="0.1" value="5">
-                            <span class="unit">%</span>
-                        </div>
-                        <p class="form-hint">只显示绝对值 ≥ 此值的基金（0 = 不过滤）</p>
-                    </div>
-                    <div class="form-group">
-                        <label>三日平均溢价率绝对值阈值</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="avgThresholdInput" min="0" max="50" step="0.1" value="0">
-                            <span class="unit">%</span>
-                        </div>
-                        <p class="form-hint">只显示三日均溢绝对值 ≥ 此值的基金（0 = 不过滤）</p>
-                    </div>
-                    <div class="form-group">
-                        <label>最小成交额阈值</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="minAmountInput" min="0" max="10000" step="10" value="100">
-                            <span class="unit">万</span>
-                        </div>
-                        <p class="form-hint">只显示成交额 ≥ 此值的基金（0 = 不过滤）</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showSuspendedCheck">
-                            显示停牌的基金
-                        </label>
-                        <p class="form-hint">关闭后将隐藏停牌/无成交的基金</p>
-                    </div>
-                    <div class="form-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="showUnpurchasableCheck">
-                            显示暂停申购的基金
-                        </label>
-                        <p class="form-hint">关闭后将隐藏暂停申购的基金</p>
-                    </div>
-                    <hr class="settings-divider">
-                    <div class="form-group">
-                        <label>预计收益计算参数</label>
-                        <p class="form-hint form-hint--margin">申购费率、赎回费率由 API 自动获取，以下参数需自行设定</p>
-                    </div>
-                    <div class="form-group">
-                        <label>券商佣金费率</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="commissionRateInput" min="0" max="100" step="0.1" value="1.5">
-                            <span class="unit">万</span>
-                        </div>
-                        <p class="form-hint">场内买卖佣金费率，如万1.5输入1.5</p>
-                    </div>
-                    <div class="form-group">
-                        <label>佣金最低收费</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="commissionMinInput" min="0" max="100" step="0.5" value="5">
-                            <span class="unit">元</span>
-                        </div>
-                        <p class="form-hint">佣金计算不足此金额时按此金额收取</p>
-                    </div>
-                    <div class="form-group">
-                        <label>单次最大投入金额</label>
-                        <div class="input-with-unit">
-                            <input type="number" id="maxCapitalInput" min="0" max="10000000" step="1000" value="1000">
-                            <span class="unit">元</span>
-                        </div>
-                        <p class="form-hint">实际投入 = min(最大投入, 基金申购上限)</p>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button id="resetSettingsBtn" class="btn-secondary">重置</button>
-                    <button id="applySettingsBtn" class="btn-primary">应用</button>
-                </div>
-            </div>
-        </div>
-
-        <footer class="footer">
-            <p>数据来源：东方财富、天天基金、上交所、深交所</p>
-            <p class="risk-warning">本站所有收费以及免费的信息和数据仅供参考。<br>所有信息均不构成投资建议，金快查不承担因此导致的任何责任。</p>
-            <p class="legal-links">
-                <a href="pages/agreement.html">用户协议</a>
-                <span class="divider">|</span>
-                <a href="pages/privacy.html">隐私政策</a>
-            </p>
-            <p class="footer-credit">@金快查 2026 | @MistyBridge</p>
-        </footer>
     </div>
 
-    <!-- 基金详情弹窗 -->
+    <!-- ═══════════════════════════════════════════ 视图2：数据页 ═══════════════════════════════════════════ -->
+    <div id="view-data" style="display:none">
+        <div class="container">
+            <header class="header">
+                <div class="header-brand">
+                    <img src="assets/icon.jpg" alt="金快查" class="brand-icon">
+                    <h1>金快查</h1>
+                </div>
+                <div class="header-info">
+                    <button id="darkModeBtn" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
+                    <span id="statusText" class="status-text">加载中...</span>
+                    <button id="manualRefreshBtn" class="btn-manual-refresh" title="刷新数据">
+                        <svg class="refresh-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="16" cy="20" rx="12" ry="8" fill="url(#goldGradient)"/>
+                            <ellipse cx="16" cy="18" rx="10" ry="6" fill="url(#goldLight)"/>
+                            <ellipse cx="16" cy="14" rx="6" ry="4" fill="url(#goldGradient)"/>
+                            <ellipse cx="16" cy="13" rx="4" ry="2.5" fill="url(#goldHighlight)"/>
+                            <defs>
+                                <linearGradient id="goldGradient" x1="8" y1="12" x2="24" y2="28" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FFD700"/><stop offset="50%" stop-color="#FFA500"/><stop offset="100%" stop-color="#FF8C00"/>
+                                </linearGradient>
+                                <linearGradient id="goldLight" x1="10" y1="14" x2="22" y2="24" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FFEC8B"/><stop offset="100%" stop-color="#FFD700"/>
+                                </linearGradient>
+                                <linearGradient id="goldHighlight" x1="12" y1="11" x2="20" y2="15" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#FFF8DC"/><stop offset="100%" stop-color="#FFEC8B"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </button>
+                    <span id="refreshStatus" class="refresh-status"></span>
+                </div>
+            </header>
+
+            <div class="spa-nav" id="spaNav">
+                <a href="#/" class="spa-nav-back">← 返回首页</a>
+                <div class="spa-nav-tabs">
+                    <a href="#/lof" class="spa-nav-tab" data-mode="lof">基金数据</a>
+                    <a href="#/favorites" class="spa-nav-tab" data-mode="favorites">基金收藏</a>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <main class="content">
+                    <div class="toolbar">
+                        <div class="search-box">
+                            <div class="fund-type-select" id="fundTypeSelect">
+                                <span class="ft-current-label">LOF基金</span>
+                                <span class="ft-arrow">▾</span>
+                            </div>
+                            <div class="search-input-wrap">
+                                <input type="text" id="searchInput" placeholder="(--) 代码/名称">
+                            </div>
+                            <button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button>
+                            <button id="colConfigBtn" class="btn-settings btn-col-config" title="表头管理" style="margin-left:0">⚙</button>
+                            <div class="fund-type-dropdown" id="fundTypeDropdown" style="display:none">
+                                <div class="ft-option active" data-type="lof">
+                                    <span class="ft-opt-name">LOF基金</span>
+                                    <span class="ft-opt-count" id="ftOptLofCount">--</span>
+                                </div>
+                                <div class="ft-option disabled" data-type="etf">
+                                    <span class="ft-opt-name">ETF基金</span>
+                                    <span class="ft-opt-status">暂未开放</span>
+                                </div>
+                            </div>
+                        </div>
+                        <span class="toolbar-timestamp" id="toolbarTimestamp">--</span>
+                        <div class="mobile-sort-btns">
+                            <div class="sort-btn-row">
+                                <button id="premiumModeBtn" class="btn-sort-mode active" data-mode="premium">溢价模式</button>
+                                <button class="btn-arb-help" data-type="premium" title="溢价套利流程">?</button>
+                            </div>
+                            <div class="sort-btn-row">
+                                <button id="discountModeBtn" class="btn-sort-mode" data-mode="discount">折价模式</button>
+                                <button class="btn-arb-help" data-type="discount" title="折价套利流程">?</button>
+                            </div>
+                        </div>
+                        <div class="pagination-info">显示 <span id="shownRecords">-</span> 条，共 <span id="totalRecords">-</span> 条</div>
+                    </div>
+                    <div class="table-viewport" id="tableViewport">
+                        <table class="fund-table" id="fundTable">
+                            <colgroup id="tableColgroup"></colgroup>
+                            <thead><tr id="tableHeaderRow"></tr></thead>
+                            <tbody id="fundTableBody">
+                                <tr><td colspan="12" class="empty-state"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p><p class="loading-hint">首次连接可能需要 10-30 秒</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="modal-overlay" id="columnEditor" style="display:none">
+                        <div class="modal-content ce-modal">
+                            <div class="modal-header">
+                                <h3>表头管理</h3>
+                                <button class="modal-close" id="ceCloseBtn">&times;</button>
+                            </div>
+                            <div class="modal-body" style="padding:0">
+                                <div class="ce-hint"><span>拖动 ≡ 调整顺序</span><button class="ce-lib-btn" id="ceLibBtn">表头库</button></div>
+                                <div class="ce-list" id="columnEditorList"></div>
+                            </div>
+                            <div class="modal-footer ce-footer-row">
+                                <button class="btn-secondary" id="cePresetsBtn">存档</button>
+                                <div class="ce-footer-right">
+                                    <button class="btn-secondary" id="ceResetBtn">恢复默认</button>
+                                    <button class="btn-primary" id="ceApplyBtn">应用</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="mobileCardList" class="mobile-card-list">
+                        <div class="mobile-empty"><i class="icon loading-spinner-icon">⏳</i><p>正在加载数据，请稍候...</p></div>
+                    </div>
+                    <div id="paginationBar" class="pagination-bar">
+                        <button id="firstPageBtn" class="page-btn">首页</button>
+                        <button id="prevPageBtn" class="page-btn">上一页</button>
+                        <span id="pageInfo" class="page-info">第 1 页 / 共 1 页</span>
+                        <button id="nextPageBtn" class="page-btn">下一页</button>
+                        <button id="lastPageBtn" class="page-btn">末页</button>
+                        <select id="pageSizeSelect" class="page-size-select">
+                            <option value="20" selected>20条/页</option>
+                            <option value="50">50条/页</option>
+                            <option value="100">100条/页</option>
+                            <option value="200">200条/页</option>
+                        </select>
+                    </div>
+                </main>
+            </div>
+
+            <div id="loader" class="loader-overlay"><div class="loader-content"><div class="spinner"></div><p>正在连接服务器...</p><p class="loader-hint">首次加载可能需要 10-30 秒，请耐心等待</p></div></div>
+            <div id="errorContainer" class="error-container" style="display:none">
+                <div class="error-content"><div class="error-icon">⚠️</div><p id="errorMessage">加载失败</p><button id="retryBtn" class="btn-retry">重试</button></div>
+            </div>
+
+            <div id="settingsModal" class="modal-overlay" style="display:none">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>筛选设置</h3>
+                        <button id="closeSettingsBtn" class="modal-close">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label>溢价率/折价率绝对值阈值</label>
+                            <div class="input-with-unit"><input type="number" id="thresholdInput" min="0" max="50" step="0.1" value="5"><span class="unit">%</span></div>
+                            <p class="form-hint">只显示绝对值 ≥ 此值的基金（0 = 不过滤）</p>
+                        </div>
+                        <div class="form-group">
+                            <label>三日平均溢价率绝对值阈值</label>
+                            <div class="input-with-unit"><input type="number" id="avgThresholdInput" min="0" max="50" step="0.1" value="0"><span class="unit">%</span></div>
+                            <p class="form-hint">只显示三日均溢绝对值 ≥ 此值的基金（0 = 不过滤）</p>
+                        </div>
+                        <div class="form-group">
+                            <label>最小成交额阈值</label>
+                            <div class="input-with-unit"><input type="number" id="minAmountInput" min="0" max="10000" step="10" value="100"><span class="unit">万</span></div>
+                            <p class="form-hint">只显示成交额 ≥ 此值的基金（0 = 不过滤）</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="showSuspendedCheck">显示停牌的基金</label>
+                            <p class="form-hint">关闭后将隐藏停牌/无成交的基金</p>
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label"><input type="checkbox" id="showUnpurchasableCheck">显示暂停申购的基金</label>
+                            <p class="form-hint">关闭后将隐藏暂停申购的基金</p>
+                        </div>
+                        <hr class="settings-divider">
+                        <div class="form-group">
+                            <label>预计收益计算参数</label>
+                            <p class="form-hint form-hint--margin">申购费率、赎回费率由 API 自动获取，以下参数需自行设定</p>
+                        </div>
+                        <div class="form-group">
+                            <label>券商佣金费率</label>
+                            <div class="input-with-unit"><input type="number" id="commissionRateInput" min="0" max="100" step="0.1" value="1.5"><span class="unit">万</span></div>
+                            <p class="form-hint">场内买卖佣金费率，如万1.5输入1.5</p>
+                        </div>
+                        <div class="form-group">
+                            <label>佣金最低收费</label>
+                            <div class="input-with-unit"><input type="number" id="commissionMinInput" min="0" max="100" step="0.5" value="5"><span class="unit">元</span></div>
+                            <p class="form-hint">佣金计算不足此金额时按此金额收取</p>
+                        </div>
+                        <div class="form-group">
+                            <label>单次最大投入金额</label>
+                            <div class="input-with-unit"><input type="number" id="maxCapitalInput" min="0" max="10000000" step="1000" value="1000"><span class="unit">元</span></div>
+                            <p class="form-hint">实际投入 = min(最大投入, 基金申购上限)</p>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="resetSettingsBtn" class="btn-secondary">重置</button>
+                        <button id="applySettingsBtn" class="btn-primary">应用</button>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="footer">
+                <p>数据来源：东方财富、天天基金、上交所、深交所</p>
+                <p class="risk-warning">本站所有收费以及免费的信息和数据仅供参考。<br>所有信息均不构成投资建议，金快查不承担因此导致的任何责任。</p>
+                <p class="legal-links">
+                    <a href="pages/agreement.html">用户协议</a>
+                    <span class="divider">|</span>
+                    <a href="pages/privacy.html">隐私政策</a>
+                </p>
+                <p class="footer-credit">@金快查 2026 | @MistyBridge</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ 全局：基金详情弹窗 ═══════════════════════════════════════════ -->
     <div id="fundDetailModal" class="fund-detail-overlay" style="display:none">
         <div class="fund-detail-modal">
             <div class="fd-header">
                 <h3 id="fundDetailTitle">基金详情</h3>
-                <button id="fdCloseBtn" class="fd-close" title="关闭">&times;</button>
+                <span class="fd-header-actions">
+                    <button id="fdFavoriteBtn" class="fd-star" title="收藏基金">☆</button>
+                    <button id="fdCloseBtn" class="fd-close" title="关闭">&times;</button>
+                </span>
             </div>
             <div id="fdSkeleton" class="fd-skeleton show">
                 <div class="fd-skeleton-kpi"><span></span><span></span><span></span><span></span><span></span><span></span></div>
@@ -338,11 +355,7 @@
                         <option value="premium">溢价率</option>
                     </select>
                     <select class="fd-range-select" id="fdRangeSelect">
-                        <option value="7">七日</option>
-                        <option value="30">一月</option>
-                        <option value="90">三月</option>
-                        <option value="180">六月</option>
-                        <option value="365">一年</option>
+                        <option value="7">七日</option><option value="30">一月</option><option value="90">三月</option><option value="180">六月</option><option value="365">一年</option>
                     </select>
                 </div>
                 <div class="fd-chart-container"><canvas id="fdChart"></canvas><button class="fd-fullscreen-btn" id="fdFullscreenBtn" title="全屏横屏查看">⛶</button></div>
@@ -350,7 +363,7 @@
         </div>
     </div>
 
-    <!-- 套利流程帮助弹窗 -->
+    <!-- 全局：套利流程帮助弹窗 -->
     <div id="arbHelpOverlay" class="arb-help-overlay" style="display:none">
         <div class="arb-help-popup">
             <div class="arb-help-header">
@@ -361,11 +374,208 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <script src="js/columns.js?v=10"></script>
-    <script src="js/config.js?v=10"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-    <script src="js/api.js?v=10"></script>
-    <script src="js/app.js?v=10"></script>
+    <!-- ═══════════════════════════════════════════ SPA 路由器 ═══════════════════════════════════════════ -->
+    <script>
+    var SPA = {
+        _app: null,
+        _scriptsReady: false,
+        _loading: false,
+        _currentMode: '',
+
+        navigate: function(mode) {
+            location.hash = '#/' + mode;
+        },
+
+        _loadScript: function(src) {
+            return new Promise(function(resolve, reject) {
+                var s = document.createElement('script');
+                s.src = src;
+                s.onload = resolve;
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        },
+
+        _loadAllScripts: function() {
+            if (this._scriptsReady) return Promise.resolve();
+            if (this._loading) return this._loading;
+            var self = this;
+            // Phase 1: 无依赖脚本并行加载 (Chart.js 按需延迟，不在此处加载)
+            this._loading = Promise.all([
+                self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
+                self._loadScript('js/columns.js?v=14'),
+                self._loadScript('js/config.js?v=14'),
+                self._loadScript('js/cache.js?v=1')
+            ]).then(function() {
+                // Phase 2: api.js 依赖 config.js
+                return self._loadScript('js/api.js?v=14');
+            }).then(function() {
+                // Phase 3: app.js 依赖以上所有
+                return self._loadScript('js/app.js?v=14');
+            }).then(function() {
+                self._scriptsReady = true;
+            });
+            return this._loading;
+        },
+
+        _updateTabs: function(mode) {
+            var tabs = document.querySelectorAll('.spa-nav-tab');
+            tabs.forEach(function(t) { t.classList.toggle('active', t.dataset.mode === mode); });
+        },
+
+        _route: function() {
+            var hash = location.hash || '#/';
+            var landingView = document.getElementById('view-landing');
+            var dataView = document.getElementById('view-data');
+
+            // 更新导航 tab 高亮
+            this._updateTabs(hash === '#/favorites' ? 'favorites' : (hash === '#/lof' ? 'lof' : ''));
+
+            if (hash === '#/' || hash === '#') {
+                landingView.style.display = 'block';
+                dataView.style.display = 'none';
+                document.title = '金快查';
+                return;
+            }
+
+            var mode = (hash === '#/favorites') ? 'favorites' : 'lof';
+            document.title = mode === 'favorites' ? '金快查 - 基金收藏' : '金快查 - LOF基金实时折溢价监控';
+
+            landingView.style.display = 'none';
+            dataView.style.display = 'block';
+            this._enterDataView(mode);
+        },
+
+        _enterDataView: function(mode) {
+            var self = this;
+            this._loadAllScripts().then(function() {
+                self._setAppMode(mode);
+            });
+        },
+
+        _setAppMode: function(mode) {
+            if (!this._app) {
+                window.LOF_PAGE_MODE = mode;
+                this._app = new LofFundMonitor();
+                this._currentMode = mode;
+                return;
+            }
+            if (this._currentMode === mode) return;
+            this._currentMode = mode;
+            window.LOF_PAGE_MODE = mode;
+            this._app.pageMode = (mode === 'favorites') ? 'favorites' : 'normal';
+            if (mode === 'favorites') {
+                this._app.fundType = 'all';
+            }
+            this._app.currentPage = 1;
+            this._app.applyFilters();
+            this._app.renderTable();
+            this._app.updatePaginationInfo();
+        }
+    };
+
+    // 暗色模式
+    (function() {
+        var mode = localStorage.getItem('lof_darkMode') || 'light';
+        function applyDark(m) {
+            document.documentElement.classList.remove('dark-mode', 'light-mode');
+            document.documentElement.classList.add(m === 'dark' ? 'dark-mode' : 'light-mode');
+            var btn = document.getElementById('darkModeBtn');
+            if (btn) { btn.textContent = m === 'dark' ? '☀️' : '🌙'; }
+            var btnL = document.getElementById('darkModeBtnLanding');
+            if (btnL) { btnL.textContent = m === 'dark' ? '☀️' : '🌙'; }
+        }
+        applyDark(mode);
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('#darkModeBtn') || e.target.closest('#darkModeBtnLanding');
+            if (!btn) return;
+            var cur = document.documentElement.classList.contains('dark-mode') ? 'dark' : 'light';
+            var next = cur === 'dark' ? 'light' : 'dark';
+            applyDark(next);
+            localStorage.setItem('lof_darkMode', next);
+        });
+    })();
+
+    // 欢迎弹窗
+    (function() {
+        if (!sessionStorage.getItem('jkc_welcome_shown')) {
+            sessionStorage.setItem('jkc_welcome_shown', '1');
+            var overlay = document.getElementById('welcomeOverlay');
+            var agreeBtn = document.getElementById('welcomeAgreeBtn');
+            if (overlay && agreeBtn) {
+                overlay.classList.remove('hidden');
+                agreeBtn.addEventListener('click', function() { overlay.classList.add('hidden'); }, { once: true });
+            }
+        }
+    })();
+
+    // 本地开发提示：缺少 ?api= 参数时显示
+    (function() {
+        var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        if (isLocal && !window.location.search.includes('api=')) {
+            var banner = document.createElement('div');
+            banner.style.cssText = 'text-align:center;padding:8px;background:#fff3cd;color:#856404;font-size:0.82rem;';
+            banner.innerHTML = '本地开发模式 — 请使用 <b>?api=https://jinkuaicha.com</b> 连接后端，例如：<br><code style="background:#eee;padding:2px 6px;border-radius:3px;">http://localhost:5000/?api=https://jinkuaicha.com</code>';
+            document.body.insertBefore(banner, document.body.firstChild);
+        }
+    })();
+
+    // 路由监听
+    window.addEventListener('hashchange', function() { SPA._route(); });
+    if (location.hash && location.hash !== '#/' && location.hash !== '#') {
+        SPA._route();
+    }
+
+    // 导航页后台预热：立即开始预加载脚本和数据
+    (function() {
+        var preloaded = false;
+        function preload() {
+            if (preloaded) return;
+            if (document.getElementById('view-landing').style.display === 'none') return;
+            preloaded = true;
+            // 加载轻量脚本 → 拉取数据 → 缓存
+            var scripts = [
+                'js/config.js?v=14',
+                'js/api.js?v=14',
+                'js/cache.js?v=1'
+            ];
+            var loaded = 0;
+            function loadNext() {
+                if (loaded >= scripts.length) {
+                    // 脚本就绪，拉数据
+                    if (typeof api !== 'undefined' && typeof Cache !== 'undefined') {
+                        api.getFunds(1, 600, true, true).then(function(result) {
+                            var funds = result.data.filter(function(f) {
+                                return f.premium_rate !== null && f.premium_rate !== undefined;
+                            });
+                            Cache.set('funds', funds, 300000);
+                            Cache.set('fundsMeta', {
+                                last_fetch: result.meta ? result.meta.last_fetch : null,
+                                interval: result.meta ? (result.meta.refresh_interval_sec || 300) / 60 : 5,
+                                total: result.data.length
+                            }, 300000);
+                        }).catch(function(){});
+                    }
+                    return;
+                }
+                var s = document.createElement('script');
+                s.src = scripts[loaded];
+                s.onload = function() { loaded++; loadNext(); };
+                s.onerror = function() { loaded++; loadNext(); };
+                document.head.appendChild(s);
+            }
+            loadNext();
+            // 预热后端连接
+            fetch('/health').catch(function(){});
+        }
+        // 1s 后开始预加载
+        setTimeout(preload, 1000);
+        // 用户鼠标悬停条目也触发
+        var items = document.querySelectorAll('.entry-item');
+        for (var i = 0; i < items.length; i++) {
+            items[i].addEventListener('mouseenter', preload, { once: true });
+        }
+    })();
+    </script>
 </body>
 </html>
