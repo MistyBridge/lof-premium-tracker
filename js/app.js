@@ -31,6 +31,10 @@ class LofFundMonitor {
             this.commissionRate = 1.5; this.commissionMin = 5; this.maxCapital = 1000;
             this.darkMode = 'light';
         }
+        this.pageMode = (typeof window.LOF_PAGE_MODE !== 'undefined') ? window.LOF_PAGE_MODE : 'normal';
+        if (this.pageMode === 'favorites') {
+            this.fundType = 'all';
+        }
         this.bindEvents();
         this._initFundTypeDropdown();
         this._buildTableHead();
@@ -40,43 +44,23 @@ class LofFundMonitor {
     }
 
     async init() {
-        this.showLoading(true);
-        this.updateStatus('正在连接服务...');
-        let retries = 0;
-        const maxRetries = 5;
-        const retryDelay = 8000; // 8秒重试间隔（Railway冷启动需要时间）
-        while (retries < maxRetries) {
-            try {
-                this.updateStatus(retries === 0 ? '正在连接服务...' : `连接失败，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
-                const healthResult = await this.checkHealth();
-                const data = healthResult.data;
-                // data_ready 字段可能不存在（旧版后端兼容），用 cache_count > 0 兜底
-                const isReady = data.data_ready !== undefined ? data.data_ready : (data.cache_count > 0);
-                if (!isReady) {
-                    throw new Error('数据未就绪，后端正在初始化中，请稍后重试');
-                }
-                await this.loadRankings();
-                await this.loadFunds();
-                this.startAutoRefresh();
-                this.showError(false);
-                this.showLoading(false);
+        this._renderSkeleton();
+        this.updateStatus('正在加载数据...');
+        try {
+            await this.loadFunds();
+            this.startAutoRefresh();
+            this.showError(false);
+            this._hideCacheBanner();
+        } catch (error) {
+            console.error('[LOF] 初始化失败:', error.message);
+            // 有缓存数据时静默失败，显示缓存 banner
+            if (this.funds.length > 0) {
+                this._showCacheBanner('数据更新中，当前显示缓存数据', true);
                 this.updateStatus('');
-                // 欢迎弹窗 —— 首次访问，页面加载完毕后再弹出
-                this._showWelcome();
-                return; // 成功则退出
-            } catch (error) {
-                retries++;
-                console.error(`[LOF] 初始化失败(${retries}/${maxRetries}):`, error.message);
-                if (retries < maxRetries) {
-                    this.updateStatus(`服务初始化中，${retryDelay/1000}秒后重试(${retries}/${maxRetries})...`);
-                    // 更新 loader 文字提示重试进度
-                    this.updateLoaderText(`连接中... (${retries}/${maxRetries})`);
-                    await new Promise(r => setTimeout(r, retryDelay));
-                } else {
-                    this.updateStatus('连接失败，请检查网络后刷新页面');
-                    this.showError(true, '无法连接到数据服务：' + error.message + '\n\n可能原因：\n1. 服务正在冷启动，请等待1分钟后刷新\n2. 网络不稳定，请稍后重试');
-                    this.showLoading(false);
-                }
+                this.startAutoRefresh();
+            } else {
+                this.updateStatus('连接失败，请检查网络后刷新页面');
+                this.showError(true, '无法连接到数据服务：' + error.message + '\n\n可能原因：\n1. 服务正在冷启动，请等待1分钟后刷新\n2. 网络不稳定，请稍后重试');
             }
         }
     }
@@ -95,23 +79,6 @@ class LofFundMonitor {
         }
     }
 
-    _showWelcome() {
-        try {
-            if (sessionStorage.getItem('jkc_welcome_shown')) return;
-            sessionStorage.setItem('jkc_welcome_shown', '1');
-            const overlay = document.getElementById('welcomeOverlay');
-            const agreeBtn = document.getElementById('welcomeAgreeBtn');
-            if (overlay && agreeBtn) {
-                overlay.classList.remove('hidden');
-                agreeBtn.addEventListener('click', () => {
-                    overlay.classList.add('hidden');
-                }, { once: true });
-            }
-        } catch (e) {
-            // sessionStorage may be blocked in some browsers
-        }
-    }
-
     async checkHealth() {
         try {
             const result = await api.getHealth();
@@ -127,46 +94,60 @@ class LofFundMonitor {
 
     async loadFunds() {
         this.isLoading = true;
+        // Phase 1: 检查缓存，命中则立即渲染
+        var self = this;
+        var cachedFunds = Cache.get('funds');
+        var cachedMeta = Cache.get('fundsMeta');
+        if (cachedFunds && cachedFunds.length > 0) {
+            self.funds = cachedFunds;
+            self.applyFilters();
+            self.renderTable();
+            self.updatePaginationInfo();
+            if (cachedMeta) {
+                self._updateToolbarTimestamp(cachedMeta.last_fetch, cachedMeta.interval);
+                self._updateFundTypeCounts(cachedMeta.total, cachedFunds.length);
+            }
+            self._showCacheBanner('数据来自缓存，正在刷新...');
+            self.updateStatus('');
+            self.isLoading = false;
+        }
+        // Phase 2: 后台拉取最新数据
         try {
-            // 始终从后端获取全部基金（含停牌、停购），由前端 applyFilters 按开关过滤
-            const result = await api.getFunds(1, 600, true, true);
-            // 记录服务端数据时间戳，用于刷新按钮时间对齐
-            if (result.meta?.last_fetch) {
-                this._lastServerFetch = result.meta.last_fetch;
-                // 同步更新工具栏时间戳
-                const ts = document.getElementById('toolbarTimestamp');
-                if (ts) {
-                    const time = this.formatTime(result.meta.last_fetch);
-                    const interval = (result.meta.refresh_interval_sec || 300) / 60;
-                    ts.textContent = time + ' · ' + interval + '分钟刷新';
-                }
+            var result = await api.getFunds(1, 600, true, true);
+            if (result.meta && result.meta.last_fetch) {
+                self._lastServerFetch = result.meta.last_fetch;
+                self._updateToolbarTimestamp(result.meta.last_fetch, (result.meta.refresh_interval_sec || 300) / 60);
             }
-            // 保存原始数据总数（过滤前）
-            const totalFromApi = result.data.length;
-            // 仅过滤无溢价率的基金（无效数据），停牌和停购由 applyFilters 处理
-            this.funds = result.data.filter(fund => {
-                if (fund.premium_rate === null || fund.premium_rate === undefined) return false;
-                return true;
+            var totalFromApi = result.data.length;
+            self.funds = result.data.filter(function(f) {
+                return f.premium_rate !== null && f.premium_rate !== undefined;
             });
-            this.applyFilters();
-            this.renderTable();
-            this.updatePaginationInfo();
-            // 更新基金类型选择器的计数
-            this._updateFundTypeCounts(totalFromApi, result.data.length);
-            // Check if data is from history (market closed)
-            const firstFund = result.data[0];
-            if (firstFund && firstFund.data_date) {
-                this.updateStatus('');
-            }
+            // 写入缓存
+            Cache.set('funds', self.funds, 300000);
+            Cache.set('fundsMeta', {
+                last_fetch: result.meta ? result.meta.last_fetch : null,
+                interval: result.meta ? (result.meta.refresh_interval_sec || 300) / 60 : 5,
+                total: totalFromApi
+            }, 300000);
+            self.applyFilters();
+            self.renderTable();
+            self.updatePaginationInfo();
+            self._updateFundTypeCounts(totalFromApi, self.funds.length);
+            self._hideCacheBanner();
+            if (self.funds.length > 0) self.updateStatus('');
         } catch (error) {
-            throw new Error(`基金列表加载失败: ${error.message}`);
+            if (!cachedFunds || cachedFunds.length === 0) {
+                throw new Error('基金列表加载失败: ' + error.message);
+            }
+            self._showCacheBanner('刷新失败，显示缓存数据', true);
         } finally {
-            this.isLoading = false;
+            self.isLoading = false;
         }
-        // Show empty only if loadFunds succeeded but returned 0 items
-        if (this.funds.length === 0) {
-            this.updateStatus('');
-        }
+    }
+
+    _updateToolbarTimestamp(fetchTime, interval) {
+        var ts = document.getElementById('toolbarTimestamp');
+        if (ts) ts.textContent = this.formatTime(fetchTime) + ' · ' + interval + '分钟刷新';
     }
 
     // ===== 三日平均溢价率（从后端API获取，字段 avg_premium_3d）=====
@@ -319,6 +300,10 @@ class LofFundMonitor {
 
     applyFilters() {
         let filtered = [...this.funds];
+        if (this.pageMode === 'favorites') {
+            var favs = this._getFavorites();
+            filtered = filtered.filter(function(f) { return favs.indexOf(f.code) >= 0; });
+        }
         if (!this.showSuspended) {
             filtered = filtered.filter(fund => !fund.is_suspended);
         }
@@ -416,7 +401,8 @@ class LofFundMonitor {
         var infoBtn;
         switch (colId) {
             case 'code':
-                return '<td class="col-code frozen" style="left:36px">' + fund.code + '</td>';
+                var starActive = this._isFavorite(fund.code) ? ' row-star--active' : '';
+                return '<td class="col-code frozen" style="left:36px"><button class="row-star' + starActive + '" data-code="' + fund.code + '">' + (starActive ? '★' : '☆') + '</button><span class="code-text">' + fund.code + '</span></td>';
             case 'name':
                 return '<td class="col-name frozen" style="left:135px" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>';
             case 'price':
@@ -560,11 +546,12 @@ class LofFundMonitor {
             profitText = profit1000 > 0 ? '+' + profit1000.toFixed(2) : profit1000.toFixed(2);
             profitClass = profit1000 > 0 ? 'mc-pos' : profit1000 < 0 ? 'mc-neg' : '';
         }
+        var isFav = this._isFavorite(fund.code);
         return `<div class="mobile-card" data-code="${fund.code}">
             <div class="mc-top-row">
                 <span class="mc-code">${fund.code}</span>
                 <span class="mc-name">${this.truncateName(fund.name, 8)}</span>
-                <span class="mc-status-badge status-badge ${fund.premium_status || ''}">${statusText}</span>
+                <button class="mc-fav-btn${isFav ? ' mc-fav--active' : ''}" data-code="${fund.code}">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="mc-right">
                 <span class="mc-premium ${premiumClass}">${premiumText}</span>
@@ -660,17 +647,30 @@ class LofFundMonitor {
         // 深色模式按钮
         const darkModeBtn = document.getElementById('darkModeBtn');
         if (darkModeBtn) darkModeBtn.addEventListener('click', () => this.toggleDarkMode());
-        // PC端：点击代码/名称列 → 复制文本
+        // PC端：行内收藏星标点击
         document.querySelector('.fund-table')?.addEventListener('click', (e) => {
+            const star = e.target.closest('.row-star');
+            if (!star) return;
+            e.stopPropagation();
+            e.preventDefault();
+            this._toggleFavorite(star.dataset.code);
+            if (this.pageMode === 'favorites') { this.applyFilters(); this.renderTable(); this.updatePaginationInfo(); }
+        });
+
+        // PC端：点击代码/名称列 → 复制文本（排除星标）
+        document.querySelector('.fund-table')?.addEventListener('click', (e) => {
+            if (e.target.closest('.row-star')) return;
             const codeCell = e.target.closest('.col-code');
             const nameCell = e.target.closest('.col-name');
             if (codeCell || nameCell) {
                 e.stopPropagation();
-                const text = (codeCell || nameCell).textContent.trim();
+                var txtEl = codeCell ? codeCell.querySelector('.code-text') : null;
+                var text = txtEl ? txtEl.textContent.trim() : (codeCell || nameCell).textContent.trim();
                 navigator.clipboard.writeText(text).then(() => this.showToast('复制成功')).catch(() => {});
                 return;
             }
         });
+
         // 通用点击事件委托（移动端 ? 图标 / 详情弹窗 / 卡片→弹窗）
         document.addEventListener('click', (e) => {
             // 移动端 ? 按钮
@@ -719,15 +719,26 @@ class LofFundMonitor {
             }
 
                         // 关闭详情弹窗
+            const favoriteBtn = e.target.closest('#fdFavoriteBtn');
+            if (favoriteBtn && this._detailFundCode) { this._toggleFavorite(this._detailFundCode); return; }
             const closeBtn = e.target.closest('#fdCloseBtn');
             if (closeBtn) { this.closeFundDetail(); return; }
             if (e.target.id === 'fundDetailModal') { this.closeFundDetail(); return; }
+            // 移动端卡片收藏按钮
+            const mcFav = e.target.closest('.mc-fav-btn');
+            if (mcFav) {
+                e.stopPropagation();
+                this._toggleFavorite(mcFav.dataset.code);
+                if (this.pageMode === 'favorites') { this.applyFilters(); this.renderTable(); this.updatePaginationInfo(); }
+                return;
+            }
             // PC端基金行 / 移动端卡片点击 → 详情弹窗
             const row = e.target.closest('.fund-row');
             const card = e.target.closest('.mobile-card');
             if (row || card) {
                 if (e.target.closest('.col-code') || e.target.closest('.col-name') ||
-                    e.target.closest('.btn-profit-info') || e.target.closest('.mc-profit-help')) return;
+                    e.target.closest('.btn-profit-info') || e.target.closest('.mc-profit-help') ||
+                    e.target.closest('.mc-fav-btn')) return;
                 const code = (row || card).dataset.code;
                 if (code) this.showFundDetail(code);
             }
@@ -1439,10 +1450,46 @@ class LofFundMonitor {
         if (el) el.style.display = show ? 'flex' : 'none';
     }
 
-    showError(show, message = '') {
-        const el = document.getElementById('errorContainer');
+    showError(show, message) {
+        message = message || '';
+        var el = document.getElementById('errorContainer');
         if (el) el.style.display = show ? 'block' : 'none';
         if (document.getElementById('errorMessage') && message) document.getElementById('errorMessage').textContent = message;
+    }
+
+    _renderSkeleton() {
+        var tbody = document.getElementById('fundTableBody');
+        if (!tbody) return;
+        var cols = (typeof getActiveColumns === 'function') ? getActiveColumns().length : 12;
+        var html = '';
+        for (var i = 0; i < 12; i++) {
+            html += '<tr class="skeleton-row">';
+            for (var j = 0; j < cols; j++) {
+                var w = Math.floor(Math.random() * 35 + 40);
+                html += '<td><div class="skeleton-bar" style="width:' + w + '%"></div></td>';
+            }
+            html += '</tr>';
+        }
+        tbody.innerHTML = html;
+    }
+
+    _showCacheBanner(msg, isError) {
+        var b = document.getElementById('cacheBanner');
+        if (!b) {
+            b = document.createElement('div');
+            b.id = 'cacheBanner';
+            b.className = 'cache-banner';
+            var view = document.getElementById('view-data');
+            if (view) view.insertBefore(b, view.firstChild);
+        }
+        b.textContent = msg;
+        b.className = isError ? 'cache-banner error' : 'cache-banner';
+        b.style.display = 'block';
+    }
+
+    _hideCacheBanner() {
+        var b = document.getElementById('cacheBanner');
+        if (b) b.style.display = 'none';
     }
 
     async handleManualRefresh() {
@@ -1512,9 +1559,65 @@ class LofFundMonitor {
         }, 1000);
     }
 
+    // ===== 基金收藏 =====
+    _getFavorites() {
+        try { return JSON.parse(localStorage.getItem('lof_favorites')) || []; }
+        catch (e) { return []; }
+    }
+
+    _isFavorite(code) {
+        return this._getFavorites().indexOf(code) >= 0;
+    }
+
+    _toggleFavorite(code) {
+        var favs = this._getFavorites();
+        var idx = favs.indexOf(code);
+        if (idx >= 0) { favs.splice(idx, 1); }
+        else { favs.push(code); }
+        localStorage.setItem('lof_favorites', JSON.stringify(favs));
+        this._updateFavoriteStar(code);
+        var isFav = idx < 0;
+        // 同步更新表格行内星标
+        var rowStar = document.querySelector('.row-star[data-code="' + code + '"]');
+        if (rowStar) {
+            rowStar.textContent = isFav ? '★' : '☆';
+            rowStar.classList.toggle('row-star--active', isFav);
+        }
+        // 同步更新移动端卡片收藏按钮
+        var mcFav = document.querySelector('.mc-fav-btn[data-code="' + code + '"]');
+        if (mcFav) {
+            mcFav.textContent = isFav ? '★' : '☆';
+            mcFav.classList.toggle('mc-fav--active', isFav);
+        }
+    }
+
+    _updateFavoriteStar(code) {
+        var btn = document.getElementById('fdFavoriteBtn');
+        if (!btn) return;
+        var favs = this._getFavorites();
+        if (favs.indexOf(code) >= 0) {
+            btn.textContent = '★';
+            btn.classList.add('fd-star--active');
+        } else {
+            btn.textContent = '☆';
+            btn.classList.remove('fd-star--active');
+        }
+    }
+
     // ===== 基金详情弹窗 =====
-    showFundDetail(code) {
-        const modal = document.getElementById('fundDetailModal');
+    _ensureChart() {
+        if (typeof Chart !== 'undefined') return Promise.resolve();
+        return new Promise(function(res, rej) {
+            var s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+        });
+    }
+
+    async showFundDetail(code) {
+        await this._ensureChart();
+        var modal = document.getElementById('fundDetailModal');
         const skeleton = document.getElementById('fdSkeleton');
         const phase1 = document.getElementById('fdPhase1');
         const phase2 = document.getElementById('fdPhase2');
@@ -1531,6 +1634,7 @@ class LofFundMonitor {
         this._detailMode = 'price,nav';
         this._detailDays = 7;
         this._detailFundCode = code;
+        this._updateFavoriteStar(code);
         const indSel = document.getElementById('fdIndSelect');
         const rangeSel = document.getElementById('fdRangeSelect');
         if (indSel) indSel.value = 'price,nav';
@@ -1958,4 +2062,4 @@ class LofFundMonitor {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => { window.lofMonitor = new LofFundMonitor(); });
+// SPA mode: instantiation is controlled by the hash router in index.html

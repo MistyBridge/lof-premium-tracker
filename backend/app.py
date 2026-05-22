@@ -13,10 +13,12 @@ try:
 except Exception:
     pass
 
+import json
 import logging
+import os
 import threading
-from datetime import datetime, timezone
-from flask import Flask, jsonify, request, send_from_directory
+from datetime import datetime, time, timezone
+from flask import Flask, jsonify, redirect, request, send_from_directory
 from flask_cors import CORS
 
 from config import Config
@@ -67,23 +69,90 @@ def err_resp(message, code=1, status=400, details=None):
 # 辅助函数
 # ══════════════════════════════════════════════════════════════════
 
+def _is_market_hours() -> bool:
+    """判断当前是否在A股交易时段（9:30-11:30, 13:00-15:00, 工作日）"""
+    now = datetime.now()
+    if now.weekday() >= 5:
+        return False
+    t = now.time()
+    return (time(9, 30) <= t <= time(11, 30)) or (time(13, 0) <= t <= time(15, 0))
+
+
+# 停牌状态持久化缓存
+_SUSPENSION_CACHE_FILE = os.path.join(os.path.dirname(__file__), '_suspension_cache.json')
+
+
+def _load_suspension_cache() -> dict:
+    """加载上一交易日停牌状态"""
+    try:
+        with open(_SUSPENSION_CACHE_FILE, 'r') as f:
+            data = json.load(f)
+        return data.get('suspended', {})
+    except Exception:
+        return {}
+
+
+def _save_suspension_cache(suspended_map: dict):
+    """保存本交易日停牌状态"""
+    try:
+        with open(_SUSPENSION_CACHE_FILE, 'w') as f:
+            json.dump({
+                'date': datetime.now().strftime('%Y-%m-%d'),
+                'ts': datetime.now().timestamp(),
+                'suspended': suspended_map
+            }, f)
+    except Exception:
+        pass
+
+
+def _maybe_update_suspension_cache(all_data: dict):
+    """交易时段内每隔60秒更新停牌缓存"""
+    if not _is_market_hours():
+        return
+    try:
+        with open(_SUSPENSION_CACHE_FILE, 'r') as f:
+            prev = json.load(f)
+        last_ts = prev.get('ts', 0)
+        if datetime.now().timestamp() - last_ts < 60:
+            return  # 60秒内不重复写入
+    except Exception:
+        pass
+    suspended_map = {code: _is_suspended(fund) for code, fund in all_data.items()}
+    _save_suspension_cache(suspended_map)
+
+
 def _is_suspended(fund: dict) -> bool:
-    """判断基金是否停牌或无成交"""
+    """
+    智能停牌判定：
+    1. amount!=0 或 volume!=0 → 绝对不停牌（最高优先级）
+    2. 交易时段内 amount=0 或 volume=0 → 停牌
+    3. 交易时段外 → 沿用昨日停牌状态
+    """
+    code = fund.get("code", "")
     vol = fund.get("volume")
     amt = fund.get("amount")
-    # 成交量为0 → 停牌
-    if vol is not None and vol == 0:
-        return True
-    # 成交额为0 → 停牌（SSE 数据有 amount）
-    if amt is not None and amt == 0:
-        return True
-    # SZ 数据可能缺少 volume/amount，但 price≈1.0 且无波动 → 停牌基金典型特征
-    # 使用 float() 兼容 PostgreSQL NUMERIC → Decimal 类型
-    price = float(fund.get("price", 0) or 0)
-    pct = float(fund.get("change_pct", 0) or 0)
-    if abs(price - 1.0) < 0.001 and pct == 0 and (vol is None or vol == 0):
-        return True
-    return False
+
+    # Rule 1: 有成交 → 绝对不停牌
+    if (vol is not None and vol > 0) or (amt is not None and amt > 0):
+        return False
+
+    # 加载昨日停牌缓存
+    prev_suspended = _load_suspension_cache()
+    was_suspended = prev_suspended.get(code, False)
+
+    if _is_market_hours():
+        # Rule 2: 交易时段内，成交量和成交额为0 → 停牌
+        vol_zero = vol is not None and vol == 0
+        amt_zero = amt is not None and amt == 0
+        if vol_zero or amt_zero:
+            return True
+        # vol/amt 均为 None → 沿用昨日状态
+        if vol is None and amt is None:
+            return was_suspended
+        return False
+    else:
+        # Rule 3: 非交易时段 → 沿用昨日停牌状态
+        return was_suspended
 
 
 def _fmt(fund: dict, detail: bool = False) -> dict:
@@ -140,14 +209,33 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
 # Web 前端静态文件服务
 # ══════════════════════════════════════════════════════════════════
 
-import os
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root (backend/../)
 
 @app.route("/")
 def index():
-    """返回 Web 前端首页"""
+    """返回 Web 前端首页（SPA 入口，通过 hash 路由分发视图）"""
     return send_from_directory(BASE_DIR, "index.html")
+
+@app.route("/lof.html")
+def redirect_lof():
+    """旧版 LOF 数据页 → SPA hash 路由"""
+    qs = request.query_string.decode()
+    url = '/#/lof'
+    if qs: url = '/?' + qs + '#/lof'
+    return redirect(url, code=301)
+
+@app.route("/favorites.html")
+def redirect_favorites():
+    """旧版基金收藏页 → SPA hash 路由"""
+    qs = request.query_string.decode()
+    url = '/#/favorites'
+    if qs: url = '/?' + qs + '#/favorites'
+    return redirect(url, code=301)
+
+@app.route("/pages/<path:filename>")
+def pages_files(filename):
+    """用户协议 / 隐私政策等静态页面"""
+    return send_from_directory(os.path.join(BASE_DIR, "pages"), filename)
 
 @app.route("/css/<path:filename>")
 def css_files(filename):
@@ -277,6 +365,9 @@ def list_funds():
     _trigger_lazy_refresh()
     f = get_fetcher()
     all_data = f.get_all()
+
+    # 更新停牌缓存（供下一交易日沿用）
+    _maybe_update_suspension_cache(all_data)
 
     # 服务启动中，数据尚未加载
     if not all_data:
