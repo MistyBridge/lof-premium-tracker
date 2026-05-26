@@ -7,3 +7,4 @@ psycopg2-binary>=2.9.0
 python-dotenv>=1.0.0
 baostock>=0.8.8
 tushare>=1.4.0
+chinese-calendar>=1.9.0
