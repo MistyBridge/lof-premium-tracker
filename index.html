@@ -161,11 +161,7 @@
                                 <span class="ft-arrow">▾</span>
                             </div>
                             <div class="search-input-wrap">
-                                <form autocomplete="off" style="display:contents">
-                                    <input type="email" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none" tabindex="-1" aria-hidden="true">
-                                    <input type="password" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none" tabindex="-1" aria-hidden="true">
-                                    <input type="text" id="searchInput" placeholder="(--) 代码/名称" autocomplete="one-time-code" name="q">
-                                </form>
+                                <input type="text" id="searchInput" placeholder="(--) 代码/名称" autocomplete="one-time-code">
                             </div>
                             <button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button>
                             <button id="colConfigBtn" class="btn-settings btn-col-config" title="表头管理" style="margin-left:0">⚙</button>
@@ -630,31 +626,12 @@
 
         _enterDataView: function(mode) {
             var self = this;
-            // 前3秒锁定搜索栏，每0.5s清空浏览器自动填充
-            var si = document.getElementById('searchInput');
-            if (si) {
-                si.value = '';
-                si.readOnly = true;
-                si.placeholder = '加载中...';
-                var ticks = 0;
-                var iv = setInterval(function() {
-                    si.value = '';
-                    if (++ticks >= 6) {
-                        clearInterval(iv);
-                        si.readOnly = false;
-                        si.placeholder = '(--) 代码/名称';
-                    }
-                }, 500);
-            }
             this._loadAllScripts().then(function() {
                 self._setAppMode(mode);
             });
         },
 
         _setAppMode: function(mode) {
-            // 清除 Chrome 自动填充
-            var si = document.getElementById('searchInput');
-            if (si) si.value = '';
             if (!this._app) {
                 window.LOF_PAGE_MODE = mode;
                 this._app = new LofFundMonitor();
