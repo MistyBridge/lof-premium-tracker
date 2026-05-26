@@ -51,11 +51,11 @@ class LofFundMonitor {
             await this.loadFunds();
             this.startAutoRefresh();
             this.showError(false);
-            this._hideCacheBanner();
+            this._softToast('数据已加载');
         } catch (error) {
             console.error('[LOF] 初始化失败:', error.message, error.errorType || '');
             if (this.funds.length > 0) {
-                this._showCacheBanner('数据更新中，当前显示缓存数据', true);
+                this._softToast('数据更新中，当前显示缓存数据');
                 this.updateStatus('');
                 this.startAutoRefresh();
             } else {
@@ -125,7 +125,7 @@ class LofFundMonitor {
                 self._updateToolbarTimestamp(cachedMeta.last_fetch, cachedMeta.interval);
                 self._updateFundTypeCounts(cachedMeta.total, cachedFunds.length);
             }
-            self._showCacheBanner('数据来自缓存，正在刷新...');
+            self._softToast('数据来自缓存');
             self.updateStatus('');
             self.isLoading = false;
         }
@@ -140,7 +140,6 @@ class LofFundMonitor {
             self.funds = result.data.filter(function(f) {
                 return f.premium_rate !== null && f.premium_rate !== undefined;
             });
-            // 写入缓存
             Cache.set('funds', self.funds, 300000);
             Cache.set('fundsMeta', {
                 last_fetch: result.meta ? result.meta.last_fetch : null,
@@ -151,7 +150,7 @@ class LofFundMonitor {
             self.renderTable();
             self.updatePaginationInfo();
             self._updateFundTypeCounts(totalFromApi, self.funds.length);
-            self._hideCacheBanner();
+            self._softToast('数据已更新');
             if (self.funds.length > 0) self.updateStatus('');
         } catch (error) {
             if (!cachedFunds || cachedFunds.length === 0) {
@@ -159,7 +158,7 @@ class LofFundMonitor {
                 e.errorType = error.errorType || 'unknown';
                 throw e;
             }
-            self._showCacheBanner('刷新失败，显示缓存数据', true);
+            self._softToast('刷新失败，显示缓存数据');
         } finally {
             self.isLoading = false;
         }
@@ -1520,32 +1519,25 @@ class LofFundMonitor {
         tbody.innerHTML = html;
     }
 
-    _showCacheBanner(msg, isError) {
-        var b = document.getElementById('cacheBanner');
-        if (!b) {
-            b = document.createElement('div');
-            b.id = 'cacheBanner';
-            b.className = 'cache-banner';
-            var view = document.getElementById('view-data');
-            if (view) view.insertBefore(b, view.firstChild);
-        }
-        b.textContent = msg;
-        b.className = isError ? 'cache-banner error' : 'cache-banner';
-        b.style.display = 'block';
-    }
-
-    _hideCacheBanner() {
-        var b = document.getElementById('cacheBanner');
-        if (b) b.style.display = 'none';
+    _softToast(msg) {
+        var existing = document.querySelector('.soft-toast');
+        if (existing) existing.remove();
+        var t = document.createElement('div');
+        t.className = 'soft-toast';
+        t.textContent = msg;
+        document.getElementById('view-data')?.appendChild(t);
+        requestAnimationFrame(function () { t.classList.add('show'); });
+        setTimeout(function () {
+            t.classList.remove('show');
+            setTimeout(function () { t.remove(); }, 400);
+        }, 3000);
     }
 
     async handleManualRefresh() {
         const btn = document.getElementById('manualRefreshBtn');
         const icon = btn?.querySelector('.refresh-icon');
-        const statusEl = document.getElementById('refreshStatus');
 
         if (btn) { btn.disabled = true; }
-        // 立即播放动画，不管数据是否更新
         if (icon) {
             icon.classList.remove('bouncing');
             icon.addEventListener('animationend', () => icon.classList.remove('bouncing'), { once: true });
@@ -1556,39 +1548,21 @@ class LofFundMonitor {
             });
         }
 
-        if (statusEl) {
-            statusEl.textContent = '刷新中...';
-            statusEl.classList.add('show');
-        }
-
         try {
-            // 先查健康检查，获取中心服务器的 last_fetch 时间
             const healthResult = await this.checkHealth();
             const serverLastFetch = healthResult.data?.last_fetch;
-
-            // 对齐时间：与本地缓存的 last_fetch 比较
             if (serverLastFetch && this._lastServerFetch === serverLastFetch) {
-                // 时间相同 → 中心服务器数据未更新，只执行动画
-                if (statusEl) statusEl.textContent = '✓';
-                setTimeout(() => {
-                    if (statusEl) statusEl.classList.remove('show');
-                }, 1500);
+                this._softToast('数据已是最新');
                 return;
             }
-
-            // 时间不同 → 从中心服务器分发数据到网页
             this._lastServerFetch = serverLastFetch;
             await this.loadRankings();
             await this.loadFunds();
-            if (statusEl) statusEl.textContent = '✓';
+            this._softToast('刷新完成');
         } catch (error) {
-            if (statusEl) statusEl.textContent = '✗';
             this.showToast('刷新失败: ' + error.message);
         } finally {
             if (btn) { btn.disabled = false; }
-            setTimeout(() => {
-                if (statusEl) statusEl.classList.remove('show');
-            }, 2000);
         }
     }
 

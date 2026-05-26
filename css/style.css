@@ -22,8 +22,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .header-info { display: flex; align-items: center; gap: 10px; }
 .status-text { font-size: 0.9rem; opacity: 0.9; }
 .auto-refresh-label { font-size: 0.85rem; opacity: 0.9; }
-.refresh-status { font-size: 0.85rem; opacity: 0; transition: opacity 0.3s ease; min-width: 60px; }
-.refresh-status.show { opacity: 1; }
 
 /* 深色模式按钮 */
 .btn-dark-mode {
@@ -383,10 +381,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
                 background-size: 200% 100%; animation: sk-shimmer 1.5s infinite; }
 @keyframes sk-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
-/* ── 缓存/离线提示条 ── */
-.cache-banner { text-align: center; padding: 6px 12px; font-size: 0.78rem; background: #fff3cd;
-                color: #856404; border-bottom: 1px solid #ffc107; display: none; }
-.cache-banner.error { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+/* ── 软弹窗提示 ── */
+.soft-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); padding: 10px 24px; background: rgba(0,0,0,0.5); color: #fff; border-radius: 8px; font-size: 0.85rem; z-index: 9999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+.soft-toast.show { opacity: 0.5; }
 
 /* Error */
 .error-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.98); display: flex; align-items: center; justify-content: center; z-index: 1000; }
@@ -622,8 +619,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .dark-mode .loader-hint { color: #666; }
 .dark-mode .skeleton-bar { background: linear-gradient(90deg, #1e2a4a 25%, #253350 50%, #1e2a4a 75%);
                            background-size: 200% 100%; }
-.dark-mode .cache-banner { background: #2d2410; color: #e0a800; border-color: #665000; }
-.dark-mode .cache-banner.error { background: #2d1518; color: #f5c6cb; border-color: #721c24; }
 .dark-mode .footer { color: var(--text2); }
 .dark-mode .footer .legal-links a { color: var(--primary); }
 .dark-mode .form-hint { color: var(--text2); }
