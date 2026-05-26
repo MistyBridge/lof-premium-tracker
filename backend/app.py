@@ -23,6 +23,8 @@ from flask_cors import CORS
 
 from config import Config
 from data_fetcher import get_fetcher
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from history_db import get_history_db, filter_and_forward_fill
 from chart_cache import get_chart_cache
 from task_queue import get_task_queue
@@ -43,6 +45,13 @@ logger = logging.getLogger("lof-api")
 # ─────────────────────────────────────────────
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"], "allow_headers": ["Content-Type"]}})  # 允许跨域，支持预检请求
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["60 per minute"],
+    storage_uri="memory://",
+)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -295,6 +304,7 @@ def health():
 # ── 手动刷新（仅返回当前缓存，不触发外部API调用） ──
 # 外部API调用仅由中心服务器每5分钟自动发起的懒更新机制触发
 @app.route("/refresh", methods=["POST"])
+@limiter.limit("5 per minute")
 def refresh():
     """返回当前内存缓存状态，不触发新的数据抓取"""
     f = get_fetcher()
@@ -375,6 +385,7 @@ def list_tasks():
 # ─────────────────────────────────────────────────────────────────
 
 @app.route("/api/funds", methods=["GET"])
+@limiter.limit("30 per minute")
 def list_funds():
     # 懒更新：用户访问时检查数据是否陈旧，在后台触发刷新
     _trigger_lazy_refresh()
