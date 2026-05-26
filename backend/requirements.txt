@@ -8,6 +8,6 @@ python-dotenv>=1.0.0
 # akshare 已弃用，改用东方财富+腾讯+新浪+网易+天天基金多源降级
 baostock>=0.8.8
 # tushare>=1.4.0  -- 已移除（需 token 未使用）
-flask-limiter>=3.5.0
+# flask-limiter>=3.5.0  -- 暂移除，Railway 构建失败排查中
 pytest>=7.0.0
 chinese-calendar>=1.9.0
