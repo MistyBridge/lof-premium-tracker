@@ -46,6 +46,9 @@ class LofFundMonitor {
     async init() {
         this._renderSkeleton();
         this._computeLocalMarketStatus();
+        // 清除 Chrome 自动填充的邮箱
+        var si = document.getElementById('searchInput');
+        if (si) si.value = '';
         this.updateStatus('正在加载数据...');
         try {
             await this.loadFunds();
