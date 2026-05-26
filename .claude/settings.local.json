@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell *)",
+      "Bash(wmic process *)",
+      "Bash(cmd *)",
+      "Bash(tasklist /v /fo list)",
+      "Bash(findstr /i \"AutoHotkey cc-switch ReadAloud\")",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
+    ]
+  }
+}
