@@ -70,18 +70,10 @@ def err_resp(message, code=1, status=400, details=None):
 # ══════════════════════════════════════════════════════════════════
 
 def _is_market_hours() -> bool:
-    """判断当前是否在A股交易时段（9:30-11:30, 13:00-15:00, 工作日，排除法定节假日）"""
+    """判断当前是否在A股交易时段（9:30-11:30, 13:00-15:00, 工作日）"""
     now = datetime.now()
-    # 周末直接排除
     if now.weekday() >= 5:
         return False
-    # 中国法定节假日（含调休）
-    try:
-        from chinese_calendar import is_workday
-        if not is_workday(now.date()):
-            return False
-    except ImportError:
-        pass  # 降级：节假日包不可用时跳过节假日检查
     t = now.time()
     return (time(9, 30) <= t <= time(11, 30)) or (time(13, 0) <= t <= time(15, 0))
 
@@ -270,13 +262,6 @@ def health():
     hdb = get_history_db()
     available_dates = hdb.get_available_dates()
     cache_count = len(f.get_all())
-    now = datetime.now()
-    if now.weekday() >= 5:
-        market_status, market_status_text = "holiday", "周末休市"
-    elif _is_market_hours():
-        market_status, market_status_text = "trading", "交易中"
-    else:
-        market_status, market_status_text = "closed", "已收盘"
     return ok({
         "status": "running",
         "data_ready": cache_count > 0,
@@ -285,8 +270,6 @@ def health():
         "last_fetch": f.last_fetch_time.isoformat() if f.last_fetch_time else None,
         "error": f.fetch_error,
         "refresh_interval_sec": Config.REFRESH_INTERVAL_SECONDS,
-        "market_status": market_status,
-        "market_status_text": market_status_text,
         "history_dates": available_dates,
         "history_days": len(available_dates),
         "chart_cache": get_chart_cache().get_stats(),
