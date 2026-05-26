@@ -61,11 +61,14 @@ def _parse_purchase_limit_from_html(html: str) -> Optional[float]:
     val = re.sub(r'<[^>]+>', '', m.group(1)).strip()
     if not val or '无限额' in val or '---' in val:
         return None  # no limit
-    # Extract number
-    nm = re.search(r'([\d,.]+)\s*元', val)
+    # Extract number — handle "X.XX元" and "X.XX万元"
+    nm = re.search(r'([\d,.]+)\s*万?\s*元', val)
     if nm:
         try:
-            return float(nm.group(1).replace(',', ''))
+            amount = float(nm.group(1).replace(',', ''))
+            if '万' in val:
+                amount *= 10000
+            return amount
         except ValueError:
             return None
     return None
@@ -91,8 +94,9 @@ def _parse_redemption_fee_from_html(html: str) -> Optional[float]:
         try:
             return float(rates[0])
         except ValueError:
-            return None
-    return None
+            pass
+    # 数据源无费率时使用行业默认值 1.5%（中登标准最短档）
+    return 1.5
 
 
 def fetch_fee_for_code(code: str, session: requests.Session) -> Dict[str, Any]:
