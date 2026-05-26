@@ -1,0 +1,17 @@
+# Cloudflare Pages 静态资源缓存规则
+# 保留 ?v=X 版本号机制作为缓存强制刷新手段
+
+/css/*
+  Cache-Control: public, max-age=86400
+
+/js/*
+  Cache-Control: public, max-age=86400
+
+/assets/*
+  Cache-Control: public, max-age=604800
+
+/pages/*
+  Cache-Control: public, max-age=86400
+
+/index.html
+  Cache-Control: public, max-age=0

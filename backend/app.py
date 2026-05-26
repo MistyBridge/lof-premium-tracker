@@ -23,6 +23,8 @@ from flask_cors import CORS
 
 from config import Config
 from data_fetcher import get_fetcher
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from history_db import get_history_db, filter_and_forward_fill
 from chart_cache import get_chart_cache
 from task_queue import get_task_queue
@@ -43,6 +45,13 @@ logger = logging.getLogger("lof-api")
 # ─────────────────────────────────────────────
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*", "methods": ["GET", "POST", "OPTIONS"], "allow_headers": ["Content-Type"]}})  # 允许跨域，支持预检请求
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["60 per minute"],
+    storage_uri="memory://",
+)
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -70,10 +79,18 @@ def err_resp(message, code=1, status=400, details=None):
 # ══════════════════════════════════════════════════════════════════
 
 def _is_market_hours() -> bool:
-    """判断当前是否在A股交易时段（9:30-11:30, 13:00-15:00, 工作日）"""
+    """判断当前是否在A股交易时段（9:30-11:30, 13:00-15:00, 工作日，排除法定节假日）"""
     now = datetime.now()
+    # 周末直接排除
     if now.weekday() >= 5:
         return False
+    # 中国法定节假日（含调休）
+    try:
+        from chinese_calendar import is_workday
+        if not is_workday(now.date()):
+            return False
+    except ImportError:
+        pass  # 降级：节假日包不可用时跳过节假日检查
     t = now.time()
     return (time(9, 30) <= t <= time(11, 30)) or (time(13, 0) <= t <= time(15, 0))
 
@@ -262,6 +279,13 @@ def health():
     hdb = get_history_db()
     available_dates = hdb.get_available_dates()
     cache_count = len(f.get_all())
+    now = datetime.now()
+    if now.weekday() >= 5:
+        market_status, market_status_text = "holiday", "周末休市"
+    elif _is_market_hours():
+        market_status, market_status_text = "trading", "交易中"
+    else:
+        market_status, market_status_text = "closed", "已收盘"
     return ok({
         "status": "running",
         "data_ready": cache_count > 0,
@@ -270,6 +294,8 @@ def health():
         "last_fetch": f.last_fetch_time.isoformat() if f.last_fetch_time else None,
         "error": f.fetch_error,
         "refresh_interval_sec": Config.REFRESH_INTERVAL_SECONDS,
+        "market_status": market_status,
+        "market_status_text": market_status_text,
         "history_dates": available_dates,
         "history_days": len(available_dates),
         "chart_cache": get_chart_cache().get_stats(),
@@ -280,6 +306,7 @@ def health():
 # ── 手动刷新（仅返回当前缓存，不触发外部API调用） ──
 # 外部API调用仅由中心服务器每5分钟自动发起的懒更新机制触发
 @app.route("/refresh", methods=["POST"])
+@limiter.limit("5 per minute")
 def refresh():
     """返回当前内存缓存状态，不触发新的数据抓取"""
     f = get_fetcher()
@@ -360,6 +387,7 @@ def list_tasks():
 # ─────────────────────────────────────────────────────────────────
 
 @app.route("/api/funds", methods=["GET"])
+@limiter.limit("30 per minute")
 def list_funds():
     # 懒更新：用户访问时检查数据是否陈旧，在后台触发刷新
     _trigger_lazy_refresh()

@@ -26,6 +26,8 @@
 
     <link rel="stylesheet" href="css/style.css?v=15">
     <link rel="stylesheet" href="css/landing.css?v=5">
+    <link rel="stylesheet" href="css/account.css?v=1">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
     <!-- ═══════════════════════════════════════════ 全局：欢迎弹窗 ═══════════════════════════════════════════ -->
@@ -67,8 +69,10 @@
                     <h1>金快查</h1>
                 </div>
                 <div class="header-info">
+                    <span id="landingMarketStatus" class="market-status">--</span>
+                    <span id="landingTimestamp" class="landing-timestamp">--</span>
                     <button id="darkModeBtnLanding" class="btn-dark-mode" title="切换深色/浅色模式">🌙</button>
-                    <span class="user-center-link">用户中心</span>
+                    <span class="user-center-link" onclick="if(window.Auth)Auth.open('login')">用户中心</span>
                 </div>
             </header>
 
@@ -173,6 +177,7 @@
                                 </div>
                             </div>
                         </div>
+                        <span class="market-status" id="marketStatus" title="交易所状态">--</span>
                         <span class="toolbar-timestamp" id="toolbarTimestamp">--</span>
                         <div class="mobile-sort-btns">
                             <div class="sort-btn-row">
@@ -309,6 +314,41 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════ 视图3：用户中心 ═══════════════════════════════════════════ -->
+    <div id="view-account" style="display:none">
+        <div class="account-container">
+            <a href="#/" class="account-back">← 返回首页</a>
+            <div class="account-card" id="accountCard">
+                <div class="account-avatar" id="accountAvatar" title="点击上传头像（最大200KB）">?</div>
+                <input type="file" id="accountAvatarInput" accept="image/jpeg,image/png,image/gif,image/webp" style="display:none">
+                <div class="account-info">
+                    <div class="account-nickname" id="accountNickname">--</div>
+                    <div class="account-email" id="accountEmail">--</div>
+                    <div class="account-meta" id="accountMeta">注册时间：--</div>
+                </div>
+                <button class="account-edit-btn" id="accountEditBtn">编辑资料</button>
+            </div>
+            <div class="account-section">
+                <h3>偏好设置</h3>
+                <div class="account-setting">
+                    <span>深色模式</span>
+                    <select id="accountDarkMode">
+                        <option value="light">浅色</option>
+                        <option value="dark">深色</option>
+                    </select>
+                </div>
+            </div>
+            <div class="account-section">
+                <h3>数据管理</h3>
+                <button class="account-btn" id="accountChPwdBtn">修改密码</button>
+                <button class="account-btn" id="accountSyncBtn" disabled>同步收藏 (开发中)</button>
+                <button class="account-btn account-btn-danger" id="accountLogoutBtn">退出登录</button>
+                <button class="account-btn account-btn-destroy" id="accountDestroyBtn">注销账户</button>
+                <p class="account-warn">注销后账户及所有数据将被永久删除，不可恢复</p>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══════════════════════════════════════════ 全局：基金详情弹窗 ═══════════════════════════════════════════ -->
     <div id="fundDetailModal" class="fund-detail-overlay" style="display:none">
         <div class="fund-detail-modal">
@@ -363,6 +403,123 @@
         </div>
     </div>
 
+    <!-- 全局：编辑资料弹窗 -->
+    <div id="profileEditModal" class="modal-overlay" style="display:none">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3>编辑资料</h3>
+                <button class="modal-close" id="profileEditClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>昵称</label><input type="text" id="profileNicknameInput" placeholder="设置你的昵称" maxlength="20"></div>
+                <div id="profileEditError" class="auth-error" style="display:none"></div>
+                <button class="btn-primary auth-submit-btn" id="profileEditSave">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局：头像预览弹窗 -->
+    <div id="avatarPreviewModal" class="modal-overlay" style="display:none">
+        <div class="modal-content" style="max-width:360px;text-align:center">
+            <div class="modal-header">
+                <h3>头像</h3>
+                <button class="modal-close" id="avatarPreviewClose">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:20px">
+                <img id="avatarPreviewImg" src="" alt="头像" style="width:200px;height:200px;border-radius:50%;object-fit:cover;background:var(--bg)">
+                <button class="btn-primary auth-submit-btn" id="avatarUploadBtn" style="margin-top:16px">上传图片</button>
+                <p class="auth-hint" style="margin-top:8px">支持 JPG/PNG/GIF/WebP，最大 200KB</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局：修改密码弹窗 -->
+    <div id="chPwdModal" class="modal-overlay" style="display:none">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3>修改密码</h3>
+                <button class="modal-close" id="chPwdClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group"><label>当前密码</label><input type="password" id="chPwdCurrent" placeholder="输入当前密码"></div>
+                <div class="form-group"><label>新密码</label><input type="password" id="chPwdNew" placeholder="至少6位" minlength="6"></div>
+                <div class="form-group"><label>确认新密码</label><input type="password" id="chPwdNew2" placeholder="再次输入新密码"></div>
+                <div id="chPwdError" class="auth-error" style="display:none"></div>
+                <button class="btn-primary auth-submit-btn" id="chPwdSave">确认修改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局：通用确认弹窗 -->
+    <div id="confirmModal" class="modal-overlay" style="display:none">
+        <div class="modal-content auth-modal">
+            <div class="modal-header"><h3 id="confirmTitle">确认操作</h3></div>
+            <div class="modal-body">
+                <p id="confirmMsg" style="margin-bottom:16px;font-size:0.92rem;color:var(--text)"></p>
+                <div id="confirmExtra" style="display:none">
+                    <div class="form-group"><label>邮箱确认</label><input type="email" id="confirmEmail" placeholder="输入你的邮箱地址"></div>
+                    <div class="form-group"><label>密码确认</label><input type="password" id="confirmPassword" placeholder="输入密码确认"></div>
+                    <div id="confirmError" class="auth-error" style="display:none"></div>
+                </div>
+                <div style="display:flex;gap:10px">
+                    <button class="btn-secondary auth-submit-btn" id="confirmCancelBtn">取消</button>
+                    <button class="btn-primary auth-submit-btn" id="confirmOkBtn">确认</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局：邮件发送提示弹窗 -->
+    <div id="emailSentModal" class="modal-overlay" style="display:none">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3>激活邮件已发送</h3>
+                <button class="modal-close" id="emailSentClose">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:center;padding:30px 24px">
+                <p style="font-size:0.95rem;color:var(--text);line-height:1.8">邮件已发送到您填写的邮箱，<br>点击邮件内链接即可激活使用<br><br><small style="color:var(--text2)">通常在 1-3 分钟内送达，高峰期可能略有延迟<br>如未收到请检查垃圾箱</small></p>
+                <button class="btn-primary auth-submit-btn" id="emailSentOkBtn" style="margin-top:16px">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全局：登录弹窗 -->
+    <div id="authModal" class="modal-overlay" style="display:none">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3 id="authModalTitle">登录</h3>
+                <button id="authCloseBtn" class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="authModalBody">
+                <div id="authFormLogin">
+                    <div class="form-group"><label>邮箱</label><input type="email" id="authEmail" placeholder="your@email.com" autocomplete="email"></div>
+                    <div class="form-group"><label>密码</label><input type="password" id="authPassword" placeholder="输入密码" autocomplete="current-password"></div>
+                    <div class="auth-remember-row"><label class="checkbox-label"><input type="checkbox" id="authRemember"> 记住密码</label><a href="#" id="switchToReset" class="auth-forgot-link">忘记密码？</a></div>
+                    <div id="authError" class="auth-error" style="display:none"></div>
+                    <button class="btn-primary auth-submit-btn" id="authLoginBtn">登录</button>
+                    <p class="auth-switch">还没有账号？<a href="#" id="switchToRegister">立即注册</a></p>
+                </div>
+                <div id="authFormRegister" style="display:none">
+                    <div class="form-group"><label>邮箱</label><input type="email" id="regEmail" placeholder="your@email.com" autocomplete="email"></div>
+                    <div class="form-group"><label>密码</label><input type="password" id="regPassword" placeholder="至少6位" minlength="6" autocomplete="new-password"></div>
+                    <div class="form-group"><label>重复密码</label><input type="password" id="regPasswordConfirm" placeholder="再次输入密码" minlength="6" autocomplete="new-password"></div>
+                    <div id="regError" class="auth-error" style="display:none"></div>
+                    <div id="regSuccess" class="auth-success" style="display:none"></div>
+                    <button class="btn-primary auth-submit-btn" id="authRegisterBtn">注册</button>
+                    <p class="auth-switch">已有账号？<a href="#" id="switchToLogin">返回登录</a></p>
+                </div>
+                <div id="authFormReset" style="display:none">
+                    <p class="auth-hint">输入注册邮箱，我们将发送密码重置链接</p>
+                    <div class="form-group"><label>邮箱</label><input type="email" id="resetEmail" placeholder="your@email.com" autocomplete="email"></div>
+                    <div id="resetMsg" class="auth-success" style="display:none"></div>
+                    <div id="resetError" class="auth-error" style="display:none"></div>
+                    <button class="btn-primary auth-submit-btn" id="authResetBtn">发送重置链接</button>
+                    <p class="auth-switch"><a href="#" id="switchToLoginFromReset">返回登录</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 全局：套利流程帮助弹窗 -->
     <div id="arbHelpOverlay" class="arb-help-overlay" style="display:none">
         <div class="arb-help-popup">
@@ -405,7 +562,10 @@
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
                 self._loadScript('js/columns.js?v=14'),
                 self._loadScript('js/config.js?v=14'),
-                self._loadScript('js/cache.js?v=1')
+                self._loadScript('js/cache.js?v=1'),
+                self._loadScript('js/supabase.js?v=1'),
+                self._loadScript('js/auth.js?v=1'),
+                self._loadScript('js/account.js?v=1')
             ]).then(function() {
                 // Phase 2: api.js 依赖 config.js
                 return self._loadScript('js/api.js?v=14');
@@ -423,25 +583,44 @@
             tabs.forEach(function(t) { t.classList.toggle('active', t.dataset.mode === mode); });
         },
 
+        _enterAccountView: function() {
+            var landingView = document.getElementById('view-landing');
+            var dataView = document.getElementById('view-data');
+            var accountView = document.getElementById('view-account');
+            landingView.style.display = 'none';
+            dataView.style.display = 'none';
+            accountView.style.display = 'block';
+            document.title = '金快查 - 用户中心';
+            if (typeof AccountPage !== 'undefined') {
+                AccountPage.init();
+            }
+        },
+
         _route: function() {
             var hash = location.hash || '#/';
             var landingView = document.getElementById('view-landing');
             var dataView = document.getElementById('view-data');
+            var accountView = document.getElementById('view-account');
 
-            // 更新导航 tab 高亮
             this._updateTabs(hash === '#/favorites' ? 'favorites' : (hash === '#/lof' ? 'lof' : ''));
 
             if (hash === '#/' || hash === '#') {
                 landingView.style.display = 'block';
                 dataView.style.display = 'none';
+                if (accountView) accountView.style.display = 'none';
                 document.title = '金快查';
+                return;
+            }
+
+            if (hash === '#/account') {
+                this._enterAccountView();
                 return;
             }
 
             var mode = (hash === '#/favorites') ? 'favorites' : 'lof';
             document.title = mode === 'favorites' ? '金快查 - 基金收藏' : '金快查 - LOF基金实时折溢价监控';
-
             landingView.style.display = 'none';
+            if (accountView) accountView.style.display = 'none';
             dataView.style.display = 'block';
             this._enterDataView(mode);
         },
@@ -526,6 +705,50 @@
         SPA._route();
     }
 
+    // 导航页：市场状态 + 数据时间戳（本地计算，缓存回填）
+    (function() {
+        // 本地计算市场状态
+        function computeMarketStatus() {
+            var now = new Date();
+            var day = now.getDay();
+            var t = now.getHours() * 60 + now.getMinutes();
+            if (day === 0 || day === 6) return ['holiday', '周末休市'];
+            if (t >= 570 && t <= 690) return ['trading', '交易中'];
+            if (t >= 780 && t <= 900) return ['trading', '交易中'];
+            return ['closed', '已收盘'];
+        }
+        function updateMarketStatus() {
+            var el = document.getElementById('landingMarketStatus');
+            if (!el) return;
+            var s = computeMarketStatus();
+            el.textContent = s[1];
+            el.className = 'market-status ms-' + s[0];
+        }
+        function formatTime(iso) {
+            if (!iso) return '';
+            return new Date(iso).toLocaleString('zh-CN', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Shanghai' });
+        }
+        function updateTimestamp(lastFetch, intervalMin) {
+            var el = document.getElementById('landingTimestamp');
+            if (!el) return;
+            if (lastFetch) {
+                el.textContent = formatTime(lastFetch) + ' · ' + (intervalMin || 5) + '分钟刷新';
+            }
+        }
+        // 立即显示市场状态
+        updateMarketStatus();
+        // 从缓存读取上次时间戳
+        try {
+            var raw = localStorage.getItem('jkc_fundsMeta');
+            if (raw) {
+                var meta = JSON.parse(raw);
+                if (meta.last_fetch) updateTimestamp(meta.last_fetch, meta.interval);
+            }
+        } catch(e) {}
+        // 暴露给预加载器调用
+        window._landingUpdateTimestamp = updateTimestamp;
+    })();
+
     // 导航页后台预热：立即开始预加载脚本和数据
     (function() {
         var preloaded = false;
@@ -537,7 +760,10 @@
             var scripts = [
                 'js/config.js?v=14',
                 'js/api.js?v=14',
-                'js/cache.js?v=1'
+                'js/cache.js?v=1',
+                'js/supabase.js?v=1',
+                'js/auth.js?v=1',
+                'js/account.js?v=1'
             ];
             var loaded = 0;
             function loadNext() {
@@ -549,11 +775,15 @@
                                 return f.premium_rate !== null && f.premium_rate !== undefined;
                             });
                             Cache.set('funds', funds, 300000);
-                            Cache.set('fundsMeta', {
+                            var meta = {
                                 last_fetch: result.meta ? result.meta.last_fetch : null,
                                 interval: result.meta ? (result.meta.refresh_interval_sec || 300) / 60 : 5,
                                 total: result.data.length
-                            }, 300000);
+                            };
+                            Cache.set('fundsMeta', meta, 300000);
+                            if (window._landingUpdateTimestamp && meta.last_fetch) {
+                                window._landingUpdateTimestamp(meta.last_fetch, meta.interval);
+                            }
                         }).catch(function(){});
                     }
                     return;
