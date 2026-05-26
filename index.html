@@ -626,9 +626,22 @@
 
         _enterDataView: function(mode) {
             var self = this;
-            // 清除浏览器自动填充
+            // 前3秒锁定搜索栏，每0.5s清空浏览器自动填充
             var si = document.getElementById('searchInput');
-            if (si) { si.value = ''; si.readOnly = true; setTimeout(function() { si.readOnly = false; }, 100); }
+            if (si) {
+                si.value = '';
+                si.readOnly = true;
+                si.placeholder = '加载中...';
+                var ticks = 0;
+                var iv = setInterval(function() {
+                    si.value = '';
+                    if (++ticks >= 6) {
+                        clearInterval(iv);
+                        si.readOnly = false;
+                        si.placeholder = '(--) 代码/名称';
+                    }
+                }, 500);
+            }
             this._loadAllScripts().then(function() {
                 self._setAppMode(mode);
             });
