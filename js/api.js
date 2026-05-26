@@ -44,23 +44,44 @@ class LofApiService {
             clearTimeout(timeout);
 
             if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                if (response.status === 429) {
+                    var rateErr = new Error('请求过于频繁，请稍后重试');
+                    rateErr.errorType = 'rate_limit';
+                    rateErr.statusCode = 429;
+                    throw rateErr;
+                }
+                var err = new Error(response.status >= 500 ? '服务器繁忙，请稍后重试' : '请求失败 (' + response.status + ')');
+                err.errorType = response.status >= 500 ? 'server' : 'client';
+                err.statusCode = response.status;
+                throw err;
             }
 
             const result = await response.json();
 
-            // 后端成功码为 0
             if (result.code !== 0) {
-                throw new Error(result.message || '请求失败');
+                var appErr = new Error(result.message || '请求失败');
+                appErr.errorType = 'api';
+                appErr.apiCode = result.code;
+                throw appErr;
             }
 
             return result;
         } catch (error) {
             clearTimeout(timeout);
+            if (error.errorType) throw error;
             if (error.name === 'AbortError') {
-                throw new Error('请求超时，请检查网络连接');
+                var toErr = new Error('请求超时，请检查网络连接');
+                toErr.errorType = 'timeout';
+                throw toErr;
             }
-            throw error;
+            if (error.name === 'TypeError' && error.message.indexOf('fetch') >= 0) {
+                var netErr = new Error('网络连接失败，请检查网络');
+                netErr.errorType = 'network';
+                throw netErr;
+            }
+            var unkErr = new Error(error.message || '未知错误');
+            unkErr.errorType = 'unknown';
+            throw unkErr;
         }
     }
 

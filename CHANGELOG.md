@@ -1,5 +1,40 @@
 # 金快查 更新日志
 
+## 2026-05-26
+
+### M1 收尾
+| 内容 | 说明 | 文件 |
+|------|------|------|
+| 错误分类 | api.js 按 errorType 分类（timeout/network/server/client/rate_limit），app.js 按类型给不同提示文案 | `js/api.js`, `js/app.js` |
+| 图表 Tooltip 边界 | 首尾数据点显示「边界日期：后续交易日数据不足」橙色提示 | `js/app.js`, `css/style.css` |
+| 交易日历指示器 | toolbar 显示市场状态标签（交易中/已收盘/周末休市），本地计算+后端双源 | `js/app.js`, `backend/app.py`, `css/style.css` |
+| 导航页状态栏 | 导航页右上角同时显示市场状态+数据刷新时间，移动端可见 | `index.html`, `css/landing.css` |
+
+### M2 性能与基础设施
+| 内容 | 说明 | 文件 |
+|------|------|------|
+| 静态缓存 | `_headers` 文件 CF Pages 缓存策略：CSS/JS 1天，Assets 7天，HTML 不缓存 | `_headers` NEW |
+| 依赖管理 | 移除 tushare、添加 runtime.txt (Python 3.11)、添加 flask-limiter、chinese-calendar、pytest | `requirements.txt`, `runtime.txt` NEW |
+| API 限流 | Flask-Limiter 全局 60/min，funds 30/min，refresh 5/min，前端 429 友好提示 | `backend/app.py`, `js/api.js`, `js/app.js` |
+| 自动化测试 | 49 个 pytest 测试覆盖交易日历/停牌判定/响应格式/数据格式化/边界值/节假日/限额解析/赎回费率 | `backend/tests/` NEW |
+| 节假日日历 | 集成 chinese-calendar，五一/国庆等法定假日正确识别为休市，ImportError 自动降级 | `backend/app.py` |
+
+### Bug 修复
+| 问题 | 原因 | 修复 | 文件 |
+|------|------|------|------|
+| 73% 基金缺申购限额 | `_parse_purchase_limit_from_html` 只认「元」不认「万元」 | 正则扩展 `万?元`，万元自动乘 10000 | `backend/fee_fetcher.py` |
+| 12% 基金缺赎回费率 | jjfl 页面定期开放基金无费率数据 | 无数据时默认 1.5%（中登标准最短档） | `backend/fee_fetcher.py` |
+| 详情弹窗限额显示「0万」 | `(limit/10000).toFixed(0)` 对 1000 元取整为 0 | <10万显示元，>=10万显示万元 | `js/app.js` |
+
+### M3a 用户中心（WIP）
+| 内容 | 说明 | 文件 |
+|------|------|------|
+| Supabase 项目 | 创建 mistybridge/jinkuaicha，profiles + fund_favorites + user_settings 三表 | Supabase |
+| 前端 Auth | 登录/注册/密码重置弹窗，session 持久化，记住密码自动登录 | `js/supabase.js` NEW, `js/auth.js` NEW, `index.html` |
+| 用户中心页面 | SPA 路由 `#/account`，个人信息卡片 + 头像上传 + 昵称编辑 + 改密 + 退出 + 注销 | `js/account.js` NEW, `css/account.css` NEW |
+| 邮件系统 | Resend SMTP + 阿里云 DNS → Cloudflare DNS 迁移，DMARC 配置，激活邮件流程 | Supabase Auth |
+| Resend 验证 | 域名 jinkuaicha.com 完整 DNS 配置（DKIM/SPF/MX/DMARC），发送功能正常 | Cloudflare, Resend |
+
 ## 2026-05-20
 
 | 原方案 | 更新方案 | 影响范围 |

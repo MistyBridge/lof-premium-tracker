@@ -64,7 +64,15 @@
 .dark-mode .spa-nav-tab.active { background: var(--primary); color: #fff; }
 
 /* ── 用户中心 ── */
-.user-center-link { color: rgba(255,255,255,0.5); font-size: 0.85rem; cursor: default; }
+.user-center-link { color: rgba(255,255,255,0.85); font-size: 0.85rem; cursor: pointer; }
+.user-center-link:hover { color: #fff; }
+
+/* ── 导航页时间戳 ── */
+.landing-timestamp { color: rgba(255,255,255,0.65); font-size: 0.75rem; white-space: nowrap; }
+#landingMarketStatus { font-size: 0.72rem; padding: 1px 8px; border-radius: 10px; }
+#landingMarketStatus.ms-trading { background: rgba(255,255,255,0.2); color: #fff; }
+#landingMarketStatus.ms-closed { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+#landingMarketStatus.ms-holiday { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
 
 /* ── 暗色模式 ── */
 .dark-mode .entry-item.entry-active:hover { background: #1e2a4a; }

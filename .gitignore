@@ -19,3 +19,7 @@ __pycache__/
 *.pyo
 .env
 backend/fee_cache.json
+# 密钥文件
+credentials.md
+secrets.md
+.env

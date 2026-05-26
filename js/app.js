@@ -45,6 +45,7 @@ class LofFundMonitor {
 
     async init() {
         this._renderSkeleton();
+        this._computeLocalMarketStatus();
         this.updateStatus('正在加载数据...');
         try {
             await this.loadFunds();
@@ -52,16 +53,33 @@ class LofFundMonitor {
             this.showError(false);
             this._hideCacheBanner();
         } catch (error) {
-            console.error('[LOF] 初始化失败:', error.message);
-            // 有缓存数据时静默失败，显示缓存 banner
+            console.error('[LOF] 初始化失败:', error.message, error.errorType || '');
             if (this.funds.length > 0) {
                 this._showCacheBanner('数据更新中，当前显示缓存数据', true);
                 this.updateStatus('');
                 this.startAutoRefresh();
             } else {
                 this.updateStatus('连接失败，请检查网络后刷新页面');
-                this.showError(true, '无法连接到数据服务：' + error.message + '\n\n可能原因：\n1. 服务正在冷启动，请等待1分钟后刷新\n2. 网络不稳定，请稍后重试');
+                this.showError(true, this._errorHelpText(error));
             }
+        }
+    }
+
+    _errorHelpText(error) {
+        var msg = error.message || '未知错误';
+        switch (error.errorType) {
+            case 'rate_limit':
+                return '请求过于频繁 — 请稍后重试\n\n服务器保护性限流，通常几秒后自动恢复。请避免频繁刷新页面。';
+            case 'timeout':
+                return '请求超时 — 服务器响应过慢\n\n' + msg + '\n\n可能原因：\n1. 服务正在冷启动（约30-60秒），请稍后刷新\n2. 网络不稳定，请检查连接后重试';
+            case 'network':
+                return '网络连接失败 — 无法访问服务器\n\n' + msg + '\n\n可能原因：\n1. 服务器已离线或正在维护\n2. DNS解析失败，请检查网络设置\n3. 防火墙或代理阻止了连接';
+            case 'server':
+                return '服务器错误 — 服务端处理异常\n\n' + msg + '\n\n可能原因：\n1. 数据源暂时不可用\n2. 服务器负载过高\n请稍后重试，如持续出现请联系反馈';
+            case 'client':
+                return '请求异常 — 客户端错误\n\n' + msg + '\n\n如持续出现请联系反馈';
+            default:
+                return '无法连接到数据服务：' + msg + '\n\n可能原因：\n1. 服务正在冷启动，请等待1分钟后刷新\n2. 网络不稳定，请稍后重试';
         }
     }
 
@@ -137,7 +155,9 @@ class LofFundMonitor {
             if (self.funds.length > 0) self.updateStatus('');
         } catch (error) {
             if (!cachedFunds || cachedFunds.length === 0) {
-                throw new Error('基金列表加载失败: ' + error.message);
+                var e = new Error('基金列表加载失败: ' + error.message);
+                e.errorType = error.errorType || 'unknown';
+                throw e;
             }
             self._showCacheBanner('刷新失败，显示缓存数据', true);
         } finally {
@@ -568,7 +588,7 @@ class LofFundMonitor {
         if (fund.can_purchase === false) return '暂停申赎';
         if (fund.purchase_limit > 0) {
             const limitWan = fund.purchase_limit / 10000;
-            return limitWan >= 1 ? `限${limitWan.toFixed(0)}万` : `限${Math.round(fund.purchase_limit)}元`;
+            return limitWan >= 10 ? `限${limitWan.toFixed(0)}万` : `限${Math.round(fund.purchase_limit)}元`;
         }
         return '开放申赎';
     }
@@ -983,6 +1003,33 @@ class LofFundMonitor {
             const interval = (data.refresh_interval_sec || 300) / 60;
             ts.textContent = time ? time + ' · ' + interval + '分钟刷新' : '等待首次刷新...';
         }
+        if (data.market_status) {
+            this._updateMarketStatus(data.market_status, data.market_status_text);
+        }
+    }
+
+    _computeLocalMarketStatus() {
+        var now = new Date();
+        var day = now.getDay();
+        var h = now.getHours();
+        var m = now.getMinutes();
+        var t = h * 60 + m;
+        if (day === 0 || day === 6) {
+            this._updateMarketStatus('holiday', '周末休市');
+        } else if (t >= 570 && t <= 690) {
+            this._updateMarketStatus('trading', '交易中');
+        } else if (t >= 780 && t <= 900) {
+            this._updateMarketStatus('trading', '交易中');
+        } else {
+            this._updateMarketStatus('closed', '已收盘');
+        }
+    }
+
+    _updateMarketStatus(status, text) {
+        var el = document.getElementById('marketStatus');
+        if (!el) return;
+        el.textContent = text || status;
+        el.className = 'market-status ms-' + status;
     }
 
     _updateFundTypeCounts(total, cache) {
@@ -1761,7 +1808,8 @@ class LofFundMonitor {
             limitEl.parentElement.style.display = '';
             limitEl.className = 'fd-kpi-value';
             if (fund.purchase_limit != null && fund.purchase_limit > 0) {
-                limitEl.textContent = (fund.purchase_limit / 10000).toFixed(0) + '万';
+                const limitW = fund.purchase_limit / 10000;
+                limitEl.textContent = limitW >= 10 ? '限' + limitW.toFixed(0) + '万' : '限' + Math.round(fund.purchase_limit) + '元';
             } else if (fund.can_purchase === false) {
                 limitEl.textContent = '暂停申购';
             } else {
@@ -1996,6 +2044,10 @@ class LofFundMonitor {
             html += '<div class="arb-tooltip-row arb-tooltip-profit"><span>不建议操作</span><span class="arb-neg">无正收益机会</span></div>';
         }
 
+        var isBoundary = dataIdx === 0 || dataIdx === chartData.length - 1;
+        if (isBoundary) {
+            html += '<div class="arb-tooltip-boundary">ⓘ 边界日期：后续交易日数据不足，套利模拟仅供参考</div>';
+        }
         html += '<div class="arb-tooltip-disclaimer">所有预估收益为理论计算结果，不产生任何收益保证</div>';
         el.innerHTML = html;
         el.style.display = 'block';
