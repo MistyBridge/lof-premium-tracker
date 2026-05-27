@@ -1209,17 +1209,17 @@ class LofFundMonitor {
         document.getElementById('kpiCardEditor').addEventListener('click', function (e) { if (e.target === e.currentTarget) self._closeKpiCardEditor(); });
         document.getElementById('kceApplyBtn').addEventListener('click', function () { self._applyKpiPrefs(); self._closeKpiCardEditor(); });
         document.getElementById('kceResetBtn').addEventListener('click', function () { localStorage.removeItem(KPI_PREFS_KEY); self._buildKpiCardEditorList(); });
-    },
+    }
 
     _openKpiCardEditor() {
         document.getElementById('kpiCardEditor').style.display = 'flex';
         this._buildKpiCardEditorList();
-    },
+    }
 
     _closeKpiCardEditor() {
         document.getElementById('kpiCardEditor').style.display = 'none';
         if (this._kpiSortable) { this._kpiSortable.destroy(); this._kpiSortable = null; }
-    },
+    }
 
     _buildKpiCardEditorList() {
         var list = document.getElementById('kpiCardEditorList');
@@ -1264,11 +1264,11 @@ class LofFundMonitor {
                 }
             });
         }
-    },
+    }
 
     _applyKpiPrefs() {
         this._renderKpiCards();
-    },
+    }
 
     _renderKpiCards() {
         if (typeof getActiveKpiIds !== 'function') return;
@@ -1283,7 +1283,7 @@ class LofFundMonitor {
                 item.classList.remove('fd-kpi-hidden');
             }
         });
-    },
+    }
 
     _buildColumnEditorList() {
         var list = document.getElementById('columnEditorList');
