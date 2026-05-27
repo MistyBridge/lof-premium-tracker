@@ -1207,11 +1207,14 @@ class LofFundMonitor {
     // ── KPI 卡片编辑器 ──
     _initKpiCardEditor() {
         var self = this;
+        this._kpiEditorView = 'active';
         document.getElementById('fdKpiConfigBtn').addEventListener('click', function (e) { e.stopPropagation(); self._openKpiCardEditor(); });
         document.getElementById('kceCloseBtn').addEventListener('click', function () { self._closeKpiCardEditor(); });
         document.getElementById('kpiCardEditor').addEventListener('click', function (e) { if (e.target === e.currentTarget) self._closeKpiCardEditor(); });
         document.getElementById('kceApplyBtn').addEventListener('click', function () { self._applyKpiPrefs(); self._closeKpiCardEditor(); });
-        document.getElementById('kceResetBtn').addEventListener('click', function () { localStorage.removeItem(KPI_PREFS_KEY); self._buildKpiCardEditorList(); });
+        document.getElementById('kceResetBtn').addEventListener('click', function () { resetKpiPrefs(); self._buildKpiCardEditorList(); });
+        document.getElementById('kceLibBtn').addEventListener('click', function () { self._kpiEditorView = (self._kpiEditorView === 'library') ? 'active' : 'library'; self._buildKpiCardEditorList(); });
+        document.getElementById('kcePresetsBtn').addEventListener('click', function () { self._kpiEditorView = (self._kpiEditorView === 'presets') ? 'active' : 'presets'; self._buildKpiCardEditorList(); });
     }
 
     _openKpiCardEditor() {
