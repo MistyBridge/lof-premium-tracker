@@ -214,6 +214,8 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
         "can_purchase": fund.get("can_purchase"),  # 是否可申购（None=未知）
         "data_date": fund.get("_history_date"),     # 数据日期（历史回填时有值）
+        "turnover_rate": fund.get("turnover_rate"),            # 换手率（%）
+        "on_exchange_shares": fund.get("on_exchange_shares"),  # 场内份额（份）
         # ── 推导字段 ──
         "change_amount": round(change_pct / 100 * price, 4) if (price and price > 0) else None,
     }

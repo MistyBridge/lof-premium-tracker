@@ -20,6 +20,8 @@ var KPI_CARD_REGISTRY = [
     { id: 'fdSuspended',      label: '停牌状态',     defaultVisible: false, critical: false },
     { id: 'fdPurchaseFee',    label: '申购费率',     defaultVisible: false, critical: false },
     { id: 'fdDataDate',       label: '数据日期',     defaultVisible: false, critical: false },
+    { id: 'fdTurnoverRate',   label: '换手率',       defaultVisible: false, critical: false },
+    { id: 'fdOnExchangeShares',label: '场内份额',    defaultVisible: false, critical: false },
 ];
 
 var KPI_PREFS_KEY = 'lof_kpi_card_prefs_v1';
