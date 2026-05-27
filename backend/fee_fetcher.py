@@ -168,6 +168,13 @@ def fetch_fees_batch(codes: list, concurrency: int = 10) -> Dict[str, Dict[str, 
     Uses concurrent threads for speed.
     Returns: {code: {purchase_fee_rate, redemption_fee_rate, purchase_limit}}
     """
+    # 每次刷新时清除旧缓存，确保新数据被完整重建
+    if os.path.exists(_CACHE_PATH):
+        try:
+            os.remove(_CACHE_PATH)
+        except Exception:
+            pass
+
     result: Dict[str, Dict[str, Any]] = {}
     lock = threading.Lock()
     sem = threading.Semaphore(concurrency)

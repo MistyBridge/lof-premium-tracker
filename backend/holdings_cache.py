@@ -102,10 +102,10 @@ def get_holdings(code: str) -> dict | None:
 def refresh_for_funds(funds: dict) -> int:
     """
     后台定时刷新：为符合条件的基金预抓取持仓数据
-    funds: {code: fund_dict}
-    返回抓取数量
+    每次刷新前清除旧缓存
     """
     global _cache, _last_refresh
+    _cache = {}
     fetched = 0
     now = time.time()
 
@@ -117,11 +117,6 @@ def refresh_for_funds(funds: dict) -> int:
             continue
         amount = fund.get("amount") or 0
         if amount < 1_000_000:
-            continue
-
-        # 检查缓存：24小时内不重复抓取
-        existing = _cache.get(code)
-        if existing and existing.get("updated_at", 0) > now - 86400:
             continue
 
         data = _fetch_raw(code)
