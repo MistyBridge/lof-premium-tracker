@@ -21,6 +21,8 @@ const COLUMN_REGISTRY = [
     { id: 'purchase_fee_rate',  label: '申购费率',    width: 110, defaultVisible: false, frozen: false, sortable: false, sortField: null },
     { id: 'data_date',          label: '数据日期',    width: 129, defaultVisible: false, frozen: false, sortable: false, sortField: null },
     { id: 'holdings',           label: '十大持仓',    width: 103, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'turnover_rate',      label: '换手率',      width: 103, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'on_exchange_shares', label: '场内份额',    width: 123, defaultVisible: false, frozen: false, sortable: false, sortField: null },
 ];
 if (typeof window !== 'undefined') { window.COLUMN_REGISTRY = COLUMN_REGISTRY; }
 

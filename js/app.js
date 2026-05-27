@@ -504,6 +504,10 @@ class LofFundMonitor {
                 return '<td class="col-data-date">' + (fund.data_date || '-') + '</td>';
             case 'holdings':
                 return '<td class="col-holdings"><button class="btn-holdings" data-code="' + fund.code + '">点击查看</button></td>';
+            case 'turnover_rate':
+                return '<td class="col-turnover">' + (fund.turnover_rate != null ? fund.turnover_rate.toFixed(2) + '%' : '--') + '</td>';
+            case 'on_exchange_shares':
+                return '<td class="col-shares">' + (fund.on_exchange_shares != null ? (fund.on_exchange_shares / 10000).toFixed(2) + '万份' : '--') + '</td>';
             default:
                 return '<td class="col-unknown">--</td>';
         }
@@ -1960,6 +1964,9 @@ class LofFundMonitor {
         setVal('fdSuspended', fund.is_suspended ? '停牌' : '正常');
         setVal('fdPurchaseFee', fund.purchase_fee_rate != null ? fund.purchase_fee_rate.toFixed(2) + '%' : '--');
         setVal('fdDataDate', fund.data_date || '-');
+        setVal('fdTurnoverRate', fund.turnover_rate != null ? fund.turnover_rate.toFixed(2) + '%' : '--');
+        var shares = fund.on_exchange_shares;
+        setVal('fdOnExchangeShares', shares != null ? (shares / 10000).toFixed(2) + '万份' : '--');
 
         this._detailEstProfit = est;
         this._detailFundCode = fund.code;
