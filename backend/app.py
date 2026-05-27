@@ -559,12 +559,23 @@ def fund_holdings(code):
         html = resp.text
 
         import re
+        # 提取 JS 变量中的 HTML 内容
+        m_js = re.search(r'content:"(.*?)"\s*\}', html, re.DOTALL)
+        if not m_js:
+            return err_resp("解析持仓数据失败", code=500, status=500)
+        content = m_js.group(1).replace('\\"', '"').replace('\\/', '/')
+
+        # 只在 tbody 内解析
+        tbody_match = re.search(r'<tbody>(.*?)</tbody>', content, re.DOTALL)
+        if not tbody_match:
+            return err_resp("未找到持仓表格", code=500, status=500)
+
         rows = []
-        for m in re.finditer(r'<tr>(.*?)</tr>', html, re.DOTALL):
+        for m in re.finditer(r'<tr>(.*?)</tr>', tbody_match.group(1), re.DOTALL):
             cells = re.findall(r'<td[^>]*>(.*?)</td>', m.group(1), re.DOTALL)
             if len(cells) < 9:
                 continue
-            # cells: [0]=rank, [1]=code, [2]=name, [3]=price, [4]=change%, [5]=股吧行情, [6]=占净值比, [7]=持股数, [8]=持仓市值
+            # cells: [0]=序号,[1]=代码,[2]=名称,[3]=现价,[4]=涨跌幅,[5]=股吧行情,[6]=占净值比例,[7]=持股数(万股),[8]=持仓市值(万元)
             rank = re.sub(r'<[^>]+>', '', cells[0]).strip()
             if not rank.isdigit():
                 continue
