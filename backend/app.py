@@ -221,8 +221,8 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
     if detail:
         result.update({
             "prev_nav": fund.get("prev_nav"),        # 昨日净值
-            "volume_w": round(fund.get("volume", 0) / 10000, 2),  # 成交量（万手）
-            "amount_w": round(fund.get("amount", 0) / 10000, 2),   # 成交额（万元）
+            "volume_w": round((fund.get("volume") or 0) / 10000, 2),  # 成交量（万手）
+            "amount_w": round((fund.get("amount") or 0) / 10000, 2),   # 成交额（万元）
         })
 
     return result
