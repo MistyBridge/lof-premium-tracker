@@ -1954,6 +1954,12 @@ class LofFundMonitor {
         }
 
         setVal('fdNavDate', fund.nav_date || '-');
+        // 新增字段
+        setVal('fdVolume', fund.volume != null ? (fund.volume / 10000).toFixed(2) + '万手' : '--');
+        setVal('fdChangeAmount', fund.change_amount != null ? fund.change_amount.toFixed(4) : '--');
+        setVal('fdSuspended', fund.is_suspended ? '停牌' : '正常');
+        setVal('fdPurchaseFee', fund.purchase_fee_rate != null ? fund.purchase_fee_rate.toFixed(2) + '%' : '--');
+        setVal('fdDataDate', fund.data_date || '-');
 
         this._detailEstProfit = est;
         this._detailFundCode = fund.code;

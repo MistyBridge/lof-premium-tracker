@@ -12,9 +12,14 @@ var KPI_CARD_REGISTRY = [
     { id: 'fdAmount',         label: '成交额',       defaultVisible: true,  critical: false },
     { id: 'fdEstProfitRate',  label: '预计收益率',   defaultVisible: true,  critical: false },
     { id: 'fdEstProfitAmount',label: '预计收益额',   defaultVisible: true,  critical: false },
-    { id: 'fdStatus',         label: '状态',         defaultVisible: true,  critical: false },
+    { id: 'fdStatus',         label: '状态',         defaultVisible: false,  critical: false },
     { id: 'fdPurchaseLimit',  label: '申购限额',     defaultVisible: true,  critical: false },
     { id: 'fdNavDate',        label: '净值日期',     defaultVisible: true,  critical: false },
+    { id: 'fdVolume',         label: '成交量',       defaultVisible: false, critical: false },
+    { id: 'fdChangeAmount',   label: '涨跌额',       defaultVisible: false, critical: false },
+    { id: 'fdSuspended',      label: '停牌状态',     defaultVisible: false, critical: false },
+    { id: 'fdPurchaseFee',    label: '申购费率',     defaultVisible: false, critical: false },
+    { id: 'fdDataDate',       label: '数据日期',     defaultVisible: false, critical: false },
 ];
 
 var KPI_PREFS_KEY = 'lof_kpi_card_prefs_v1';
