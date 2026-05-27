@@ -561,7 +561,7 @@ def fund_holdings(code):
         import re
         import re
         # 提取 JS 变量中的 HTML 内容: var apidata = { content: "..." }
-        m_js = re.search(r'content\s*:\s*"(.*?)"\s*\}', html, re.DOTALL)
+        m_js = re.search(r'content:"(.*)"\s*\}', html, re.DOTALL)
         if not m_js:
             return err_resp("解析持仓数据失败", code=500, status=500)
         content = m_js.group(1).replace('\\"', '"').replace('\\/', '/')
