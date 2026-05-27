@@ -468,7 +468,43 @@ class LegacySource(LOFDataSource):
             except Exception as ex:
                 logger.warning("SZ qt batch %d failed: %s", i // BATCH + 1, ex)
             time.sleep(0.1)
+
+        # 补充 push2 f18 换手率（腾讯 qt 不支持）
+        self._enrich_sz_turnover(result)
         return result
+
+    def _enrich_sz_turnover(self, funds: Dict[str, Dict[str, Any]]) -> None:
+        """从 push2 获取 SZ LOF 的 f18 换手率，补充到场内份额"""
+        if not funds:
+            return
+        try:
+            # 构造 push2 请求，获取所有 SZ LOF 的 f18
+            codes_str = ",".join(funds.keys())
+            url = (
+                "https://push2delay.eastmoney.com/api/qt/clist/get"
+                f"?pn=1&pz={len(funds)}&po=1&np=1"
+                f"&ut=bd1d9ddb04089700cf9c27f6f7426281"
+                f"&fltt=2&invt=2&fid=f3"
+                f"&fs=m:0+t:9"  # 深交所
+                f"&fields=f12,f5,f18"
+            )
+            resp = self._sess().get(url, headers=_EM_HEADERS, timeout=Config.REQUEST_TIMEOUT)
+            resp.encoding = "utf-8"
+            data = _jparse(resp.text)
+            items = (data.get("data") or {}).get("diff") or []
+            for item in items:
+                code = str(item.get("f12", "")).strip()
+                if code not in funds:
+                    continue
+                turnover = _safe_float(item.get("f18"), None)
+                vol = int(_safe_float(item.get("f5"), 0))
+                shares = None
+                if turnover and turnover > 0 and vol > 0:
+                    shares = int(vol * 10000 / turnover)
+                funds[code]["turnover_rate"] = turnover if turnover else None
+                funds[code]["on_exchange_shares"] = shares
+        except Exception as ex:
+            logger.warning("SZ turnover enrichment failed: %s", ex)
 
     # ── NAV Fetching ────────────────────────────────
 
