@@ -2044,13 +2044,13 @@ class LofFundMonitor {
                         _key: 'price', label: '场内价格', yAxisID: 'yPrice',
                         data: prices, borderColor: '#ff7a45', backgroundColor: 'rgba(255,122,69,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#ff7a45', tension: 0.2, fill: false,
-                        hidden: isPremMode,
+                        hidden: isPremMode || isTurnoverMode,
                     },
                     {
                         _key: 'nav', label: '场外净值', yAxisID: 'yPrice',
                         data: navs, borderColor: '#40a9ff', backgroundColor: 'rgba(64,169,255,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#40a9ff', tension: 0.2, fill: false,
-                        hidden: isPremMode,
+                        hidden: isPremMode || isTurnoverMode,
                     },
                     {
                         _key: 'premium', label: '溢价率', yAxisID: 'yPrem',
