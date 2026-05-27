@@ -560,13 +560,17 @@ def fund_holdings(code):
 
         import re
         import re
-        # 提取 JS 变量中的 HTML 内容: var apidata = { content: "..." }
-        m_js = re.search(r'content:"(.*)"\s*\}', html, re.DOTALL)
-        if not m_js:
+        # 提取 JS 变量中的 HTML: var apidata = { content: "...", arryear: ... }
+        start = html.find('content:"')
+        if start < 0:
             return err_resp("解析持仓数据失败", code=500, status=500)
-        content = m_js.group(1).replace('\\"', '"').replace('\\/', '/')
+        start += 9  # len('content:"')
+        end = html.find('",', start)
+        if end < 0:
+            return err_resp("解析持仓数据失败", code=500, status=500)
+        content = html[start:end].replace('\\"', '"').replace('\\/', '/')
 
-        # 直接在 content 中找所有 tr，跳过表头
+        # 在 content 中解析表格行
         rows = []
         for m in re.finditer(r'<tr>(.*?)</tr>', content, re.DOTALL):
             cells = re.findall(r'<td[^>]*>(.*?)</td>', m.group(1), re.DOTALL)
