@@ -299,6 +299,9 @@ class LOFDataFetcher:
                 fund["purchase_fee_rate"] = fee.get("purchase_fee_rate")
                 fund["redemption_fee_rate"] = fee.get("redemption_fee_rate")
                 fund["purchase_limit"] = fee.get("purchase_limit")
+                # jjfl 申购状态作为 fallback（已有 ak_share 数据时优先用 ak_share）
+                if fund.get("can_purchase") is None:
+                    fund["can_purchase"] = fee.get("can_purchase")
 
             # 更新缓存
             with self._lock:
