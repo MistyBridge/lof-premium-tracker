@@ -209,12 +209,15 @@
                 <button class="modal-close" id="kceCloseBtn">&times;</button>
             </div>
             <div class="modal-body" style="padding:0">
-                <div class="ce-hint"><span>拖动 ≡ 调整顺序 · 勾选控制显隐</span></div>
+                <div class="ce-hint"><span id="kceHint">拖动 ≡ 调整顺序</span><button class="ce-lib-btn" id="kceLibBtn">表头库</button></div>
                 <div class="ce-list" id="kpiCardEditorList"></div>
             </div>
-            <div class="modal-footer" style="justify-content:space-between">
-                <button class="btn-secondary" id="kceResetBtn">恢复默认</button>
-                <button class="btn-primary" id="kceApplyBtn">应用</button>
+            <div class="modal-footer ce-footer-row">
+                <button class="btn-secondary" id="kcePresetsBtn">存档</button>
+                <div class="ce-footer-right">
+                    <button class="btn-secondary" id="kceResetBtn">恢复默认</button>
+                    <button class="btn-primary" id="kceApplyBtn">应用</button>
+                </div>
             </div>
         </div>
     </div>
