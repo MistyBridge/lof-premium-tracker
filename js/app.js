@@ -1670,27 +1670,17 @@ class LofFundMonitor {
         body.innerHTML = '';
         var fund = this.funds.find(function (f) { return f.code === code; });
         title.textContent = (fund ? fund.code + ' ' + fund.name : code) + ' — 十大持仓';
-        var url = 'https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=' + code + '&topline=10';
-        fetch(url).then(function (r) { return r.text(); }).then(function (html) {
-            var rows = [];
-            var trRegex = /<tr>(.*?)<\/tr>/g;
-            var m;
-            while ((m = trRegex.exec(html)) !== null) {
-                var cells = [];
-                var tdRegex = /<td[^>]*>(.*?)<\/td>/g;
-                var cm;
-                while ((cm = tdRegex.exec(m[1])) !== null) {
-                    var clean = cm[1].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, '').replace(/\s+/g, ' ').trim();
-                    cells.push(clean);
-                }
-                if (cells.length >= 6) rows.push(cells);
-            }
-            if (rows.length > 0) {
-                body.innerHTML = rows.map(function (r) {
-                    return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[5] + '</td><td>' + r[6] + '</td><td style="text-align:right">' + r[7] + '</td></tr>';
+        var url = api.baseUrl + '/api/funds/' + code + '/holdings';
+        fetch(url).then(function (r) { return r.json(); }).then(function (result) {
+            var data = result.data;
+            if (!data.available) {
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">' + data.reason + '</td></tr>';
+                source.textContent = '仅对不停牌、可申购且成交额大于100万的基金提供持仓明细';
+            } else if (data.holdings && data.holdings.length > 0) {
+                body.innerHTML = data.holdings.map(function (h) {
+                    return '<tr><td>' + h.rank + '</td><td>' + h.code + '</td><td>' + h.name + '</td><td>' + h.pct + '</td><td>' + h.shares + '</td><td style="text-align:right">' + h.market_value + '</td></tr>';
                 }).join('');
-                var dateMatch = html.match(/截止至[：:]?\s*\d{4}-\d{2}-\d{2}/) || html.match(/\d{4}年\d季度/);
-                source.textContent = '数据来源：天天基金 | ' + (dateMatch ? dateMatch[0] : '季度更新');
+                source.textContent = '数据来源：天天基金 | ' + (data.quarter || '季度更新');
             } else {
                 body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">暂无持仓数据</td></tr>';
             }
