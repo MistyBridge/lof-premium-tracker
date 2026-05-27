@@ -2131,7 +2131,28 @@ class LofFundMonitor {
 
         const mode = this._detailMode || 'price,nav';
         const isPrem = mode === 'premium';
+        const isShares = mode === 'turnover';
         const date = point.date;
+
+        // 场内份额模式：显示份额 + 换手率，不显示套利模拟
+        if (isShares) {
+            let html = '<div class="arb-tooltip-date">' + date + '</div>';
+            var shVal = point.on_exchange_shares;
+            html += '<div class="arb-tooltip-row"><span>场内份额</span><span>' + (shVal != null ? shVal.toFixed(2) + '万份' : '--') + '</span></div>';
+            // 近似换手率：成交额/价格/份额
+            var price = point.price, amount = point.amount;
+            if (price && amount && shVal && price > 0 && shVal > 0) {
+                var estVol = amount / price;
+                var estTurnover = (estVol / (shVal * 10000) * 100);
+                html += '<div class="arb-tooltip-row"><span>换手率(估)</span><span>' + estTurnover.toFixed(2) + '%</span></div>';
+            } else {
+                html += '<div class="arb-tooltip-row"><span>换手率(估)</span><span>--</span></div>';
+            }
+            html += '<div class="arb-tooltip-disclaimer">份额数据基于当前值，实际每季度更新</div>';
+            el.innerHTML = html;
+            el.style.display = 'block';
+            return;
+        }
 
         // Get settings
         const maxCap = this.maxCapital || 1000;
