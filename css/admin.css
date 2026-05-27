@@ -1,0 +1,33 @@
+/* 管理员面板 */
+.admin-container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+.admin-back { color: var(--primary); text-decoration: none; font-size: 0.9rem; }
+.admin-title { font-size: 1.3rem; font-weight: 600; margin: 16px 0; color: var(--text); }
+.admin-toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.admin-search { flex: 1; min-width: 200px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: var(--card); color: var(--text); }
+.admin-filter { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; background: var(--card); color: var(--text); }
+.admin-search:focus, .admin-filter:focus { outline: none; border-color: var(--primary); }
+
+.admin-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.admin-table th { padding: 12px 14px; font-size: 0.82rem; font-weight: 600; color: var(--text2); text-align: left; border-bottom: 2px solid var(--border); background: var(--bg); }
+.admin-table td { padding: 10px 14px; font-size: 0.88rem; color: var(--text); border-bottom: 1px solid var(--border); }
+.admin-table tbody tr:hover { background: var(--bg); }
+.admin-empty { text-align: center; padding: 40px; color: var(--text2); }
+
+.admin-badge { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; }
+.admin-badge-admin { background: #e8f0fe; color: #1a73e8; }
+.admin-badge-user { background: #f0f0f0; color: #666; }
+.admin-badge-active { background: #e6f4ea; color: #137333; }
+.admin-badge-banned { background: #fce8e6; color: #c5221f; }
+.dark-mode .admin-badge-user { background: #2a2a2a; color: #999; }
+.dark-mode .admin-badge-admin { background: #1a2a4a; color: #5b8def; }
+.dark-mode .admin-badge-active { background: #1a2a1a; color: #4caf84; }
+.dark-mode .admin-badge-banned { background: #2a1a1a; color: #e88; }
+
+.admin-action-btn { padding: 4px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem; cursor: pointer; margin-right: 4px; background: var(--card); color: var(--text); }
+.admin-action-btn:hover { background: var(--bg); }
+.admin-action-btn.ban:hover { border-color: #c5221f; color: #c5221f; }
+.admin-action-btn.unban:hover { border-color: #137333; color: #137333; }
+.admin-action-btn.promote:hover { border-color: #1a73e8; color: #1a73e8; }
+
+.admin-batch { display: flex; gap: 10px; margin-top: 16px; align-items: center; flex-wrap: wrap; }
+.admin-page-info { font-size: 0.85rem; color: var(--text2); margin-left: auto; }
