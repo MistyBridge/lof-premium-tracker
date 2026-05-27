@@ -32,7 +32,36 @@ function getActiveKpiIds() {
             active.push(c.id);
         }
     });
-    // Sort by user order
     active.sort(function (a, b) { return order.indexOf(a) - order.indexOf(b); });
     return active;
+}
+
+function resetKpiPrefs() { localStorage.removeItem(KPI_PREFS_KEY); }
+
+// 存档系统
+var KPI_PRESETS_KEY = 'lof_kpi_card_presets_v1';
+function loadKpiPresets() { try { return JSON.parse(localStorage.getItem(KPI_PRESETS_KEY)) || []; } catch (e) { return []; } }
+function saveKpiPresets(presets) { localStorage.setItem(KPI_PRESETS_KEY, JSON.stringify(presets)); }
+function saveCurrentAsKpiPreset(name) {
+    var presets = loadKpiPresets();
+    presets.push({ name: name, prefs: loadKpiPrefs() });
+    saveKpiPresets(presets);
+}
+function applyKpiPreset(index) {
+    var presets = loadKpiPresets();
+    if (index >= 0 && index < presets.length) {
+        saveKpiPrefs(presets[index].prefs);
+    }
+}
+function overwriteKpiPreset(index) {
+    var presets = loadKpiPresets();
+    if (index >= 0 && index < presets.length) {
+        presets[index].prefs = loadKpiPrefs();
+        saveKpiPresets(presets);
+    }
+}
+function deleteKpiPreset(index) {
+    var presets = loadKpiPresets();
+    presets.splice(index, 1);
+    saveKpiPresets(presets);
 }
