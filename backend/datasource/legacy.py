@@ -356,11 +356,12 @@ class LegacySource(LOFDataSource):
                     continue
                 vol = int(_safe_float(item.get("f5"), 0))
                 turnover = _safe_float(item.get("f18"), None)
-                # 场内份额(份) = 成交量(手)×100 / 换手率(%) × 100%
-                # 换手率 = 成交量 / 场内份额 × 100，所以 场内份额 = 成交量 / 换手率 × 100
+                # 场内份额(份) = 成交量(手)×100 / 换手率(%)
+                # 换手率 = 成交量(份) / 场内份额 × 100
+                # 场内份额 = 成交量(手)×100 / (换手率/100) = 成交量×10000 / 换手率
                 shares = None
                 if turnover and turnover > 0 and vol > 0:
-                    shares = int(vol / (turnover / 100))
+                    shares = int(vol * 10000 / turnover)
                 result[code] = {
                     "code": code.zfill(6),
                     "name": str(item.get("f14", "")).strip(),
