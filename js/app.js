@@ -1232,46 +1232,54 @@ class LofFundMonitor {
         var list = document.getElementById('kpiCardEditorList');
         if (!list || typeof KPI_CARD_REGISTRY === 'undefined') return;
         if (this._kpiSortable) { this._kpiSortable.destroy(); this._kpiSortable = null; }
-        var activeIds = getActiveKpiIds();
+        var self = this;
+        var isActive = this._kpiEditorView !== 'library' && this._kpiEditorView !== 'presets';
+        var libBtn = document.getElementById('kceLibBtn');
+        if (libBtn) { libBtn.style.display = (self._kpiEditorView === 'presets') ? 'none' : ''; libBtn.textContent = isActive ? '表头库' : '← 返回可见列'; libBtn.classList.toggle('active', !isActive); }
+        var presetsBtn = document.getElementById('kcePresetsBtn');
+        if (presetsBtn) { presetsBtn.textContent = (self._kpiEditorView === 'presets') ? '返回可见列' : '存档'; presetsBtn.classList.toggle('active', self._kpiEditorView === 'presets'); }
+        var hint = document.getElementById('kceHint');
+        if (hint) hint.textContent = (self._kpiEditorView === 'presets') ? '表头存档管理' : (isActive ? '拖动 ≡ 调整顺序' : '勾选控制显隐');
 
         var html = '';
-        KPI_CARD_REGISTRY.forEach(function (c) {
-            var checked = activeIds.indexOf(c.id) >= 0;
-            var disabled = c.critical ? ' disabled' : '';
-            html += '<div class="ce-item" data-card-id="' + c.id + '"' + (c.critical ? ' style="opacity:0.55"' : '') + '>';
-            html += '<span class="drag-handle">&#9776;</span>';
-            html += '<input type="checkbox" ' + (checked ? 'checked' : '') + disabled + ' data-card-id="' + c.id + '">';
-            html += '<span class="ce-item-label">' + c.label + (c.critical ? ' (必选)' : '') + '</span>';
-            html += '</div>';
-        });
+        if (self._kpiEditorView === 'presets') {
+            var presets = (typeof loadKpiPresets === 'function') ? loadKpiPresets() : [];
+            if (presets.length === 0) { html += '<div class="ce-preset-empty">暂无存档<br>在下方输入名称保存当前表头配置</div>'; }
+            else { presets.forEach(function (p, i) { html += '<div class="ce-preset-item"><span class="ce-preset-name">' + p.name + '</span><button class="ce-preset-btn apply" data-idx="' + i + '">应用</button><button class="ce-preset-btn overwrite" data-idx="' + i + '">存档</button><button class="ce-preset-btn delete" data-idx="' + i + '">删除</button></div>'; }); }
+            html += '<div class="ce-preset-new"><input type="text" id="kcePresetNameInput" placeholder="输入存档名称..."><button class="btn-primary" id="kcePresetSaveBtn" style="padding:6px 14px;font-size:0.82rem">保存为新存档</button></div>';
+        } else if (isActive) {
+            var activeIds = getActiveKpiIds();
+            var prefs = loadKpiPrefs();
+            var order = prefs.order || KPI_CARD_REGISTRY.map(function (c) { return c.id; });
+            var criticalCards = KPI_CARD_REGISTRY.filter(function (c) { return c.critical; });
+            criticalCards.forEach(function (col) { html += '<div class="ce-item" data-card-id="' + col.id + '" style="opacity:0.55"><span class="drag-handle" style="visibility:hidden">&#9776;</span><span class="ce-item-label">' + col.label + ' (必选)</span></div>'; });
+            var activeCols = KPI_CARD_REGISTRY.filter(function (c) { return activeIds.indexOf(c.id) >= 0 && !c.critical; });
+            activeCols.sort(function (a, b) { return order.indexOf(a.id) - order.indexOf(b.id); });
+            activeCols.forEach(function (col, idx) { html += '<div class="ce-item" data-card-id="' + col.id + '"><span class="drag-handle">&#9776;</span><span class="ce-item-label">' + col.label + '</span><input class="ce-rank" type="number" value="' + (idx + 1) + '" data-card-id="' + col.id + '"><button class="ce-trash" title="移除此列">&#128465;</button></div>'; });
+        } else {
+            var checkedCols = [], uncheckedCols = [];
+            KPI_CARD_REGISTRY.filter(function (c) { return !c.critical; }).forEach(function (col) { var prefs = loadKpiPrefs(); var v = prefs.visible || {}; var checked = (col.id in v) ? v[col.id] : col.defaultVisible; (checked ? checkedCols : uncheckedCols).push(col); });
+            html += '<div class="ce-lib-panels"><div class="ce-lib-panel"><div class="ce-lib-panel-title">已显示</div>'; checkedCols.forEach(function (col) { html += '<div class="ce-item" data-card-id="' + col.id + '"><input type="checkbox" checked data-card-id="' + col.id + '"><span class="ce-item-label">' + col.label + '</span></div>'; }); html += '</div>';
+            html += '<div class="ce-lib-panel"><div class="ce-lib-panel-title">已隐藏</div>'; uncheckedCols.forEach(function (col) { html += '<div class="ce-item" data-card-id="' + col.id + '" style="opacity:0.45"><input type="checkbox" data-card-id="' + col.id + '"><span class="ce-item-label">' + col.label + '</span></div>'; }); html += '</div></div>';
+        }
         list.innerHTML = html;
 
-        // Checkbox change
-        var self = this;
-        list.querySelectorAll('input[type="checkbox"]:not([disabled])').forEach(function (cb) {
-            cb.addEventListener('change', function () {
-                var prefs = loadKpiPrefs();
-                prefs.visible = prefs.visible || {};
-                prefs.visible[this.dataset.cardId] = this.checked;
-                saveKpiPrefs(prefs);
-            });
-        });
-
-        // SortableJS drag
-        if (typeof Sortable !== 'undefined') {
-            this._kpiSortable = new Sortable(list, {
-                handle: '.drag-handle',
-                animation: 150,
-                ghostClass: 'ce-ghost',
-                onEnd: function () {
-                    var newOrder = Array.from(list.querySelectorAll('.ce-item')).map(function (el) { return el.dataset.cardId; });
-                    var prefs = loadKpiPrefs();
-                    prefs.order = newOrder;
-                    saveKpiPrefs(prefs);
-                }
-            });
+        if (self._kpiEditorView === 'presets') {
+            list.querySelectorAll('.ce-preset-btn.apply').forEach(function (btn) { btn.addEventListener('click', function () { var idx = parseInt(this.dataset.idx); if (typeof applyKpiPreset === 'function') applyKpiPreset(idx); self._kpiEditorView = 'active'; self._applyKpiPrefs(); self._closeKpiCardEditor(); }); });
+            list.querySelectorAll('.ce-preset-btn.overwrite').forEach(function (btn) { btn.addEventListener('click', function () { var idx = parseInt(this.dataset.idx); if (typeof overwriteKpiPreset === 'function') overwriteKpiPreset(idx); if (typeof self.showToast === 'function') self.showToast('已覆盖存档'); self._buildKpiCardEditorList(); }); });
+            list.querySelectorAll('.ce-preset-btn.delete').forEach(function (btn) { btn.addEventListener('click', function () { var idx = parseInt(this.dataset.idx); if (typeof deleteKpiPreset === 'function') deleteKpiPreset(idx); self._buildKpiCardEditorList(); }); });
+            var sb = document.getElementById('kcePresetSaveBtn'), ni = document.getElementById('kcePresetNameInput');
+            if (sb && ni) sb.addEventListener('click', function () { var n = ni.value.trim(); if (!n) return; if (typeof saveCurrentAsKpiPreset === 'function') saveCurrentAsKpiPreset(n); if (typeof self.showToast === 'function') self.showToast('已保存: ' + n); self._buildKpiCardEditorList(); });
+        } else if (isActive) {
+            list.querySelectorAll('.ce-trash').forEach(function (btn) { btn.addEventListener('click', function (e) { e.stopPropagation(); var colId = this.closest('.ce-item').dataset.cardId; var prefs = loadKpiPrefs(); prefs.visible = prefs.visible || {}; prefs.visible[colId] = false; saveKpiPrefs(prefs); self._buildKpiCardEditorList(); }); });
+            list.querySelectorAll('.ce-rank').forEach(function (input) { input.addEventListener('click', function (e) { e.stopPropagation(); }); input.addEventListener('mousedown', function (e) { e.stopPropagation(); }); input.addEventListener('change', function () { var targetIdx = parseInt(this.value) - 1; var items = Array.from(list.querySelectorAll('.ce-item:not([style*="opacity"])')); var currentIdx = items.indexOf(this.closest('.ce-item')); if (isNaN(targetIdx) || targetIdx < 0 || targetIdx >= items.length || targetIdx === currentIdx) { this.value = currentIdx + 1; return; } var movingItem = items[currentIdx]; if (currentIdx < targetIdx) list.insertBefore(movingItem, items[targetIdx].nextSibling); else list.insertBefore(movingItem, items[targetIdx]); var newItems = list.querySelectorAll('.ce-item:not([style*="opacity"])'); newItems.forEach(function (item, i) { var ri = item.querySelector('.ce-rank'); if (ri) ri.value = i + 1; }); var newOrder = Array.from(list.querySelectorAll('.ce-item')).map(function (el) { return el.dataset.cardId; }); var prefs = loadKpiPrefs(); prefs.order = newOrder; saveKpiPrefs(prefs); }); });
+            if (typeof Sortable !== 'undefined') this._kpiSortable = new Sortable(list, { handle: '.drag-handle', animation: 150, ghostClass: 'ce-ghost', filter: '[style*="opacity"]', onEnd: function () { var newOrder = Array.from(list.querySelectorAll('.ce-item')).map(function (el) { return el.dataset.cardId; }); var prefs = loadKpiPrefs(); prefs.order = newOrder; saveKpiPrefs(prefs); } });
+        } else {
+            list.querySelectorAll('.ce-item').forEach(function (item) { item.addEventListener('click', function (e) { if (e.target.tagName === 'INPUT') return; var cb = item.querySelector('input[type="checkbox"]'); if (cb) { cb.checked = !cb.checked; cb.dispatchEvent(new Event('change', { bubbles: true })); } }); });
+            list.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.addEventListener('change', function () { var colId = cb.dataset.cardId; var prefs = loadKpiPrefs(); prefs.visible = prefs.visible || {}; prefs.visible[colId] = cb.checked; saveKpiPrefs(prefs); self._buildKpiCardEditorList(); }); });
         }
     }
+
 
     _applyKpiPrefs() {
         this._renderKpiCards();
