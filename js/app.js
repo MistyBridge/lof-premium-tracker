@@ -789,6 +789,7 @@ class LofFundMonitor {
         }
         localStorage.setItem('lof_darkMode', this.darkMode);
         this.applyDarkMode(true);
+        if (typeof SettingsSync !== 'undefined') SettingsSync.pushToCloud();
     }
 
     applyDarkMode(save) {
@@ -871,6 +872,7 @@ class LofFundMonitor {
         if (this.minAmount > 0) parts.push(`成交额≥${this.minAmount}万`);
         parts.push(`佣金万${this.commissionRate} 最低${this.commissionMin}元 最大投入${this.maxCapital}元`);
         this.showToast(parts.length ? '设置已应用：' + parts.join('，') : '设置已重置');
+        if (typeof SettingsSync !== 'undefined') SettingsSync.pushToCloud();
     }
 
     resetSettings() {
