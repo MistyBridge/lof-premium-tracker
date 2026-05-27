@@ -278,21 +278,15 @@ class LOFDataFetcher:
                     fund["can_purchase"] = None
 
             # Step 5: 费率数据
-            fee_cache = load_fee_cache()
-            cache_is_fresh = False
-            if fee_cache:
-                cached_count = len(set(fee_cache.keys()) & set(enriched.keys()))
-                if cached_count >= len(enriched) * 0.8:
-                    cache_is_fresh = True
-                    logger.info("Using fee cache: %d/%d funds", cached_count, len(enriched))
-
-            if not cache_is_fresh:
-                try:
-                    fee_data = fetch_fees_batch(list(enriched.keys()), concurrency=10)
-                    fee_cache.update(fee_data)
-                    save_fee_cache(fee_cache)
-                except Exception as ex:
-                    logger.warning("Fee batch fetch failed: %s", ex)
+            # 每次刷新都重新抓取，不使用磁盘缓存（数据稳定性优先）
+            fee_cache = {}
+            try:
+                fee_data = fetch_fees_batch(list(enriched.keys()), concurrency=10)
+                fee_cache = fee_data
+                save_fee_cache(fee_cache)
+            except Exception as ex:
+                logger.warning("Fee batch fetch failed: %s", ex)
+                fee_cache = load_fee_cache()
 
             for code, fund in enriched.items():
                 fee = fee_cache.get(code, {})
