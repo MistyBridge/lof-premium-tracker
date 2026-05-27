@@ -112,12 +112,15 @@ class LofFundMonitor {
     loadRankings() {}
 
     async loadFunds() {
+        // 防止并发加载（自动刷新可能在加载中再次触发）
+        if (this._loadingFunds) return;
+        this._loadingFunds = true;
         this.isLoading = true;
-        // Phase 1: 检查缓存，命中则立即渲染
         var self = this;
+        // Phase 1: 检查缓存，仅在首次加载时渲染缓存（避免旧缓存覆盖新数据）
         var cachedFunds = Cache.get('funds');
         var cachedMeta = Cache.get('fundsMeta');
-        if (cachedFunds && cachedFunds.length > 0) {
+        if (cachedFunds && cachedFunds.length > 0 && self.funds.length === 0) {
             self.funds = cachedFunds;
             self.applyFilters();
             self.renderTable();
@@ -162,6 +165,7 @@ class LofFundMonitor {
             self._softToast('刷新失败，显示缓存数据');
         } finally {
             self.isLoading = false;
+            self._loadingFunds = false;
         }
     }
 
