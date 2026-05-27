@@ -828,6 +828,7 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-kpi-item.fd-kpi-hidden { display: none; }
 .fd-kpi-config-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text2); padding: 0 4px; line-height: 1; }
 .fd-kpi-config-btn:hover { color: var(--primary); }
+#kpiCardEditor { z-index: 2000 !important; }
 
 .fd-profit-section {
     margin-top: 16px; background: linear-gradient(135deg, #f6f8fc, #eef2f7);

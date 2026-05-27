@@ -776,6 +776,9 @@ class LofFundMonitor {
                     e.target.closest('.btn-profit-info') || e.target.closest('.mc-profit-help') ||
                     e.target.closest('.mc-fav-btn')) return;
                 const code = (row || card).dataset.code;
+                // KPI 卡片编辑器打开时不触发详情
+                var kpiEditor = document.getElementById('kpiCardEditor');
+                if (kpiEditor && kpiEditor.style.display === 'flex') return;
                 if (code) this.showFundDetail(code);
             }
         });
@@ -1212,6 +1215,7 @@ class LofFundMonitor {
     }
 
     _openKpiCardEditor() {
+        this.closeFundDetail();
         document.getElementById('kpiCardEditor').style.display = 'flex';
         this._buildKpiCardEditorList();
     }
