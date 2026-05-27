@@ -9,4 +9,5 @@ baostock>=0.8.8
 tushare>=1.4.0
 chinese-calendar>=1.9.0
 flask-limiter>=3.5.0
+flask-limiter>=3.5.0
 structlog>=24.0.0
