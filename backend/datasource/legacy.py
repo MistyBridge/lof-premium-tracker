@@ -241,6 +241,9 @@ class LegacySource(LOFDataSource):
         got = len(all_prices)
         logger.info("Legacy: %d prices (SSE=%d, SZ=%d)", got, len(sse), len(sz))
 
+        # 统一补充 SZ turnover（push2 分页获取）
+        self._enrich_sz_turnover(all_prices)
+
         # Level 2-3: 新浪 → 网易 补缺
         all_codes = set(sse.keys()) | set(sz_codes)
         missing = [c for c in all_codes if c not in all_prices]
@@ -470,7 +473,6 @@ class LegacySource(LOFDataSource):
             time.sleep(0.1)
 
         # 补充 push2 f18 换手率（腾讯 qt 不支持）
-        self._enrich_sz_turnover(result)
         return result
 
     def _enrich_sz_turnover(self, funds: Dict[str, Dict[str, Any]]) -> None:
@@ -508,9 +510,11 @@ class LegacySource(LOFDataSource):
                         shares = int(vol * 10000 / turnover)
                     funds[code]["turnover_rate"] = turnover if turnover else None
                     funds[code]["on_exchange_shares"] = shares
+                    matched += 1
                 if len(seen) >= total:
                     break
                 time.sleep(0.2)
+            logger.info("SZ turnover enriched: %d matched of %d funds", matched, len(funds))
         except Exception as ex:
             logger.warning("SZ turnover enrichment failed: %s", ex)
 
