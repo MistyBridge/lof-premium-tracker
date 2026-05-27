@@ -1598,6 +1598,11 @@ class LofFundMonitor {
         localStorage.setItem('lof_favorites', JSON.stringify(favs));
         this._updateFavoriteStar(code);
         var isFav = idx < 0;
+        // 云端同步
+        if (typeof FavoritesSync !== 'undefined') {
+            if (isFav) FavoritesSync.addToCloud(code);
+            else FavoritesSync.removeFromCloud(code);
+        }
         // 同步更新表格行内星标
         var rowStar = document.querySelector('.row-star[data-code="' + code + '"]');
         if (rowStar) {

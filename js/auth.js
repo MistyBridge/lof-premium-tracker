@@ -165,6 +165,8 @@ var Auth = {
             }
             this._updateUI(res.data.user);
             this.close();
+            // 登录后同步收藏
+            if (typeof FavoritesSync !== 'undefined') FavoritesSync.pullAndMerge();
             location.hash = '#/account';
         } catch (e) {
             this._showError('authError', e.message || '登录失败');
@@ -233,6 +235,7 @@ var Auth = {
             var res = await window._sb.auth.getSession();
             if (res.data && res.data.session) {
                 this._updateUI(res.data.session.user);
+                if (typeof FavoritesSync !== 'undefined') FavoritesSync.pullAndMerge();
                 return;
             }
         } catch (e) { /* no session */ }
@@ -244,6 +247,7 @@ var Auth = {
                 var loginRes = await window._sb.auth.signInWithPassword({ email: savedEmail, password: savedPwd });
                 if (loginRes.data && loginRes.data.user) {
                     this._updateUI(loginRes.data.user);
+                    if (typeof FavoritesSync !== 'undefined') FavoritesSync.pullAndMerge();
                 }
             } catch (e) { /* auto-login failed */ }
         }

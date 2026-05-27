@@ -105,6 +105,15 @@ var AccountPage = {
                     ' · 上次登录：' + new Date(user.last_sign_in_at || createdAt).toLocaleDateString('zh-CN');
             }
 
+            // 收藏数量
+            var localFavs = JSON.parse(localStorage.getItem('lof_favorites') || '[]').length;
+            document.getElementById('accountSyncBtn').textContent = '同步收藏 (本地 ' + localFavs + ' 只)';
+            if (typeof FavoritesSync !== 'undefined') {
+                FavoritesSync.getCount().then(function (n) {
+                    document.getElementById('accountSyncBtn').textContent = '同步收藏 (本地 ' + localFavs + ' · 云端 ' + n + ' 只)';
+                });
+            }
+
             // Prefs
             document.getElementById('accountDarkMode').value = localStorage.getItem('lof_darkMode') || 'light';
         } catch (e) {
