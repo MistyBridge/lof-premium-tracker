@@ -51,6 +51,16 @@ var AccountPage = {
         var fileInput = document.getElementById('accountAvatarInput');
         if (fileInput) fileInput.addEventListener('change', function () { self._uploadAvatar(this.files[0]); });
 
+        // 收藏同步
+        var syncBtn = document.getElementById('accountSyncBtn');
+        if (syncBtn) {
+            syncBtn.disabled = false;
+            syncBtn.textContent = '同步收藏';
+            syncBtn.addEventListener('click', function () {
+                self._doFavSync();
+            });
+        }
+
         // 修改密码
         var chPwdBtn = document.getElementById('accountChPwdBtn');
         if (chPwdBtn) chPwdBtn.addEventListener('click', function () { self._openChPwd(); });
@@ -105,15 +115,7 @@ var AccountPage = {
                     ' · 上次登录：' + new Date(user.last_sign_in_at || createdAt).toLocaleDateString('zh-CN');
             }
 
-            // 收藏数量
-            var localFavs = JSON.parse(localStorage.getItem('lof_favorites') || '[]').length;
-            document.getElementById('accountSyncBtn').textContent = '同步收藏 (本地 ' + localFavs + ' 只)';
-            if (typeof FavoritesSync !== 'undefined') {
-                FavoritesSync.getCount().then(function (n) {
-                    document.getElementById('accountSyncBtn').textContent = '同步收藏 (本地 ' + localFavs + ' · 云端 ' + n + ' 只)';
-                });
-            }
-
+            this._updateFavCount();
             // Prefs
             document.getElementById('accountDarkMode').value = localStorage.getItem('lof_darkMode') || 'light';
         } catch (e) {
@@ -273,6 +275,31 @@ var AccountPage = {
             document.getElementById('confirmModal').style.display = 'none';
             if (callback) callback();
         };
+    },
+
+    _doFavSync: async function () {
+        var btn = document.getElementById('accountSyncBtn');
+        btn.disabled = true;
+        btn.textContent = '同步中...';
+        try {
+            await FavoritesSync.pullAndMerge();
+            this._updateFavCount();
+            btn.textContent = '同步完成 ✓';
+        } catch (e) {
+            btn.textContent = '同步失败';
+        }
+        setTimeout(function () { btn.disabled = false; this._updateFavCount(); }.bind(this), 2000);
+    },
+
+    _updateFavCount: function () {
+        var localFavs = JSON.parse(localStorage.getItem('lof_favorites') || '[]').length;
+        var btn = document.getElementById('accountSyncBtn');
+        btn.textContent = '同步收藏 (本地 ' + localFavs + ' 只)';
+        if (typeof FavoritesSync !== 'undefined') {
+            FavoritesSync.getCount().then(function (n) {
+                btn.textContent = '同步收藏 (本地 ' + localFavs + ' · 云端 ' + n + ' 只)';
+            });
+        }
     },
 
     _destroyAccount: function () {
