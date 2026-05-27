@@ -497,6 +497,8 @@ class LofFundMonitor {
                 return '<td class="col-purchase-fee">' + fee + '</td>';
             case 'data_date':
                 return '<td class="col-data-date">' + (fund.data_date || '-') + '</td>';
+            case 'holdings':
+                return '<td class="col-holdings"><button class="btn-holdings" data-code="' + fund.code + '">点击查看</button></td>';
             default:
                 return '<td class="col-unknown">--</td>';
         }
@@ -610,6 +612,11 @@ class LofFundMonitor {
         }
         const retryBtn = document.getElementById('retryBtn');
         if (retryBtn) retryBtn.addEventListener('click', () => this.init());
+        const holdingsCloseBtn = document.getElementById('holdingsCloseBtn');
+        const holdingsModal = document.getElementById('holdingsModal');
+        if (holdingsCloseBtn) holdingsCloseBtn.addEventListener('click', () => { holdingsModal.style.display = 'none'; });
+        if (holdingsModal) holdingsModal.addEventListener('click', (e) => { if (e.target === holdingsModal) holdingsModal.style.display = 'none'; });
+
         const manualRefreshBtn = document.getElementById('manualRefreshBtn');
         if (manualRefreshBtn) manualRefreshBtn.addEventListener('click', () => this.handleManualRefresh());
         const settingsBtn = document.getElementById('settingsBtn');
@@ -666,6 +673,15 @@ class LofFundMonitor {
         // 深色模式按钮
         const darkModeBtn = document.getElementById('darkModeBtn');
         if (darkModeBtn) darkModeBtn.addEventListener('click', () => this.toggleDarkMode());
+        // 十大持仓按钮
+        document.querySelector('.fund-table')?.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-holdings');
+            if (!btn) return;
+            e.stopPropagation();
+            e.preventDefault();
+            this.showHoldings(btn.dataset.code);
+        });
+
         // PC端：行内收藏星标点击
         document.querySelector('.fund-table')?.addEventListener('click', (e) => {
             const star = e.target.closest('.row-star');
@@ -1640,6 +1656,50 @@ class LofFundMonitor {
             document.head.appendChild(s);
         });
     }
+
+    showHoldings(code) {
+        var modal = document.getElementById('holdingsModal');
+        var loading = document.getElementById('holdingsLoading');
+        var table = document.getElementById('holdingsTable');
+        var body = document.getElementById('holdingsBody');
+        var source = document.getElementById('holdingsSource');
+        var title = document.getElementById('holdingsTitle');
+        modal.style.display = 'flex';
+        loading.style.display = 'block';
+        table.style.display = 'none';
+        body.innerHTML = '';
+        var fund = this.funds.find(function (f) { return f.code === code; });
+        title.textContent = (fund ? fund.code + ' ' + fund.name : code) + ' — 十大持仓';
+        var url = 'https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code=' + code + '&topline=10';
+        fetch(url).then(function (r) { return r.text(); }).then(function (html) {
+            var rows = [];
+            var trRegex = /<tr>(.*?)<\/tr>/g;
+            var m;
+            while ((m = trRegex.exec(html)) !== null) {
+                var cells = [];
+                var tdRegex = /<td[^>]*>(.*?)<\/td>/g;
+                var cm;
+                while ((cm = tdRegex.exec(m[1])) !== null) {
+                    var clean = cm[1].replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, '').replace(/\s+/g, ' ').trim();
+                    cells.push(clean);
+                }
+                if (cells.length >= 6) rows.push(cells);
+            }
+            if (rows.length > 0) {
+                body.innerHTML = rows.map(function (r) {
+                    return '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td><td>' + r[2] + '</td><td>' + r[5] + '</td><td>' + r[6] + '</td><td style="text-align:right">' + r[7] + '</td></tr>';
+                }).join('');
+                var dateMatch = html.match(/截止至[：:]?\s*\d{4}-\d{2}-\d{2}/) || html.match(/\d{4}年\d季度/);
+                source.textContent = '数据来源：天天基金 | ' + (dateMatch ? dateMatch[0] : '季度更新');
+            } else {
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">暂无持仓数据</td></tr>';
+            }
+            loading.style.display = 'none';
+            table.style.display = 'table';
+        }).catch(function () {
+            loading.textContent = '加载失败';
+        });
+    },
 
     async showFundDetail(code) {
         await this._ensureChart();
