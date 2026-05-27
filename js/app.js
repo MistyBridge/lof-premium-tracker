@@ -2008,7 +2008,7 @@ class LofFundMonitor {
         const prices = chartData.map(d => d.price);
         const navs = chartData.map(d => d.nav);
         const premiums = chartData.map(d => d.premium_rate);
-        const turnovers = chartData.map(d => d.turnover_rate);
+        const sharesData = chartData.map(d => d.on_exchange_shares);
 
         const isDark = this.darkMode === 'dark';
         const tc = isDark ? '#8899aa' : '#666';
@@ -2019,7 +2019,7 @@ class LofFundMonitor {
 
         const mode = this._detailMode || 'price,nav';
         const isPremMode = mode === 'premium';
-        const isTurnoverMode = mode === 'turnover';
+        const isSharesMode = mode === 'turnover';
 
         // 价格/净值 Y轴范围
         const pnVals = prices.concat(navs).filter(v => v != null);
@@ -2031,9 +2031,9 @@ class LofFundMonitor {
         const prAbs = prVals.length > 0 ? Math.max(Math.abs(Math.min(...prVals)), Math.abs(Math.max(...prVals))) : 5;
         const prMax = Math.ceil(prAbs * 1.2) || 5;
 
-        // 换手率 Y轴范围
-        const toVals = turnovers.filter(v => v != null);
-        const toMax = toVals.length > 0 ? Math.ceil(Math.max(...toVals) * 1.2) : 10;
+        // 场内份额 Y轴范围
+        const shVals = sharesData.filter(v => v != null);
+        const shMax = shVals.length > 0 ? Math.ceil(Math.max(...shVals) * 1.1) : 10;
 
         this._detailChart = new Chart(ctx, {
             type: 'line',
@@ -2044,13 +2044,13 @@ class LofFundMonitor {
                         _key: 'price', label: '场内价格', yAxisID: 'yPrice',
                         data: prices, borderColor: '#ff7a45', backgroundColor: 'rgba(255,122,69,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#ff7a45', tension: 0.2, fill: false,
-                        hidden: isPremMode || isTurnoverMode,
+                        hidden: isPremMode || isSharesMode,
                     },
                     {
                         _key: 'nav', label: '场外净值', yAxisID: 'yPrice',
                         data: navs, borderColor: '#40a9ff', backgroundColor: 'rgba(64,169,255,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#40a9ff', tension: 0.2, fill: false,
-                        hidden: isPremMode || isTurnoverMode,
+                        hidden: isPremMode || isSharesMode,
                     },
                     {
                         _key: 'premium', label: '溢价率', yAxisID: 'yPrem',
@@ -2062,10 +2062,10 @@ class LofFundMonitor {
                         pointBackgroundColor: premiums.map(v => v >= 0 ? '#e74c3c' : '#27ae60'),
                     },
                     {
-                        _key: 'turnover', label: '换手率', yAxisID: 'yTurnover',
-                        data: turnovers, borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.08)',
+                        _key: 'shares', label: '场内份额(万份)', yAxisID: 'yShares',
+                        data: sharesData, borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#9b59b6', tension: 0.2, fill: false,
-                        hidden: !isTurnoverMode,
+                        hidden: !isSharesMode,
                     },
                 ],
             },
@@ -2082,7 +2082,7 @@ class LofFundMonitor {
                 scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tc, maxTicksLimit: tickLimit, autoSkip: true } },
                     yPrice: {
-                        type: 'linear', display: !isPremMode && !isTurnoverMode, position: 'left',
+                        type: 'linear', display: !isPremMode && !isSharesMode, position: 'left',
                         grid: { color: gc }, min: pnMin, max: pnMax,
                         ticks: { font: { size: 11 }, color: tc, callback: (v) => v.toFixed(3) },
                     },
@@ -2095,12 +2095,12 @@ class LofFundMonitor {
                             callback: (v) => v.toFixed(1) + '%',
                         },
                     },
-                    yTurnover: {
-                        type: 'linear', display: isTurnoverMode, position: 'left',
-                        grid: { color: gc }, min: 0, max: toMax,
+                    yShares: {
+                        type: 'linear', display: isSharesMode, position: 'left',
+                        grid: { color: gc }, min: 0, max: shMax,
                         ticks: {
                             font: { size: 11 }, color: '#9b59b6',
-                            callback: (v) => v.toFixed(2) + '%',
+                            callback: (v) => v.toFixed(0) + '万份',
                         },
                     },
                 },
