@@ -1699,7 +1699,7 @@ class LofFundMonitor {
         }).catch(function () {
             loading.textContent = '加载失败';
         });
-    },
+    }
 
     async showFundDetail(code) {
         await this._ensureChart();
