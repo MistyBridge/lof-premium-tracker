@@ -29,6 +29,7 @@ _FEE_HEADERS = {
 
 # Cache file path (same directory as this file)
 _CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fee_cache.json")
+_CACHE_VERSION = 2  # increment when parser logic changes
 
 
 def _make_session() -> requests.Session:
@@ -201,12 +202,16 @@ def fetch_fees_batch(codes: list, concurrency: int = 10) -> Dict[str, Dict[str, 
 
 
 def load_fee_cache() -> Dict[str, Dict[str, Any]]:
-    """Load fee data from local cache file."""
+    """Load fee data from local cache file. Returns empty if version mismatch."""
     if not os.path.exists(_CACHE_PATH):
         return {}
     try:
         with open(_CACHE_PATH, "r", encoding="utf-8") as f:
-            return json.load(f)
+            cached = json.load(f)
+        if isinstance(cached, dict) and cached.get("version") == _CACHE_VERSION:
+            return cached.get("data", {})
+        # Version mismatch: discard old cache
+        return {}
     except Exception:
         return {}
 
@@ -215,6 +220,6 @@ def save_fee_cache(data: Dict[str, Dict[str, Any]]) -> None:
     """Save fee data to local cache file."""
     try:
         with open(_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False)
+            json.dump({"version": _CACHE_VERSION, "data": data}, f, ensure_ascii=False)
     except Exception as ex:
         logger.warning("fee_cache_save_failed", error=str(ex))
