@@ -2008,6 +2008,7 @@ class LofFundMonitor {
         const prices = chartData.map(d => d.price);
         const navs = chartData.map(d => d.nav);
         const premiums = chartData.map(d => d.premium_rate);
+        const turnovers = chartData.map(d => d.turnover_rate);
 
         const isDark = this.darkMode === 'dark';
         const tc = isDark ? '#8899aa' : '#666';
@@ -2016,9 +2017,9 @@ class LofFundMonitor {
         const pointR = isYearly ? 0 : 4;
         const tickLimit = isYearly ? 15 : chartData.length;
 
-        // 模式: 'price,nav' 显示价格+净值, 'premium' 显示溢价率
         const mode = this._detailMode || 'price,nav';
         const isPremMode = mode === 'premium';
+        const isTurnoverMode = mode === 'turnover';
 
         // 价格/净值 Y轴范围
         const pnVals = prices.concat(navs).filter(v => v != null);
@@ -2029,6 +2030,10 @@ class LofFundMonitor {
         const prVals = premiums.filter(v => v != null);
         const prAbs = prVals.length > 0 ? Math.max(Math.abs(Math.min(...prVals)), Math.abs(Math.max(...prVals))) : 5;
         const prMax = Math.ceil(prAbs * 1.2) || 5;
+
+        // 换手率 Y轴范围
+        const toVals = turnovers.filter(v => v != null);
+        const toMax = toVals.length > 0 ? Math.ceil(Math.max(...toVals) * 1.2) : 10;
 
         this._detailChart = new Chart(ctx, {
             type: 'line',
@@ -2056,6 +2061,12 @@ class LofFundMonitor {
                         },
                         pointBackgroundColor: premiums.map(v => v >= 0 ? '#e74c3c' : '#27ae60'),
                     },
+                    {
+                        _key: 'turnover', label: '换手率', yAxisID: 'yTurnover',
+                        data: turnovers, borderColor: '#9b59b6', backgroundColor: 'rgba(155,89,182,0.08)',
+                        borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#9b59b6', tension: 0.2, fill: false,
+                        hidden: !isTurnoverMode,
+                    },
                 ],
             },
             options: {
@@ -2071,7 +2082,7 @@ class LofFundMonitor {
                 scales: {
                     x: { grid: { display: false }, ticks: { font: { size: 11 }, color: tc, maxTicksLimit: tickLimit, autoSkip: true } },
                     yPrice: {
-                        type: 'linear', display: !isPremMode, position: 'left',
+                        type: 'linear', display: !isPremMode && !isTurnoverMode, position: 'left',
                         grid: { color: gc }, min: pnMin, max: pnMax,
                         ticks: { font: { size: 11 }, color: tc, callback: (v) => v.toFixed(3) },
                     },
@@ -2082,6 +2093,14 @@ class LofFundMonitor {
                             font: { size: 11 },
                             color: (ctx) => ctx.tick.value > 0 ? '#e74c3c' : ctx.tick.value < 0 ? '#27ae60' : tc,
                             callback: (v) => v.toFixed(1) + '%',
+                        },
+                    },
+                    yTurnover: {
+                        type: 'linear', display: isTurnoverMode, position: 'left',
+                        grid: { color: gc }, min: 0, max: toMax,
+                        ticks: {
+                            font: { size: 11 }, color: '#9b59b6',
+                            callback: (v) => v.toFixed(2) + '%',
                         },
                     },
                 },
