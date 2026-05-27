@@ -81,6 +81,7 @@ def filter_and_forward_fill(raw_rows: list) -> list:
             "price": round(price, 4),
             "nav": round(nav, 4) if nav > 0 else None,
             "premium_rate": premium,
+            "amount": amount,
             "_raw_price": price,
         }
         result.append(entry)

@@ -588,6 +588,18 @@ def fund_chart(code: str):
     raw = hdb.get_kline_history(code=code, days=days)
     filtered = filter_and_forward_fill(raw)
 
+    # 计算近似换手率：成交量(估) = 成交额 / 价格，换手率 = 成交量 / 场内份额 × 100
+    shares = fund.get("on_exchange_shares")
+    if shares and shares > 0 and filtered:
+        for pt in filtered:
+            price = pt.get("price")
+            amount = pt.get("amount")
+            if price and amount and price > 0:
+                est_vol = amount / price
+                pt["turnover_rate"] = round(est_vol / shares * 100, 2)
+            else:
+                pt["turnover_rate"] = None
+
     return ok({
         "code": code,
         "name": fund.get("name"),
