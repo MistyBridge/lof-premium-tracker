@@ -547,66 +547,11 @@ def fund_holdings(code):
             "reason": "暂不支持：该基金" + "、".join(reasons)
         })
 
-    # 抓取十大持仓
-    try:
-        import requests as req
-        url = f"https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code={code}&topline=10"
-        resp = req.get(url, headers={
-            "User-Agent": "Mozilla/5.0",
-            "Referer": f"https://fundf10.eastmoney.com/ccmx_{code}.html"
-        }, timeout=10)
-        resp.encoding = resp.apparent_encoding or "utf-8"
-        html = resp.text
-
-        import re
-        import re
-        # 提取 JS 变量中的 HTML: var apidata = { content: "...", arryear: ... }
-        start = html.find('content:"')
-        if start < 0:
-            return err_resp("解析持仓数据失败", code=500, status=500)
-        start += 9  # len('content:"')
-        end = html.find('",', start)
-        if end < 0:
-            return err_resp("解析持仓数据失败", code=500, status=500)
-        content = html[start:end].replace('\\"', '"').replace('\\/', '/')
-
-        # 在 content 中解析表格行
-        rows = []
-        for m in re.finditer(r'<tr>(.*?)</tr>', content, re.DOTALL):
-            cells = re.findall(r'<td[^>]*>(.*?)</td>', m.group(1), re.DOTALL)
-            if len(cells) < 9:
-                continue
-            # cells: [0]=序号,[1]=代码,[2]=名称,[3]=现价,[4]=涨跌幅,[5]=股吧行情,[6]=占净值比例,[7]=持股数(万股),[8]=持仓市值(万元)
-            rank = re.sub(r'<[^>]+>', '', cells[0]).strip()
-            if not rank.isdigit():
-                continue
-            code = re.sub(r'<[^>]+>', '', cells[1]).strip()
-            name = re.sub(r'<[^>]+>', '', cells[2]).strip()
-            pct = re.sub(r'<[^>]+>', '', cells[6]).strip()
-            shares = re.sub(r'<[^>]+>', '', cells[7]).strip()
-            market_value = re.sub(r'<[^>]+>', '', cells[8]).strip()
-            if not pct or pct == '--':
-                continue
-            rows.append({
-                "rank": int(rank),
-                "code": code,
-                "name": name,
-                "pct": pct,
-                "shares": shares,
-                "market_value": market_value
-            })
-
-        # 提取日期
-        date_match = re.search(r'(\d{4})年(\d)季度', html)
-        quarter = f"{date_match.group(1)}Q{date_match.group(2)}" if date_match else None
-
-        return ok({
-            "available": True,
-            "quarter": quarter,
-            "holdings": rows[:10]
-        })
-    except Exception as e:
-        return err_resp(f"获取持仓数据失败: {e}", code=500, status=500)
+    from holdings_cache import get_holdings
+    data = get_holdings(code)
+    if data and data.get("holdings"):
+        return ok({"available": True, "quarter": data.get("quarter"), "holdings": data["holdings"]})
+    return ok({"available": True, "quarter": None, "holdings": []})
 
 
 @app.route("/api/funds/<code>/chart", methods=["GET"])
@@ -789,6 +734,12 @@ def _trigger_lazy_refresh():
                 except Exception as ex:
                     logger.warning("history_save_failed", error=str(ex))
                 logger.info("lazy_refresh_done", cache_count=len(f.get_all()))
+                # 后台预抓取十大持仓（符合条件的基金）
+                try:
+                    from holdings_cache import refresh_for_funds
+                    refresh_for_funds(f.get_all())
+                except Exception as ex:
+                    logger.debug("holdings_refresh_skipped", error=str(ex))
             else:
                 # 实时抓取失败，尝试从历史数据降级
                 if len(f.get_all()) == 0:
