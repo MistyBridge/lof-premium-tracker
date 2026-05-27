@@ -14,12 +14,13 @@ except Exception:
     pass
 
 import json
-import logging
 import os
 import threading
 from datetime import datetime, time, timezone
 from flask import Flask, jsonify, redirect, request, send_from_directory
 from flask_cors import CORS
+
+import structlog
 
 from config import Config
 from data_fetcher import get_fetcher
@@ -31,14 +32,21 @@ from task_queue import get_task_queue
 from nav_backfill import run_nav_backfill
 
 # ─────────────────────────────────────────────
-# 日志配置
+# 结构化日志
 # ─────────────────────────────────────────────
-logging.basicConfig(
-    level=getattr(logging, Config.LOG_LEVEL),
-    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
+structlog.configure(
+    processors=[
+        structlog.stdlib.add_log_level,
+        structlog.dev.set_exc_info,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer(),
+    ],
+    wrapper_class=structlog.stdlib.BoundLogger,
+    context_class=dict,
+    logger_factory=structlog.PrintLoggerFactory(),
+    cache_logger_on_first_use=True,
 )
-logger = logging.getLogger("lof-api")
+logger = structlog.get_logger()
 
 # ─────────────────────────────────────────────
 # Flask 应用
@@ -673,7 +681,7 @@ def _trigger_lazy_refresh():
     def _do_refresh():
         nonlocal cache_empty
         try:
-            logger.info("⏰ 懒更新触发，开始刷新...")
+            logger.info("lazy_refresh_start")
             ok_flag = f.fetch_all()
             if ok_flag:
                 # 保存溢价率快照到历史数据库
@@ -692,8 +700,8 @@ def _trigger_lazy_refresh():
                     except Exception as ex:
                         logger.debug(f"Chart cache refresh skipped: {ex}")
                 except Exception as ex:
-                    logger.warning(f"历史数据保存失败: {ex}")
-                logger.info(f"✅ 懒更新完成，当前缓存 {len(f.get_all())} 只基金")
+                    logger.warning("history_save_failed", error=str(ex))
+                logger.info("lazy_refresh_done", cache_count=len(f.get_all()))
             else:
                 # 实时抓取失败，尝试从历史数据降级
                 if len(f.get_all()) == 0:
@@ -804,10 +812,10 @@ def _startup_init():
             except Exception as ex:
                 logger.debug(f"Chart cache refresh skipped: {ex}")
         except Exception as ex:
-            logger.warning(f"历史数据保存失败: {ex}")
-        logger.info(f"✅ 实时数据刷新完成，{len(f.get_all())} 只基金")
+            logger.warning("history_save_failed", error=str(ex))
+        logger.info("realtime_refresh_done", fund_count=len(f.get_all()))
     else:
-        logger.info("⚠️ 实时数据抓取失败，继续使用历史数据服务")
+        logger.warning("realtime_fetch_failed")
 
 
 # 启动后台初始化线程（gunicorn导入模块时自动触发）
