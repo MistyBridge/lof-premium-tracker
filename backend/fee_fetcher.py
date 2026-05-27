@@ -43,6 +43,21 @@ def _make_session() -> requests.Session:
     return s
 
 
+def _parse_purchase_status_from_html(html: str) -> Optional[bool]:
+    """
+    Parse 申购状态 from jjfl HTML page.
+    Returns: True=开放申购, False=暂停申购, None=未知
+    搜索关键词：暂停申购、仅开放赎回、限制大额申购
+    """
+    if "暂停申购" in html:
+        return False
+    if "仅开放赎回" in html:
+        return False
+    if "开放申购" in html:
+        return True
+    return None
+
+
 def _parse_purchase_limit_from_html(html: str) -> Optional[float]:
     """
     Parse 日累计申购限额 from jjfl HTML page.
@@ -112,6 +127,7 @@ def fetch_fee_for_code(code: str, session: requests.Session) -> Dict[str, Any]:
         "purchase_fee_rate": None,
         "redemption_fee_rate": None,
         "purchase_limit": None,
+        "can_purchase": None,
     }
 
     # 1. Get purchase fee rate from pingzhongdata (fast, small response)
@@ -138,6 +154,7 @@ def fetch_fee_for_code(code: str, session: requests.Session) -> Dict[str, Any]:
         html = resp.text
         result["redemption_fee_rate"] = _parse_redemption_fee_from_html(html)
         result["purchase_limit"] = _parse_purchase_limit_from_html(html)
+        result["can_purchase"] = _parse_purchase_status_from_html(html)
     except Exception as ex:
         logger.debug("fee_fetch_failed", code=code, source="jjfl", error=str(ex))
 
