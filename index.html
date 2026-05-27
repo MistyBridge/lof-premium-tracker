@@ -348,6 +348,24 @@
         </div>
     </div>
 
+    <!-- 全局：十大持仓弹窗 -->
+    <div id="holdingsModal" class="modal-overlay" style="display:none">
+        <div class="modal-content" style="max-width:780px;max-height:85vh">
+            <div class="modal-header">
+                <h3 id="holdingsTitle">十大持仓</h3>
+                <button class="modal-close" id="holdingsCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:0">
+                <div class="holdings-loading" id="holdingsLoading" style="text-align:center;padding:40px;color:var(--text2)">加载中...</div>
+                <table class="holdings-table" id="holdingsTable" style="display:none;width:100%;border-collapse:collapse">
+                    <thead><tr><th style="width:40px">#</th><th style="width:100px">代码</th><th style="width:180px">名称</th><th style="width:100px">占净值比</th><th style="width:120px">持股数(万股)</th><th style="width:120px">市值(万元)</th></tr></thead>
+                    <tbody id="holdingsBody"></tbody>
+                </table>
+                <div class="holdings-source" id="holdingsSource" style="text-align:center;padding:12px;font-size:0.75rem;color:var(--text2)"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- ═══════════════════════════════════════════ 全局：基金详情弹窗 ═══════════════════════════════════════════ -->
     <div id="fundDetailModal" class="fund-detail-overlay" style="display:none">
         <div class="fund-detail-modal">

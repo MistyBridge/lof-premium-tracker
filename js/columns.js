@@ -20,6 +20,7 @@ const COLUMN_REGISTRY = [
     { id: 'is_suspended',       label: '停牌状态',    width: 110, defaultVisible: true,  frozen: false, sortable: false, sortField: null },
     { id: 'purchase_fee_rate',  label: '申购费率',    width: 110, defaultVisible: false, frozen: false, sortable: false, sortField: null },
     { id: 'data_date',          label: '数据日期',    width: 129, defaultVisible: false, frozen: false, sortable: false, sortField: null },
+    { id: 'holdings',           label: '十大持仓',    width: 103, defaultVisible: false, frozen: false, sortable: false, sortField: null },
 ];
 if (typeof window !== 'undefined') { window.COLUMN_REGISTRY = COLUMN_REGISTRY; }
 
