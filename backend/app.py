@@ -522,6 +522,75 @@ def fund_detail(code: str):
 
 # ─────────────────────────────────────────────────────────────────
 
+@app.route("/api/funds/<code>/holdings", methods=["GET"])
+def fund_holdings(code):
+    """获取基金十大持仓数据（仅对不停牌+可申购+成交额>100万的基金）"""
+    f = get_fetcher()
+    funds = f.get_all()
+    fund = funds.get(code)
+    if not fund:
+        return err_resp("基金不存在", code=404, status=404)
+
+    # 条件检查
+    reasons = []
+    if fund.get("is_suspended"):
+        reasons.append("停牌")
+    if fund.get("can_purchase") is False:
+        reasons.append("暂停申购")
+    amount = fund.get("amount") or 0
+    if amount < 1_000_000:
+        reasons.append("成交额小于100万")
+
+    if reasons:
+        return ok({
+            "available": False,
+            "reason": "暂不支持：该基金" + "、".join(reasons)
+        })
+
+    # 抓取十大持仓
+    try:
+        import requests as req
+        url = f"https://fundf10.eastmoney.com/FundArchivesDatas.aspx?type=jjcc&code={code}&topline=10"
+        resp = req.get(url, headers={
+            "User-Agent": "Mozilla/5.0",
+            "Referer": f"https://fundf10.eastmoney.com/ccmx_{code}.html"
+        }, timeout=10)
+        resp.encoding = resp.apparent_encoding or "utf-8"
+        html = resp.text
+
+        import re
+        rows = []
+        for m in re.finditer(r'<tr>(.*?)</tr>', html, re.DOTALL):
+            cells = re.findall(r'<td[^>]*>(.*?)</td>', m.group(1), re.DOTALL)
+            clean = []
+            for c in cells:
+                c = re.sub(r'<[^>]+>', ' ', c).replace('&nbsp;', '').strip()
+                c = re.sub(r'\s+', ' ', c)
+                if c:
+                    clean.append(c)
+            if len(clean) >= 6 and clean[0].isdigit():
+                rows.append({
+                    "rank": int(clean[0]),
+                    "code": clean[1],
+                    "name": clean[2],
+                    "pct": clean[5],
+                    "shares": clean[6] if len(clean) > 6 else "",
+                    "market_value": clean[7] if len(clean) > 7 else ""
+                })
+
+        # 提取日期
+        date_match = re.search(r'(\d{4})年(\d)季度', html)
+        quarter = f"{date_match.group(1)}Q{date_match.group(2)}" if date_match else None
+
+        return ok({
+            "available": True,
+            "quarter": quarter,
+            "holdings": rows[:10]
+        })
+    except Exception as e:
+        return err_resp(f"获取持仓数据失败: {e}", code=500, status=500)
+
+
 @app.route("/api/funds/<code>/chart", methods=["GET"])
 def fund_chart(code: str):
     """获取基金历史价格/净值曲线数据，支持 7/30/365 日。热门基金优先从缓存读取"""
