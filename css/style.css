@@ -825,6 +825,10 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-code-name { cursor: pointer; user-select: all; transition: color 0.15s; }
 .fd-code-name:hover { color: var(--primary); }
 
+.fd-kpi-item.fd-kpi-hidden { display: none; }
+.fd-kpi-config-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text2); padding: 0 4px; line-height: 1; }
+.fd-kpi-config-btn:hover { color: var(--primary); }
+
 .fd-profit-section {
     margin-top: 16px; background: linear-gradient(135deg, #f6f8fc, #eef2f7);
     border-radius: 12px; padding: 16px; position: relative;
