@@ -479,9 +479,10 @@ class LegacySource(LOFDataSource):
         """从 push2 获取 SZ LOF 的 f18 换手率，补充到场内份额"""
         if not funds:
             return
+        seen = set()
+        matched = 0
         try:
             # 分页拉取 SZ LOF 的 f18 数据
-            seen = set()
             for pn in range(1, 10):
                 url = (
                     "https://push2delay.eastmoney.com/api/qt/clist/get"
