@@ -200,7 +200,25 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="modal-overlay" id="columnEditor" style="display:none">
+                    <!-- KPI 卡片编辑器 -->
+    <div class="modal-overlay" id="kpiCardEditor" style="display:none">
+        <div class="modal-content" style="max-width:520px">
+            <div class="modal-header">
+                <h3>卡片管理</h3>
+                <button class="modal-close" id="kceCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:0">
+                <div class="ce-hint"><span>拖动 ≡ 调整顺序 · 勾选控制显隐</span></div>
+                <div class="ce-list" id="kpiCardEditorList"></div>
+            </div>
+            <div class="modal-footer" style="justify-content:space-between">
+                <button class="btn-secondary" id="kceResetBtn">恢复默认</button>
+                <button class="btn-primary" id="kceApplyBtn">应用</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="columnEditor" style="display:none">
                         <div class="modal-content ce-modal">
                             <div class="modal-header">
                                 <h3>表头管理</h3>
@@ -407,6 +425,7 @@
         <div class="fund-detail-modal">
             <div class="fd-header">
                 <h3 id="fundDetailTitle">基金详情</h3>
+                <button id="fdKpiConfigBtn" class="fd-kpi-config-btn" title="卡片管理">&#9881;</button>
                 <span class="fd-header-actions">
                     <button id="fdFavoriteBtn" class="fd-star" title="收藏基金">☆</button>
                     <button id="fdCloseBtn" class="fd-close" title="关闭">&times;</button>
@@ -614,6 +633,7 @@
             this._loading = Promise.all([
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
                 self._loadScript('js/columns.js?v=14'),
+                self._loadScript('js/kpi-cards.js?v=1'),
                 self._loadScript('js/config.js?v=14'),
                 self._loadScript('js/cache.js?v=1'),
                 self._loadScript('js/supabase.js?v=1'),
@@ -832,6 +852,7 @@
             preloaded = true;
             // 加载轻量脚本 → 拉取数据 → 缓存
             var scripts = [
+                'js/kpi-cards.js?v=1',
                 'js/config.js?v=14',
                 'js/api.js?v=14',
                 'js/cache.js?v=1',

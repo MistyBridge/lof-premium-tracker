@@ -39,6 +39,7 @@ class LofFundMonitor {
         this._initFundTypeDropdown();
         this._buildTableHead();
         this._initColumnEditor();
+        this._initKpiCardEditor();
         this.applyDarkMode(false); // 不保存，仅应用
         this.init();
     }
@@ -1200,6 +1201,90 @@ class LofFundMonitor {
         if (this._rankTimer) { clearInterval(this._rankTimer); this._rankTimer = null; }
     }
 
+    // ── KPI 卡片编辑器 ──
+    _initKpiCardEditor() {
+        var self = this;
+        document.getElementById('fdKpiConfigBtn').addEventListener('click', function (e) { e.stopPropagation(); self._openKpiCardEditor(); });
+        document.getElementById('kceCloseBtn').addEventListener('click', function () { self._closeKpiCardEditor(); });
+        document.getElementById('kpiCardEditor').addEventListener('click', function (e) { if (e.target === e.currentTarget) self._closeKpiCardEditor(); });
+        document.getElementById('kceApplyBtn').addEventListener('click', function () { self._applyKpiPrefs(); self._closeKpiCardEditor(); });
+        document.getElementById('kceResetBtn').addEventListener('click', function () { localStorage.removeItem(KPI_PREFS_KEY); self._buildKpiCardEditorList(); });
+    },
+
+    _openKpiCardEditor() {
+        document.getElementById('kpiCardEditor').style.display = 'flex';
+        this._buildKpiCardEditorList();
+    },
+
+    _closeKpiCardEditor() {
+        document.getElementById('kpiCardEditor').style.display = 'none';
+        if (this._kpiSortable) { this._kpiSortable.destroy(); this._kpiSortable = null; }
+    },
+
+    _buildKpiCardEditorList() {
+        var list = document.getElementById('kpiCardEditorList');
+        if (!list || typeof KPI_CARD_REGISTRY === 'undefined') return;
+        if (this._kpiSortable) { this._kpiSortable.destroy(); this._kpiSortable = null; }
+        var activeIds = getActiveKpiIds();
+
+        var html = '';
+        KPI_CARD_REGISTRY.forEach(function (c) {
+            var checked = activeIds.indexOf(c.id) >= 0;
+            var disabled = c.critical ? ' disabled' : '';
+            html += '<div class="ce-item" data-card-id="' + c.id + '"' + (c.critical ? ' style="opacity:0.55"' : '') + '>';
+            html += '<span class="drag-handle">&#9776;</span>';
+            html += '<input type="checkbox" ' + (checked ? 'checked' : '') + disabled + ' data-card-id="' + c.id + '">';
+            html += '<span class="ce-item-label">' + c.label + (c.critical ? ' (必选)' : '') + '</span>';
+            html += '</div>';
+        });
+        list.innerHTML = html;
+
+        // Checkbox change
+        var self = this;
+        list.querySelectorAll('input[type="checkbox"]:not([disabled])').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var prefs = loadKpiPrefs();
+                prefs.visible = prefs.visible || {};
+                prefs.visible[this.dataset.cardId] = this.checked;
+                saveKpiPrefs(prefs);
+            });
+        });
+
+        // SortableJS drag
+        if (typeof Sortable !== 'undefined') {
+            this._kpiSortable = new Sortable(list, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'ce-ghost',
+                onEnd: function () {
+                    var newOrder = Array.from(list.querySelectorAll('.ce-item')).map(function (el) { return el.dataset.cardId; });
+                    var prefs = loadKpiPrefs();
+                    prefs.order = newOrder;
+                    saveKpiPrefs(prefs);
+                }
+            });
+        }
+    },
+
+    _applyKpiPrefs() {
+        this._renderKpiCards();
+    },
+
+    _renderKpiCards() {
+        if (typeof getActiveKpiIds !== 'function') return;
+        var activeIds = getActiveKpiIds();
+        var items = document.querySelectorAll('.fd-kpi-grid .fd-kpi-item');
+        items.forEach(function (item) {
+            var valueSpan = item.querySelector('.fd-kpi-value');
+            var kpiId = valueSpan ? valueSpan.id : null;
+            if (kpiId && activeIds.indexOf(kpiId) < 0) {
+                item.classList.add('fd-kpi-hidden');
+            } else {
+                item.classList.remove('fd-kpi-hidden');
+            }
+        });
+    },
+
     _buildColumnEditorList() {
         var list = document.getElementById('columnEditorList');
         if (!list || typeof COLUMN_REGISTRY === 'undefined') return;
@@ -1713,6 +1798,7 @@ class LofFundMonitor {
         this._detailDays = 7;
         this._detailFundCode = code;
         this._updateFavoriteStar(code);
+        this._renderKpiCards();
         const indSel = document.getElementById('fdIndSelect');
         const rangeSel = document.getElementById('fdRangeSelect');
         if (indSel) indSel.value = 'price,nav';
