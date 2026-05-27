@@ -562,21 +562,27 @@ def fund_holdings(code):
         rows = []
         for m in re.finditer(r'<tr>(.*?)</tr>', html, re.DOTALL):
             cells = re.findall(r'<td[^>]*>(.*?)</td>', m.group(1), re.DOTALL)
-            clean = []
-            for c in cells:
-                c = re.sub(r'<[^>]+>', ' ', c).replace('&nbsp;', '').strip()
-                c = re.sub(r'\s+', ' ', c)
-                if c:
-                    clean.append(c)
-            if len(clean) >= 6 and clean[0].isdigit():
-                rows.append({
-                    "rank": int(clean[0]),
-                    "code": clean[1],
-                    "name": clean[2],
-                    "pct": clean[5],
-                    "shares": clean[6] if len(clean) > 6 else "",
-                    "market_value": clean[7] if len(clean) > 7 else ""
-                })
+            if len(cells) < 9:
+                continue
+            # cells: [0]=rank, [1]=code, [2]=name, [3]=price, [4]=change%, [5]=股吧行情, [6]=占净值比, [7]=持股数, [8]=持仓市值
+            rank = re.sub(r'<[^>]+>', '', cells[0]).strip()
+            if not rank.isdigit():
+                continue
+            code = re.sub(r'<[^>]+>', '', cells[1]).strip()
+            name = re.sub(r'<[^>]+>', '', cells[2]).strip()
+            pct = re.sub(r'<[^>]+>', '', cells[6]).strip()
+            shares = re.sub(r'<[^>]+>', '', cells[7]).strip()
+            market_value = re.sub(r'<[^>]+>', '', cells[8]).strip()
+            if not pct or pct == '--':
+                continue
+            rows.append({
+                "rank": int(rank),
+                "code": code,
+                "name": name,
+                "pct": pct,
+                "shares": shares,
+                "market_value": market_value
+            })
 
         # 提取日期
         date_match = re.search(r'(\d{4})年(\d)季度', html)
