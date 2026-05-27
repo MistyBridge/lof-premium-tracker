@@ -615,7 +615,11 @@
             location.hash = '#/' + mode;
         },
 
+        _loadedScripts: {},
+
         _loadScript: function(src) {
+            if (this._loadedScripts[src]) return Promise.resolve();
+            this._loadedScripts[src] = true;
             return new Promise(function(resolve, reject) {
                 var s = document.createElement('script');
                 s.src = src;
