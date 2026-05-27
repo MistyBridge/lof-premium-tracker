@@ -314,7 +314,7 @@ class LegacySource(LOFDataSource):
                 f"&ut=bd1d9ddb04089700cf9c27f6f7426281"
                 f"&fltt=2&invt=2&fid=f3"
                 f"&fs=m:1+t:9"
-                f"&fields=f12,f14,f2,f3,f5,f6"
+                f"&fields=f12,f14,f2,f3,f5,f6,f18"
             )
             resp = None
             for attempt in range(3):
@@ -354,13 +354,22 @@ class LegacySource(LOFDataSource):
                 price = _safe_float(price_raw)
                 if price <= 0:
                     continue
+                vol = int(_safe_float(item.get("f5"), 0))
+                turnover = _safe_float(item.get("f18"), None)
+                # 场内份额(份) = 成交量(手)×100 / 换手率(%) × 100%
+                # 换手率 = 成交量 / 场内份额 × 100，所以 场内份额 = 成交量 / 换手率 × 100
+                shares = None
+                if turnover and turnover > 0 and vol > 0:
+                    shares = int(vol / (turnover / 100))
                 result[code] = {
                     "code": code.zfill(6),
                     "name": str(item.get("f14", "")).strip(),
                     "price": price,
                     "change_pct": round(_safe_float(item.get("f3"), 0), 3),
-                    "volume": int(_safe_float(item.get("f5"), 0)),
+                    "volume": vol,
                     "amount": round(_safe_float(item.get("f6"), 0), 2),
+                    "turnover_rate": turnover if turnover else None,
+                    "on_exchange_shares": shares,
                 }
             if len(seen) >= total:
                 break
