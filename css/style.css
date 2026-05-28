@@ -947,8 +947,6 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
     .fd-kpi-item { padding: 8px 10px; border-radius: 8px; min-height: 48px; }
     .fd-kpi-label { font-size: 0.7rem; letter-spacing: 0.3px; }
     .fd-kpi-value { font-size: 0.92rem; }
-    .fd-profit-section { margin-top: 10px; padding: 12px 14px; }
-    .fd-profit-val { font-size: 1.15rem; }
     .fd-chart-legend { gap: 10px; font-size: 0.78rem; }
     .fd-chart-controls { gap: 6px; }
     .fd-ind-select, .fd-range-select { padding: 5px 8px; font-size: 0.72rem; }
