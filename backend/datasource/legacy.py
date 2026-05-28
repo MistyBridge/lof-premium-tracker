@@ -476,20 +476,20 @@ class LegacySource(LOFDataSource):
         return result
 
     def _enrich_sz_turnover(self, funds: Dict[str, Dict[str, Any]]) -> None:
-        """从 push2 获取 SZ LOF 的 f18 换手率，补充到场内份额"""
+        """从 push2 获取 LOF 的 f18 换手率，补充到场内份额"""
         if not funds:
             return
         seen = set()
         matched = 0
         try:
-            # 分页拉取 SZ LOF 的 f18 数据
+            # 分页拉取 LOF 的 f18 数据（MK04xx 板块覆盖深沪两市 LOF）
             for pn in range(1, 10):
                 url = (
                     "https://push2delay.eastmoney.com/api/qt/clist/get"
                     f"?pn={pn}&pz=100&po=1&np=1"
                     f"&ut=bd1d9ddb04089700cf9c27f6f7426281"
                     f"&fltt=2&invt=2&fid=f3"
-                    f"&fs=m:0+t:9"  # 深交所
+                    f"&fs=b:MK0404,b:MK0405,b:MK0406,b:MK0407"  # 全部 LOF
                     f"&fields=f12,f5,f18"
                 )
                 resp = self._sess().get(url, headers=_EM_HEADERS, timeout=Config.REQUEST_TIMEOUT)
