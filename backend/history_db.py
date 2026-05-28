@@ -204,6 +204,13 @@ class HistoryDB:
                 fetched_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS suspension_cache (
+                code        VARCHAR(6) PRIMARY KEY,
+                is_suspended BOOLEAN NOT NULL DEFAULT FALSE,
+                updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        """)
 
     def _migrate_schema(self, cur):
         """从旧 schema 迁移到新 schema（事务内执行）"""
@@ -582,6 +589,47 @@ class HistoryDB:
             logger.info("Saved %d fee cache entries to DB", len(rows))
         except Exception as e:
             logger.error("Failed to save fee cache: %s", e)
+            conn.rollback()
+        finally:
+            self._pool.putconn(conn)
+
+    def load_suspension_cache(self) -> Dict[str, bool]:
+        """从数据库加载停牌状态缓存，返回 {code: is_suspended}"""
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT code, is_suspended FROM suspension_cache")
+                return {r["code"]: r["is_suspended"] for r in cur.fetchall()}
+        except Exception as e:
+            logger.warning("Failed to load suspension cache: %s", e)
+            return {}
+        finally:
+            self._pool.putconn(conn)
+
+    def save_suspension_cache(self, data: Dict[str, bool]) -> None:
+        """批量写入停牌状态到数据库（upsert）"""
+        if not data:
+            return
+        rows = [(code, suspended) for code, suspended in data.items()]
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                psycopg2.extras.execute_values(
+                    cur,
+                    """
+                    INSERT INTO suspension_cache (code, is_suspended)
+                    VALUES %s
+                    ON CONFLICT (code) DO UPDATE SET
+                        is_suspended = EXCLUDED.is_suspended,
+                        updated_at   = NOW()
+                    """,
+                    rows,
+                    page_size=500,
+                )
+            conn.commit()
+            logger.info("Saved %d suspension entries to DB", len(rows))
+        except Exception as e:
+            logger.error("Failed to save suspension cache: %s", e)
             conn.rollback()
         finally:
             self._pool.putconn(conn)
