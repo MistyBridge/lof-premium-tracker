@@ -289,9 +289,12 @@ class LOFDataFetcher:
                 fund["purchase_fee_rate"] = fee.get("purchase_fee_rate")
                 fund["redemption_fee_rate"] = fee.get("redemption_fee_rate")
                 fund["purchase_limit"] = fee.get("purchase_limit")
-                # jjfl 申购状态作为 fallback（已有 ak_share 数据时优先用 ak_share）
-                if fund.get("can_purchase") is None:
-                    fund["can_purchase"] = fee.get("can_purchase")
+                # jjfl 申购状态优先（比 lsjz API 更准确，能区分"暂停申购"和"限制大额"）
+                jjfl_status = fee.get("can_purchase")
+                if jjfl_status is not None:
+                    fund["can_purchase"] = jjfl_status
+                elif fund.get("can_purchase") is None:
+                    fund["can_purchase"] = None
 
             # 更新缓存
             with self._lock:
