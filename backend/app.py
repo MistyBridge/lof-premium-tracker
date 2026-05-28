@@ -574,7 +574,7 @@ def _fill_shares(chart: list, fund: dict):
         vol = pt.pop("volume", None)
         tr = pt.pop("turnover_rate", None)
         if vol and tr and tr > 0:
-            pt["on_exchange_shares"] = round(vol / tr / 100, 2)  # 股→万份
+            pt["on_exchange_shares"] = round(vol / tr, 2)  # 手/%=万份
         elif cur_shares and cur_shares > 0:
             pt["on_exchange_shares"] = round(cur_shares / 10000, 2)
 

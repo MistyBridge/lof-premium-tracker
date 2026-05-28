@@ -123,7 +123,7 @@ def fetch_kline_data(session: requests.Session, code: str, beg_date: str, end_da
             turnover = _safe_float(parts[10]) if len(parts) > 10 else None  # 换手率(%)
             if price <= 0:
                 continue
-            volume_shares = vol_raw * 100  # 手 → 股
+            volume_shares = vol_raw  # 保持手为单位，vol/tr 直接得万份
             result[date] = {
                 "price": price,
                 "amount": amount,
