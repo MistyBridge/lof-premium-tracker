@@ -169,10 +169,11 @@ def fetch_kline_sina(session: requests.Session, code: str) -> Dict[str, dict]:
         for item in data:
             date = item.get("day", "")
             price = _safe_float(item.get("close"))
-            amount = _safe_float(item.get("volume")) * price
+            vol = _safe_float(item.get("volume"))  # 成交量(股)
+            amount = vol * price  # 成交额(元)
             if price <= 0:
                 continue
-            result[date] = {"price": price, "amount": amount, "change_pct": 0}
+            result[date] = {"price": price, "amount": amount, "change_pct": 0, "volume": vol}
         return result
     except Exception as e:
         logger.debug(f"Sina K-line failed for {code}: {e}")
@@ -262,11 +263,12 @@ def fetch_kline_tencent(session: requests.Session, code: str) -> Dict[str, dict]
                 continue
             date = line[0]
             price = _safe_float(line[2])  # close
-            amount = _safe_float(line[5]) * 100  # volume * 100 = 成交额(元)
+            vol_raw = _safe_float(line[5])  # 成交量(手)
+            amount = vol_raw * 100  # 手→成交额估算
             change_pct = 0
             if price <= 0:
                 continue
-            result[date] = {"price": price, "amount": amount, "change_pct": change_pct}
+            result[date] = {"price": price, "amount": amount, "change_pct": change_pct, "volume": vol_raw}
         return result
     except Exception as e:
         logger.debug(f"Tencent K-line failed for {code}: {e}")
@@ -620,11 +622,15 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     total_rows = [0]
     rows_lock = threading.Lock()
     processed = [0]
+    try:
+        from data_fetcher import get_fetcher
+        live_cache = get_fetcher().get_all()
+    except Exception:
+        live_cache = {}
     processed_lock = threading.Lock()
 
     def fetch_one_fund(code: str):
         """串行尝试所有API源，取第一个有数据的"""
-        # 多源K线链: EastMoney → Tencent → Baostock → AkShare
         session_k = _make_session()
         kline = fetch_kline_multisource(session_k, code, beg_ymd, end_ymd)
         if not kline:
@@ -632,6 +638,7 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
         if not kline:
             return 0
         navs = ds.fetch_nav_history(code, beg_dash, end_dash)
+        cur_shares = (live_cache.get(code) or {}).get("on_exchange_shares")
         rows = []
         for date_str, info in kline.items():
             nav = navs.get(date_str)
@@ -640,10 +647,15 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
             premium_rate = None
             if nav and nav > 0 and price > 0:
                 premium_rate = round((price - nav) / nav * 100, 3)
+            vol = info.get("volume")
+            turnover = info.get("turnover_rate")
+            if vol and not turnover and cur_shares and cur_shares > 0:
+                vol_shares = vol if vol > cur_shares else vol * 100
+                turnover = round(vol_shares / cur_shares * 100, 4)
             rows.append((
                 date_str, code, price, nav, amount,
                 0, premium_rate,
-                info.get("volume"), info.get("turnover_rate"),
+                vol, turnover,
             ))
         if rows:
             with rows_lock:
@@ -727,6 +739,13 @@ def fetch_kline_historical_data_stream(days_lookback: int = 395):
     saved_rows = 0
     errors = 0
 
+    # 获取当前场内份额（用于推算历史换手率）
+    try:
+        from data_fetcher import get_fetcher
+        live_cache = get_fetcher().get_all()
+    except Exception:
+        live_cache = {}
+
     for code in all_codes:
         try:
             session_k = _make_session()
@@ -739,6 +758,8 @@ def fetch_kline_historical_data_stream(days_lookback: int = 395):
                 continue
 
             navs = ds.fetch_nav_history(code, beg_dash, end_dash)
+            cur_shares = (live_cache.get(code) or {}).get("on_exchange_shares")
+
             rows = []
             for date_str, info in kline.items():
                 nav = navs.get(date_str)
@@ -747,10 +768,19 @@ def fetch_kline_historical_data_stream(days_lookback: int = 395):
                 premium_rate = None
                 if nav and nav > 0 and price > 0:
                     premium_rate = round((price - nav) / nav * 100, 3)
+
+                # 从成交量推算换手率
+                vol = info.get("volume")
+                turnover = info.get("turnover_rate")
+                if vol and not turnover and cur_shares and cur_shares > 0:
+                    # Sina volume=股, Tencent volume=手
+                    vol_shares = vol if vol > cur_shares else vol * 100
+                    turnover = round(vol_shares / cur_shares * 100, 4)
+
                 rows.append((
                     date_str, code, price, nav, amount,
                     0, premium_rate,
-                    info.get("volume"), info.get("turnover_rate"),
+                    vol, turnover,
                 ))
 
             if rows:
