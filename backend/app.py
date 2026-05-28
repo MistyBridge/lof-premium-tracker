@@ -189,6 +189,10 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
     price = float(fund.get("price", 0) or 0)
     change_pct = float(fund.get("change_pct", 0) or 0)
 
+    # can_purchase 统一转为 bool/None（PostgreSQL 返回 0.0/1.0 而非 False/True）
+    _can_raw = fund.get("can_purchase")
+    _can = bool(_can_raw) if _can_raw is not None else None
+
     result = {
         # ── 基础信息 ──
         "code":       fund.get("code"),              # 6位基金代码
@@ -209,10 +213,10 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         # ── 费率数据 ──
         "purchase_fee_rate": fund.get("purchase_fee_rate"),  # 申购优惠费率（%）
         "redemption_fee_rate": fund.get("redemption_fee_rate"),  # 赎回费率最短档（%）
-        "purchase_limit": 0 if fund.get("can_purchase") in (False, 0, 0.0) else fund.get("purchase_limit"),  # 停止申购→0
+        "purchase_limit": 0 if _can is False else fund.get("purchase_limit"),  # 停止申购→0
         # ── 状态 ──
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
-        "can_purchase": fund.get("can_purchase"),  # 是否可申购（None=未知）
+        "can_purchase": _can,                        # 是否可申购（None=未知）
         "data_date": fund.get("_history_date"),     # 数据日期（历史回填时有值）
         "turnover_rate": fund.get("turnover_rate"),            # 换手率（%）
         "on_exchange_shares": fund.get("on_exchange_shares"),  # 场内份额（份）
