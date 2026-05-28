@@ -1938,6 +1938,8 @@ class LofFundMonitor {
         setVal('fdAmount', amountText);
         setVal('fdEstProfitRate', est ? (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%' : '--',
             est ? (est.rate > 0 ? 'fd-pos' : est.rate < 0 ? 'fd-neg' : '') : '');
+        setVal('fdEstProfitAmount', est ? (est.amount > 0 ? '+' : '') + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元') : '--',
+            est ? (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '') : '');
         setVal('fdStatus', fund.premium_status || '未知');
 
         // 申购限额
@@ -1955,6 +1957,7 @@ class LofFundMonitor {
             }
         }
 
+        setVal('fdNavDate', fund.nav_date || '-');
         // 新增字段
         setVal('fdVolume', fund.volume != null ? (fund.volume / 10000).toFixed(2) + '万手' : '--');
         setVal('fdChangeAmount', fund.change_amount != null ? fund.change_amount.toFixed(4) : '--');
