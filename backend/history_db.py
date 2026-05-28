@@ -522,6 +522,26 @@ class HistoryDB:
         finally:
             self._pool.putconn(conn)
 
+    def get_prev_amounts(self) -> Dict[str, float]:
+        """获取上一个交易日所有基金的成交额，返回 {code: amount}"""
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT code, amount FROM daily_kline
+                    WHERE date = (
+                        SELECT DISTINCT date FROM daily_kline
+                        WHERE date < CURRENT_DATE
+                        ORDER BY date DESC LIMIT 1
+                    ) AND amount > 0
+                """)
+                return {r["code"]: float(r["amount"]) for r in cur.fetchall()}
+        except Exception as e:
+            logger.warning("Failed to get prev amounts: %s", e)
+            return {}
+        finally:
+            self._pool.putconn(conn)
+
     # ── Internal Helpers ─────────────────────────────
 
     def load_fee_cache(self) -> Dict[str, Dict]:

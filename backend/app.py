@@ -207,7 +207,8 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         "price":      fund.get("price"),             # 最新价（元）
         "change_pct": change_pct,                    # 涨跌幅（%）
         "volume":     fund.get("volume"),            # 成交量（股）
-        "amount":     fund.get("amount"),            # 成交额（元）
+        "amount":     fund.get("amount"),            # 成交额（元，实时）
+        "filter_amount": max(fund.get("amount") or 0, fund.get("prev_amount") or 0) or None,  # 筛选用：max(今日, 昨日)
         # ── 净值数据 ──
         "nav":        nav,                          # 当前净值/估算净值（元）
         "nav_date":   fund.get("nav_date"),         # 净值日期/估值时间
