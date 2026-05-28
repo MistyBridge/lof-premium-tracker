@@ -169,8 +169,8 @@ def fetch_kline_sina(session: requests.Session, code: str) -> Dict[str, dict]:
         for item in data:
             date = item.get("day", "")
             price = _safe_float(item.get("close"))
-            vol = _safe_float(item.get("volume"))  # 成交量(股)
-            amount = vol * price  # 成交额(元)
+            vol = _safe_float(item.get("volume")) / 100  # 股→手，统一单位
+            amount = vol * 100 * price  # 成交额(元)
             if price <= 0:
                 continue
             result[date] = {"price": price, "amount": amount, "change_pct": 0, "volume": vol}
