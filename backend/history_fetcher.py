@@ -90,22 +90,36 @@ def _jparse(text: str) -> dict:
 
 def fetch_kline_data(session: requests.Session, code: str, beg_date: str, end_date: str) -> Dict[str, dict]:
     """
-    获取单只基金的日K线数据。
-    返回: { "2026-04-30": {"price": 3.689, "amount": 11822.9, "change_pct": -0.03, "name": "..."}, ... }
-    
-    K线字段: 日期,开盘,收盘,最高,最低,成交量,成交额,振幅,涨跌幅,涨跌额,换手率
+    获取单只基金的日K线数据（含成交量+换手率）。
+    返回: { "2026-04-30": {"price": 3.689, "volume": 303057, "turnover_rate": 2.47, ...}, ... }
+
+    K线字段: 日期,开盘,收盘,最高,最低,成交量(手),成交额,振幅,涨跌幅,涨跌额,换手率(%)
+    多端点降级: 88.push2 → push2his
     """
     market = _market_prefix(code)
     secid = f"{market}.{code}"
-    url = (
-        f"https://push2his.eastmoney.com/api/qt/stock/kline/get"
+    endpoints = [
+        "https://88.push2.eastmoney.com/api/qt/stock/kline/get",
+        "https://push2his.eastmoney.com/api/qt/stock/kline/get",
+    ]
+    params = (
         f"?secid={secid}&fields1=f1,f2,f3,f4,f5,f6"
         f"&fields2=f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61"
         f"&klt=101&fqt=0&beg={beg_date}&end={end_date}"
     )
+    data = None
+    for ep in endpoints:
+        try:
+            resp = session.get(ep + params, headers=_KLINE_HEADERS, timeout=10)
+            d = resp.json()
+            if d.get("rc") == 0 and d.get("data") and d["data"].get("klines"):
+                data = d
+                break
+        except Exception:
+            continue
+    if not data:
+        return {}
     try:
-        resp = session.get(url, headers=_KLINE_HEADERS, timeout=10)
-        data = resp.json()
         if data.get("rc") != 0 or not data.get("data") or not data["data"].get("klines"):
             return {}
 
@@ -673,3 +687,87 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
     logger.info("Kline complete: %d/%d funds, %d rows (%d workers)",
                  processed[0], total, total_rows[0], workers)
     return total_rows[0]
+
+
+def fetch_kline_historical_data_stream(days_lookback: int = 395):
+    """
+    流式回填K线数据（含成交量+换手率），逐基金 yield 进度。
+    """
+    from history_db import get_history_db
+
+    end_dt = datetime.now()
+    beg_dt = end_dt - timedelta(days=days_lookback)
+    beg_ymd = beg_dt.strftime("%Y%m%d")
+    end_ymd = end_dt.strftime("%Y%m%d")
+    beg_dash = beg_dt.strftime("%Y-%m-%d")
+    end_dash = end_dt.strftime("%Y-%m-%d")
+
+    yield {"status": "starting", "msg": "加载LOF代码列表..."}
+
+    sz_codes = []
+    cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sz_lof_codes.json")
+    if os.path.exists(cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                sz_codes = [k for k in json.load(f).keys() if not k.startswith("_")]
+        except Exception:
+            pass
+
+    session = _make_session()
+    sse_codes = _fetch_sse_lof_codes(session)
+    all_codes = list(set(sz_codes + sse_codes))
+    total = len(all_codes)
+
+    yield {"status": "ready", "msg": f"共 {total} 只基金，开始回填...", "total": total}
+
+    from datasource.manager import get_datasource_manager
+    ds = get_datasource_manager()
+    hdb = get_history_db()
+    done = 0
+    saved_rows = 0
+    errors = 0
+
+    for code in all_codes:
+        try:
+            session_k = _make_session()
+            kline = fetch_kline_multisource(session_k, code, beg_ymd, end_ymd)
+            if not kline:
+                kline = ds.fetch_kline(code, beg_ymd, end_ymd)
+            if not kline:
+                done += 1
+                yield {"status": "skip", "code": code, "done": done, "total": total, "reason": "no_data"}
+                continue
+
+            navs = ds.fetch_nav_history(code, beg_dash, end_dash)
+            rows = []
+            for date_str, info in kline.items():
+                nav = navs.get(date_str)
+                price = info["price"]
+                amount = info.get("amount", 0)
+                premium_rate = None
+                if nav and nav > 0 and price > 0:
+                    premium_rate = round((price - nav) / nav * 100, 3)
+                rows.append((
+                    date_str, code, price, nav, amount,
+                    0, premium_rate,
+                    info.get("volume"), info.get("turnover_rate"),
+                ))
+
+            if rows:
+                hdb.save_kline_batch(rows)
+                saved_rows += len(rows)
+
+            done += 1
+            has_vol = sum(1 for r in rows if r[7])
+            yield {
+                "status": "ok", "code": code, "done": done, "total": total,
+                "rows": len(rows), "has_volume": has_vol, "saved_total": saved_rows,
+            }
+        except Exception as e:
+            done += 1
+            errors += 1
+            yield {"status": "error", "code": code, "done": done, "total": total, "error": str(e)}
+
+        time.sleep(0.1)
+
+    yield {"status": "done", "msg": f"完成: {done}/{total} 基金, {saved_rows} 行, {errors} 错误"}
