@@ -209,7 +209,7 @@ def _fmt(fund: dict, detail: bool = False) -> dict:
         # ── 费率数据 ──
         "purchase_fee_rate": fund.get("purchase_fee_rate"),  # 申购优惠费率（%）
         "redemption_fee_rate": fund.get("redemption_fee_rate"),  # 赎回费率最短档（%）
-        "purchase_limit": 0 if fund.get("can_purchase") is False else fund.get("purchase_limit"),  # 停止申购→0
+        "purchase_limit": 0 if fund.get("can_purchase") in (False, 0, 0.0) else fund.get("purchase_limit"),  # 停止申购→0
         # ── 状态 ──
         "is_suspended": _is_suspended(fund),        # 是否停牌/无成交
         "can_purchase": fund.get("can_purchase"),  # 是否可申购（None=未知）
@@ -458,7 +458,7 @@ def list_funds():
         # 过滤掉暂停申购的基金（can_purchase=False）
         # can_purchase=None 表示未知状态，保留显示
         all_data = {k: v for k, v in all_data.items()
-                    if v.get("can_purchase") is not False}
+                    if v.get("can_purchase") not in (False, 0, 0.0)}
 
     # ── 排序 ──
     items = list(all_data.values())
@@ -537,7 +537,7 @@ def fund_holdings(code):
     reasons = []
     if fund.get("is_suspended"):
         reasons.append("停牌")
-    if fund.get("can_purchase") is False:
+    if fund.get("can_purchase") in (False, 0, 0.0):
         reasons.append("暂停申购")
     amount = fund.get("amount") or 0
     if amount < 1_000_000:
@@ -622,7 +622,7 @@ def rankings():
     valid = [v for v in all_data.values()
              if v.get("premium_rate") is not None
              and not _is_suspended(v)
-             and v.get("can_purchase") is not False]
+             and v.get("can_purchase") not in (False, 0, 0.0)]
 
     if rank_type == "premium":
         sorted_funds = sorted(valid, key=lambda x: x["premium_rate"], reverse=True)

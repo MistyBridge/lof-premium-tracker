@@ -113,7 +113,7 @@ def refresh_for_funds(funds: dict) -> int:
         # 条件筛选
         if fund.get("is_suspended"):
             continue
-        if fund.get("can_purchase") is False:
+        if fund.get("can_purchase") in (False, 0, 0.0):
             continue
         amount = fund.get("amount") or 0
         if amount < 1_000_000:
