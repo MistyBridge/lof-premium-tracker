@@ -117,14 +117,19 @@ def fetch_kline_data(session: requests.Session, code: str, beg_date: str, end_da
                 continue
             date = parts[0]
             price = _safe_float(parts[2])  # 收盘价
+            vol_raw = _safe_float(parts[5]) if len(parts) > 5 else 0  # 成交量(手)
             amount = _safe_float(parts[6])  # 成交额
             change_pct = _safe_float(parts[8])  # 涨跌幅
+            turnover = _safe_float(parts[10]) if len(parts) > 10 else None  # 换手率(%)
             if price <= 0:
                 continue
+            volume_shares = vol_raw * 100  # 手 → 股
             result[date] = {
                 "price": price,
                 "amount": amount,
                 "change_pct": change_pct,
+                "volume": volume_shares if volume_shares > 0 else None,
+                "turnover_rate": turnover if turnover and turnover > 0 else None,
                 "name": name,
             }
         return result
@@ -623,7 +628,8 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
                 premium_rate = round((price - nav) / nav * 100, 3)
             rows.append((
                 date_str, code, price, nav, amount,
-                0, premium_rate
+                0, premium_rate,
+                info.get("volume"), info.get("turnover_rate"),
             ))
         if rows:
             with rows_lock:

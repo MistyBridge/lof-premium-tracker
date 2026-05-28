@@ -567,6 +567,18 @@ def fund_holdings(code):
     return ok({"available": True, "quarter": None, "holdings": []})
 
 
+def _fill_shares(chart: list, fund: dict):
+    """为图表数据点填充场内份额：优先用每日 volume/turnover_rate 计算"""
+    cur_shares = fund.get("on_exchange_shares")
+    for pt in chart:
+        vol = pt.pop("volume", None)
+        tr = pt.pop("turnover_rate", None)
+        if vol and tr and tr > 0:
+            pt["on_exchange_shares"] = round(vol / tr / 10000, 2)
+        elif cur_shares and cur_shares > 0:
+            pt["on_exchange_shares"] = round(cur_shares / 10000, 2)
+
+
 @app.route("/api/funds/<code>/chart", methods=["GET"])
 def fund_chart(code: str):
     """获取基金历史价格/净值曲线数据，支持 7/30/365 日。热门基金优先从缓存读取"""
@@ -586,6 +598,7 @@ def fund_chart(code: str):
     if cached and str(days) in cached.get("charts", {}):
         chart = cached["charts"][str(days)]
         if chart:
+            _fill_shares(chart, fund)
             return ok({
                 "code": code,
                 "name": fund.get("name"),
@@ -598,13 +611,7 @@ def fund_chart(code: str):
     hdb = get_history_db()
     raw = hdb.get_kline_history(code=code, days=days)
     filtered = filter_and_forward_fill(raw)
-
-    # 场内份额（当前值填充，份额季度变化缓慢）
-    shares = fund.get("on_exchange_shares")
-    if shares and shares > 0 and filtered:
-        shares_w = round(shares / 10000, 2)  # 转万份
-        for pt in filtered:
-            pt["on_exchange_shares"] = shares_w
+    _fill_shares(filtered, fund)
 
     return ok({
         "code": code,

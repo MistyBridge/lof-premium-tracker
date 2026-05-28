@@ -84,6 +84,10 @@ def filter_and_forward_fill(raw_rows: list) -> list:
             "amount": amount,
             "_raw_price": price,
         }
+        if row.get("volume"):
+            entry["volume"] = float(row["volume"])
+        if row.get("turnover_rate"):
+            entry["turnover_rate"] = float(row["turnover_rate"])
         result.append(entry)
         prev_valid = entry
 
@@ -178,18 +182,23 @@ class HistoryDB:
         """)
         cur.execute("""
             CREATE TABLE IF NOT EXISTS daily_kline (
-                date         DATE         NOT NULL,
-                code         VARCHAR(6)   NOT NULL
-                             REFERENCES funds(code) ON DELETE CASCADE,
-                price        NUMERIC(12,4),
-                nav          NUMERIC(12,4),
-                amount       NUMERIC(16,2) DEFAULT 0,
-                change_pct   NUMERIC(10,4) DEFAULT 0,
-                premium_rate NUMERIC(10,4),
-                created_at   TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+                date          DATE         NOT NULL,
+                code          VARCHAR(6)   NOT NULL
+                              REFERENCES funds(code) ON DELETE CASCADE,
+                price         NUMERIC(12,4),
+                nav           NUMERIC(12,4),
+                amount        NUMERIC(16,2) DEFAULT 0,
+                change_pct    NUMERIC(10,4) DEFAULT 0,
+                premium_rate  NUMERIC(10,4),
+                volume        NUMERIC(16,2),
+                turnover_rate NUMERIC(10,4),
+                created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
                 PRIMARY KEY (date, code)
             )
         """)
+        # Migration: add columns if table already exists
+        cur.execute("ALTER TABLE daily_kline ADD COLUMN IF NOT EXISTS volume NUMERIC(16,2)")
+        cur.execute("ALTER TABLE daily_kline ADD COLUMN IF NOT EXISTS turnover_rate NUMERIC(10,4)")
         cur.execute("""
             CREATE INDEX IF NOT EXISTS idx_kline_code_date
                 ON daily_kline (code, date DESC)
@@ -355,21 +364,25 @@ class HistoryDB:
                         fund.get("amount") or 0,
                         fund.get("change_pct") or 0,
                         fund.get("premium_rate"),
+                        fund.get("volume"),
+                        fund.get("turnover_rate"),
                     ))
                 if kline_rows:
                     psycopg2.extras.execute_values(
                         cur,
                         """
                         INSERT INTO daily_kline
-                            (date, code, price, nav, amount, change_pct, premium_rate)
+                            (date, code, price, nav, amount, change_pct, premium_rate, volume, turnover_rate)
                         VALUES %s
                         ON CONFLICT (date, code) DO UPDATE SET
-                            price        = EXCLUDED.price,
-                            nav          = EXCLUDED.nav,
-                            amount       = EXCLUDED.amount,
-                            change_pct   = EXCLUDED.change_pct,
-                            premium_rate = EXCLUDED.premium_rate,
-                            created_at   = NOW()
+                            price         = EXCLUDED.price,
+                            nav           = EXCLUDED.nav,
+                            amount        = EXCLUDED.amount,
+                            change_pct    = EXCLUDED.change_pct,
+                            premium_rate  = EXCLUDED.premium_rate,
+                            volume        = COALESCE(EXCLUDED.volume, daily_kline.volume),
+                            turnover_rate = COALESCE(EXCLUDED.turnover_rate, daily_kline.turnover_rate),
+                            created_at    = NOW()
                         """,
                         kline_rows,
                         page_size=500,
@@ -701,7 +714,7 @@ class HistoryDB:
     def save_kline_batch(self, rows: List[tuple]):
         """
         批量 upsert 日K线数据
-        rows: [(date, code, price, nav, amount, change_pct, premium_rate), ...]
+        rows: [(date, code, price, nav, amount, change_pct, premium_rate, volume?, turnover_rate?), ...]
         """
         if not rows:
             return
@@ -712,15 +725,17 @@ class HistoryDB:
                     cur,
                     """
                     INSERT INTO daily_kline
-                        (date, code, price, nav, amount, change_pct, premium_rate)
+                        (date, code, price, nav, amount, change_pct, premium_rate, volume, turnover_rate)
                     VALUES %s
                     ON CONFLICT (date, code) DO UPDATE SET
-                        price        = EXCLUDED.price,
-                        nav          = EXCLUDED.nav,
-                        amount       = EXCLUDED.amount,
-                        change_pct   = EXCLUDED.change_pct,
-                        premium_rate = EXCLUDED.premium_rate,
-                        created_at   = NOW()
+                        price         = EXCLUDED.price,
+                        nav           = EXCLUDED.nav,
+                        amount        = EXCLUDED.amount,
+                        change_pct    = EXCLUDED.change_pct,
+                        premium_rate  = EXCLUDED.premium_rate,
+                        volume        = COALESCE(EXCLUDED.volume, daily_kline.volume),
+                        turnover_rate = COALESCE(EXCLUDED.turnover_rate, daily_kline.turnover_rate),
+                        created_at    = NOW()
                     """,
                     rows,
                     page_size=500,
@@ -745,7 +760,7 @@ class HistoryDB:
                 cur.execute(
                     """
                     SELECT date::TEXT AS date, price, nav, amount,
-                           change_pct, premium_rate
+                           change_pct, premium_rate, volume, turnover_rate
                     FROM daily_kline
                     WHERE code = %s AND date >= %s
                     ORDER BY date ASC
