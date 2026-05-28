@@ -10,7 +10,7 @@ Fetches per-fund fee rates from East Money:
 These values change rarely (monthly or less), so they are cached
 and refreshed on a longer interval than price/NAV data.
 """
-import re, json, time, structlog, threading, os
+import re, time, structlog, threading
 from typing import Dict, Optional, Any
 import requests
 from requests.adapters import HTTPAdapter
@@ -27,9 +27,6 @@ _FEE_HEADERS = {
     "Accept-Language": "zh-CN,zh;q=0.9",
 }
 
-# Cache file path (same directory as this file)
-_CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fee_cache.json")
-_CACHE_VERSION = 3  # increment when parser logic changes
 _CACHE_TTL_SECONDS = 86400  # 24 hours — fee/limit data changes rarely
 
 
@@ -229,24 +226,19 @@ def fetch_fees_batch(codes: list, concurrency: int = 10) -> Dict[str, Dict[str, 
 
 
 def load_fee_cache() -> Dict[str, Dict[str, Any]]:
-    """Load fee data from local cache file. Returns empty if version mismatch."""
-    if not os.path.exists(_CACHE_PATH):
-        return {}
+    """Load fee data from PostgreSQL (persists across deployments)."""
     try:
-        with open(_CACHE_PATH, "r", encoding="utf-8") as f:
-            cached = json.load(f)
-        if isinstance(cached, dict) and cached.get("version") == _CACHE_VERSION:
-            return cached.get("data", {})
-        # Version mismatch: discard old cache
-        return {}
-    except Exception:
+        from history_db import get_history_db
+        return get_history_db().load_fee_cache()
+    except Exception as ex:
+        logger.warning("fee_cache_load_failed", error=str(ex))
         return {}
 
 
 def save_fee_cache(data: Dict[str, Dict[str, Any]]) -> None:
-    """Save fee data to local cache file."""
+    """Save fee data to PostgreSQL."""
     try:
-        with open(_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump({"version": _CACHE_VERSION, "data": data}, f, ensure_ascii=False)
+        from history_db import get_history_db
+        get_history_db().save_fee_cache(data)
     except Exception as ex:
         logger.warning("fee_cache_save_failed", error=str(ex))
