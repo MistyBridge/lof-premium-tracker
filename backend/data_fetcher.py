@@ -296,6 +296,15 @@ class LOFDataFetcher:
                 elif fund.get("can_purchase") is None:
                     fund["can_purchase"] = None
 
+            # Step 6: 加载昨日成交额（用于筛选时取 max，避免盘中早期成交额过低被过滤）
+            try:
+                hdb = get_history_db()
+                prev_amounts = hdb.get_prev_amounts()
+                for code, fund in enriched.items():
+                    fund["prev_amount"] = prev_amounts.get(code)
+            except Exception as ex:
+                logger.warning("Prev amount load skipped: %s", ex)
+
             # 更新缓存
             with self._lock:
                 self._cache = enriched

@@ -349,7 +349,7 @@ class LofFundMonitor {
         }
         if (this.minAmount > 0) {
             filtered = filtered.filter(fund => {
-                const amountWan = (fund.amount ?? 0) / 10000;
+                const amountWan = (fund.filter_amount ?? fund.amount ?? 0) / 10000;
                 return amountWan >= this.minAmount;
             });
         }
