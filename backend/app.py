@@ -101,81 +101,87 @@ def _is_market_hours() -> bool:
     return (time(9, 30) <= t <= time(11, 30)) or (time(13, 0) <= t <= time(15, 0))
 
 
-# 停牌状态持久化缓存
-_SUSPENSION_CACHE_FILE = os.path.join(os.path.dirname(__file__), '_suspension_cache.json')
+# 停牌状态持久化缓存（PostgreSQL）
+_suspension_cache_loaded = False
+_suspension_cache: dict = {}
 
 
 def _load_suspension_cache() -> dict:
-    """加载上一交易日停牌状态"""
+    """从数据库加载停牌状态缓存（单例加载）"""
+    global _suspension_cache_loaded, _suspension_cache
+    if _suspension_cache_loaded:
+        return _suspension_cache
     try:
-        with open(_SUSPENSION_CACHE_FILE, 'r') as f:
-            data = json.load(f)
-        return data.get('suspended', {})
+        from history_db import get_history_db
+        _suspension_cache = get_history_db().load_suspension_cache()
+        _suspension_cache_loaded = True
     except Exception:
-        return {}
+        pass
+    return _suspension_cache
 
 
 def _save_suspension_cache(suspended_map: dict):
-    """保存本交易日停牌状态"""
+    """保存停牌状态到数据库"""
+    global _suspension_cache, _suspension_cache_loaded
     try:
-        with open(_SUSPENSION_CACHE_FILE, 'w') as f:
-            json.dump({
-                'date': datetime.now().strftime('%Y-%m-%d'),
-                'ts': datetime.now().timestamp(),
-                'suspended': suspended_map
-            }, f)
+        from history_db import get_history_db
+        get_history_db().save_suspension_cache(suspended_map)
+        _suspension_cache = suspended_map
+        _suspension_cache_loaded = True
     except Exception:
         pass
+
+
+_last_suspension_save_ts = 0.0
 
 
 def _maybe_update_suspension_cache(all_data: dict):
-    """交易时段内每隔60秒更新停牌缓存"""
+    """更新停牌缓存到数据库（交易时段 60 秒节流）"""
+    global _last_suspension_save_ts
     if not _is_market_hours():
         return
-    try:
-        with open(_SUSPENSION_CACHE_FILE, 'r') as f:
-            prev = json.load(f)
-        last_ts = prev.get('ts', 0)
-        if datetime.now().timestamp() - last_ts < 60:
-            return  # 60秒内不重复写入
-    except Exception:
-        pass
+    now_ts = datetime.now().timestamp()
+    if now_ts - _last_suspension_save_ts < 60:
+        return
     suspended_map = {code: _is_suspended(fund) for code, fund in all_data.items()}
     _save_suspension_cache(suspended_map)
+    _last_suspension_save_ts = now_ts
 
 
 def _is_suspended(fund: dict) -> bool:
     """
-    智能停牌判定：
-    1. amount!=0 或 volume!=0 → 绝对不停牌（最高优先级）
-    2. 交易时段内 amount=0 或 volume=0 → 停牌
-    3. 交易时段外 → 沿用昨日停牌状态
+    停牌判定：
+    1. volume>0 或 amount>0 → 有成交，绝对不停牌
+    2. volume=0 且 amount=0 → 无成交，停牌
+    3. volume=0 且 amount=None（或反之）→ 一方有数据一方无，停牌
+    4. volume=None 且 amount=None → 数据未加载，无法判断
+       - 交易时段内：暂定未停牌（数据可能尚未到达）
+       - 非交易时段：沿用数据库缓存
     """
     code = fund.get("code", "")
     vol = fund.get("volume")
     amt = fund.get("amount")
 
-    # Rule 1: 有成交 → 绝对不停牌
+    # Rule 1: 有成交 → 不停牌
     if (vol is not None and vol > 0) or (amt is not None and amt > 0):
         return False
 
-    # 加载昨日停牌缓存
-    prev_suspended = _load_suspension_cache()
-    was_suspended = prev_suspended.get(code, False)
+    # Rule 2: 明确无成交（两者都有值且为 0，或一方为 0 另一方为 None）
+    vol_zero = vol is not None and vol == 0
+    amt_zero = amt is not None and amt == 0
+    if vol_zero and amt_zero:
+        return True
+    if vol_zero and amt is None:
+        return True
+    if amt_zero and vol is None:
+        return True
 
-    if _is_market_hours():
-        # Rule 2: 交易时段内，成交量和成交额为0 → 停牌
-        vol_zero = vol is not None and vol == 0
-        amt_zero = amt is not None and amt == 0
-        if vol_zero or amt_zero:
-            return True
-        # vol/amt 均为 None → 沿用昨日状态
-        if vol is None and amt is None:
-            return was_suspended
-        return False
-    else:
-        # Rule 3: 非交易时段 → 沿用昨日停牌状态
-        return was_suspended
+    # Rule 3: 数据未加载（两者均为 None）→ 查数据库缓存
+    if vol is None and amt is None:
+        cache = _load_suspension_cache()
+        return cache.get(code, False)
+
+    return False
 
 
 def _fmt(fund: dict, detail: bool = False) -> dict:
