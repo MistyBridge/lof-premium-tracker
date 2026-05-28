@@ -1971,21 +1971,6 @@ class LofFundMonitor {
         this._detailEstProfit = est;
         this._detailFundCode = fund.code;
         this._detailFundData = fund;
-
-        const profitVal = document.getElementById('fdEstProfit');
-        if (profitVal) {
-            if (est) {
-                const sign = est.amount > 0 ? '+' : '';
-                profitVal.textContent = sign + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元');
-                profitVal.className = 'fd-profit-val ' + (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '');
-            } else {
-                profitVal.textContent = '--';
-                profitVal.className = 'fd-profit-val';
-            }
-        }
-
-        const breakdown = document.getElementById('fdFeeBreakdown');
-        if (breakdown) { breakdown.innerHTML = ''; breakdown.classList.remove('show'); }
     }
 
     closeFundDetail() {
