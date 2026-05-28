@@ -17,7 +17,7 @@ import requests
 
 from config import Config
 from history_db import get_history_db
-from fee_fetcher import fetch_fees_batch, load_fee_cache, save_fee_cache
+from fee_fetcher import fetch_fees_batch, load_fee_cache
 from datasource.manager import get_datasource_manager
 
 logger = logging.getLogger(__name__)
@@ -277,13 +277,9 @@ class LOFDataFetcher:
                 if "can_purchase" not in fund:
                     fund["can_purchase"] = None
 
-            # Step 5: 费率数据
-            # 每次刷新都重新抓取，不使用磁盘缓存（数据稳定性优先）
-            fee_cache = {}
+            # Step 5: 费率数据（TTL 增量刷新，内部管理缓存）
             try:
-                fee_data = fetch_fees_batch(list(enriched.keys()), concurrency=10)
-                fee_cache = fee_data
-                save_fee_cache(fee_cache)
+                fee_cache = fetch_fees_batch(list(enriched.keys()), concurrency=10)
             except Exception as ex:
                 logger.warning("Fee batch fetch failed: %s", ex)
                 fee_cache = load_fee_cache()
