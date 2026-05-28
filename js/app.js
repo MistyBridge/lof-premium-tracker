@@ -1938,8 +1938,6 @@ class LofFundMonitor {
         setVal('fdAmount', amountText);
         setVal('fdEstProfitRate', est ? (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%' : '--',
             est ? (est.rate > 0 ? 'fd-pos' : est.rate < 0 ? 'fd-neg' : '') : '');
-        setVal('fdEstProfitAmount', est ? (est.amount > 0 ? '+' : '') + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元') : '--',
-            est ? (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '') : '');
         setVal('fdStatus', fund.premium_status || '未知');
 
         // 申购限额
@@ -1957,7 +1955,6 @@ class LofFundMonitor {
             }
         }
 
-        setVal('fdNavDate', fund.nav_date || '-');
         // 新增字段
         setVal('fdVolume', fund.volume != null ? (fund.volume / 10000).toFixed(2) + '万手' : '--');
         setVal('fdChangeAmount', fund.change_amount != null ? fund.change_amount.toFixed(4) : '--');
@@ -1971,21 +1968,6 @@ class LofFundMonitor {
         this._detailEstProfit = est;
         this._detailFundCode = fund.code;
         this._detailFundData = fund;
-
-        const profitVal = document.getElementById('fdEstProfit');
-        if (profitVal) {
-            if (est) {
-                const sign = est.amount > 0 ? '+' : '';
-                profitVal.textContent = sign + (Math.abs(est.amount) >= 10000 ? (est.amount / 10000).toFixed(2) + '万' : est.amount.toFixed(2) + '元');
-                profitVal.className = 'fd-profit-val ' + (est.amount > 0 ? 'fd-pos' : est.amount < 0 ? 'fd-neg' : '');
-            } else {
-                profitVal.textContent = '--';
-                profitVal.className = 'fd-profit-val';
-            }
-        }
-
-        const breakdown = document.getElementById('fdFeeBreakdown');
-        if (breakdown) { breakdown.innerHTML = ''; breakdown.classList.remove('show'); }
     }
 
     closeFundDetail() {
