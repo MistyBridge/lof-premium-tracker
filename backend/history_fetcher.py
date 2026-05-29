@@ -649,9 +649,8 @@ def fetch_kline_historical_data(days_lookback: int = 395) -> int:
                 premium_rate = round((price - nav) / nav * 100, 3)
             vol = info.get("volume")
             turnover = info.get("turnover_rate")
-            if vol and not turnover and cur_shares and cur_shares > 0:
-                vol_shares = vol if vol > cur_shares else vol * 100
-                turnover = round(vol_shares / cur_shares * 100, 4)
+            # 不推算 turnover_rate（公式循环：vol/tr 恒等于 cur_shares/10000）
+            # 只使用数据源直接提供的 turnover_rate（如 push2his）
             rows.append((
                 date_str, code, price, nav, amount,
                 0, premium_rate,
@@ -769,13 +768,9 @@ def fetch_kline_historical_data_stream(days_lookback: int = 395):
                 if nav and nav > 0 and price > 0:
                     premium_rate = round((price - nav) / nav * 100, 3)
 
-                # 从成交量推算换手率
+                # 不推算 turnover_rate（公式循环）
                 vol = info.get("volume")
                 turnover = info.get("turnover_rate")
-                if vol and not turnover and cur_shares and cur_shares > 0:
-                    # Sina volume=股, Tencent volume=手
-                    vol_shares = vol if vol > cur_shares else vol * 100
-                    turnover = round(vol_shares / cur_shares * 100, 4)
 
                 rows.append((
                     date_str, code, price, nav, amount,

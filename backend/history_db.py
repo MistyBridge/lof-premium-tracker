@@ -796,7 +796,7 @@ class HistoryDB:
                         change_pct    = EXCLUDED.change_pct,
                         premium_rate  = EXCLUDED.premium_rate,
                         volume        = COALESCE(EXCLUDED.volume, daily_kline.volume),
-                        turnover_rate = COALESCE(EXCLUDED.turnover_rate, daily_kline.turnover_rate),
+                        turnover_rate = EXCLUDED.turnover_rate,
                         created_at    = NOW()
                     """,
                     rows,
