@@ -2,11 +2,10 @@
 """
 十大持仓缓存模块
 - 数据在后台定时刷新时预抓取，不在用户请求时实时请求
-- 缓存到磁盘，季度数据变化频率极低
+- 缓存到 PostgreSQL，部署后不丢失
+- 季度数据变化频率极低
 """
-import json
 import logging
-import os
 import re
 import threading
 import time
@@ -15,7 +14,6 @@ import requests as req
 
 logger = logging.getLogger(__name__)
 
-_CACHE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "holdings_cache.json")
 _lock = threading.Lock()
 _cache: dict = {}          # {code: {holdings, quarter, updated_at}}
 _last_refresh: float = 0
@@ -71,26 +69,24 @@ def _fetch_raw(code: str) -> dict | None:
 
 
 def load_cache() -> dict:
-    """加载磁盘缓存"""
+    """从 PostgreSQL 加载缓存"""
     global _cache, _last_refresh
     try:
-        if os.path.exists(_CACHE_PATH):
-            with open(_CACHE_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            _cache = data.get("data", {})
-            _last_refresh = data.get("ts", 0)
-    except Exception:
-        pass
+        from history_db import get_history_db
+        _cache = get_history_db().load_holdings_cache()
+        _last_refresh = time.time()
+    except Exception as e:
+        logger.warning("Failed to load holdings from DB: %s", e)
     return _cache
 
 
 def save_cache() -> None:
-    """保存到磁盘"""
+    """保存到 PostgreSQL"""
     try:
-        with open(_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump({"ts": time.time(), "data": _cache}, f, ensure_ascii=False)
-    except Exception:
-        pass
+        from history_db import get_history_db
+        get_history_db().save_holdings_cache(_cache)
+    except Exception as e:
+        logger.warning("Failed to save holdings to DB: %s", e)
 
 
 def get_holdings(code: str) -> dict | None:
@@ -102,14 +98,24 @@ def get_holdings(code: str) -> dict | None:
 def refresh_for_funds(funds: dict) -> int:
     """
     后台定时刷新：为符合条件的基金预抓取持仓数据
-    每次刷新前清除旧缓存
+    增量更新：跳过已有数据的基金
     """
     global _cache, _last_refresh
-    _cache = {}
+
+    # 确保缓存已从数据库加载
+    if not _cache:
+        load_cache()
+
     fetched = 0
     now = time.time()
+    STALE_SECONDS = 86400 * 7  # 7天过期
 
     for code, fund in funds.items():
+        # 已有未过期数据，跳过
+        existing = _cache.get(code)
+        if existing and existing.get("updated_at") and (now - existing["updated_at"]) < STALE_SECONDS:
+            continue
+
         # 条件筛选
         if fund.get("is_suspended"):
             continue
@@ -125,7 +131,11 @@ def refresh_for_funds(funds: dict) -> int:
             with _lock:
                 _cache[code] = data
             fetched += 1
-            time.sleep(0.3)  # 请求间隔，避免被限流
+            time.sleep(0.3)
+
+            # 每50只保存一次，避免数据丢失
+            if fetched % 50 == 0:
+                save_cache()
 
     if fetched > 0:
         _last_refresh = now

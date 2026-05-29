@@ -220,6 +220,14 @@ class HistoryDB:
                 updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )
         """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS holdings_cache (
+                code       VARCHAR(6) PRIMARY KEY,
+                holdings   JSONB,
+                quarter    VARCHAR(10),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+        """)
 
     def _migrate_schema(self, cur):
         """从旧 schema 迁移到新 schema（事务内执行）"""
@@ -663,6 +671,60 @@ class HistoryDB:
             logger.info("Saved %d suspension entries to DB", len(rows))
         except Exception as e:
             logger.error("Failed to save suspension cache: %s", e)
+            conn.rollback()
+        finally:
+            self._pool.putconn(conn)
+
+    def load_holdings_cache(self) -> Dict[str, Dict]:
+        """从数据库加载持仓缓存，返回 {code: {holdings, quarter, updated_at}}"""
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+                cur.execute("SELECT code, holdings, quarter, updated_at FROM holdings_cache")
+                result = {}
+                for r in cur.fetchall():
+                    d = dict(r)
+                    code = d.pop("code")
+                    if d.get("updated_at"):
+                        d["updated_at"] = d["updated_at"].timestamp()
+                    result[code] = d
+                return result
+        except Exception as e:
+            logger.warning("Failed to load holdings cache: %s", e)
+            return {}
+        finally:
+            self._pool.putconn(conn)
+
+    def save_holdings_cache(self, data: Dict[str, Dict]) -> None:
+        """批量写入持仓缓存到数据库（upsert）"""
+        if not data:
+            return
+        rows = []
+        for code, info in data.items():
+            updated_at = info.get("updated_at")
+            if updated_at is not None:
+                updated_at = datetime.fromtimestamp(updated_at)
+            rows.append((code, json.dumps(info.get("holdings", [])), info.get("quarter"), updated_at))
+        conn = self._pool.getconn()
+        try:
+            with conn.cursor() as cur:
+                psycopg2.extras.execute_values(
+                    cur,
+                    """
+                    INSERT INTO holdings_cache (code, holdings, quarter, updated_at)
+                    VALUES %s
+                    ON CONFLICT (code) DO UPDATE SET
+                        holdings   = EXCLUDED.holdings,
+                        quarter    = EXCLUDED.quarter,
+                        updated_at = EXCLUDED.updated_at
+                    """,
+                    rows,
+                    page_size=500,
+                )
+            conn.commit()
+            logger.info("Saved %d holdings entries to DB", len(rows))
+        except Exception as e:
+            logger.error("Failed to save holdings cache: %s", e)
             conn.rollback()
         finally:
             self._pool.putconn(conn)
