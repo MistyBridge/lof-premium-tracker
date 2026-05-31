@@ -25,7 +25,7 @@
     <meta name="twitter:title" content="金快查 - LOF基金实时折溢价监控">
     <meta name="twitter:description" content="全市场LOF基金实时溢价率、折价率、套利收益计算。">
 
-    <link rel="stylesheet" href="css/style.css?v=16">
+    <link rel="stylesheet" href="css/style.css?v=22">
     <link rel="stylesheet" href="css/landing.css?v=5">
     <link rel="stylesheet" href="css/account.css?v=1">
     <link rel="stylesheet" href="css/admin.css?v=1">
@@ -166,7 +166,7 @@
                                 <input type="text" id="searchInput" placeholder="(--) 代码/名称" autocomplete="one-time-code">
                             </div>
                             <button id="settingsBtn" class="btn-settings" title="设置筛选阈值">设置</button>
-                            <button id="colConfigBtn" class="btn-settings btn-col-config" title="表头管理" style="margin-left:0">⚙</button>
+                            <button id="colConfigBtn" class="btn-settings btn-col-config" title="表头管理" style="margin-left:0">编辑</button>
                             <div class="fund-type-dropdown" id="fundTypeDropdown" style="display:none">
                                 <div class="ft-option active" data-type="lof">
                                     <span class="ft-opt-name">LOF基金</span>
@@ -429,7 +429,7 @@
         <div class="fund-detail-modal">
             <div class="fd-header">
                 <h3 id="fundDetailTitle">基金详情</h3>
-                <button id="fdKpiConfigBtn" class="fd-kpi-config-btn" title="卡片管理">&#9881;</button>
+                <button id="fdKpiConfigBtn" class="fd-kpi-config-btn" title="卡片管理">编辑</button>
                 <span class="fd-header-actions">
                     <button id="fdFavoriteBtn" class="fd-star" title="收藏基金">☆</button>
                     <button id="fdCloseBtn" class="fd-close" title="关闭">&times;</button>
@@ -461,6 +461,19 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">数据日期</span><span class="fd-kpi-value" id="fdDataDate">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">换手率</span><span class="fd-kpi-value" id="fdTurnoverRate">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">场内份额</span><span class="fd-kpi-value" id="fdOnExchangeShares">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">基金类型</span><span class="fd-kpi-value" id="fdFundType">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">市场</span><span class="fd-kpi-value" id="fdMarket">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">跟踪指数</span><span class="fd-kpi-value" id="fdIndexCode">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">规模(亿)</span><span class="fd-kpi-value" id="fdAum">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">赎回状态</span><span class="fd-kpi-value" id="fdRedeemStatus">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">赎回费率</span><span class="fd-kpi-value" id="fdRedemptionFee">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">数据更新</span><span class="fd-kpi-value" id="fdFetchedAt">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">振幅</span><span class="fd-kpi-value" id="fdAmplitude">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">流通市值</span><span class="fd-kpi-value" id="fdFloatMarketCap">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">总市值</span><span class="fd-kpi-value" id="fdTotalMarketCap">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">涨停价</span><span class="fd-kpi-value" id="fdLimitUp">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">跌停价</span><span class="fd-kpi-value" id="fdLimitDown">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">量比</span><span class="fd-kpi-value" id="fdVolumeRatio">--</span></div>
                 </div>
             </div>
             <div id="fdPhase2" class="fd-phase">
@@ -640,9 +653,9 @@
             // Phase 1: 无依赖脚本并行加载 (Chart.js 按需延迟，不在此处加载)
             this._loading = Promise.all([
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
-                self._loadScript('js/columns.js?v=15'),
+                self._loadScript('js/columns.js?v=22'),
                 self._loadScript('js/kpi-cards.js?v=1'),
-                self._loadScript('js/config.js?v=15'),
+                self._loadScript('js/config.js?v=22'),
                 self._loadScript('js/cache.js?v=1'),
                 self._loadScript('js/supabase.js?v=1'),
                 self._loadScript('js/auth.js?v=1'),
@@ -652,10 +665,10 @@
                 self._loadScript('js/admin.js?v=1')
             ]).then(function() {
                 // Phase 2: api.js 依赖 config.js
-                return self._loadScript('js/api.js?v=15');
+                return self._loadScript('js/api.js?v=22');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
-                return self._loadScript('js/app.js?v=15');
+                return self._loadScript('js/app.js?v=22');
             }).then(function() {
                 self._scriptsReady = true;
             });
@@ -728,15 +741,21 @@
         },
 
         _enterDataView: function(mode) {
+            console.log('[SPA] _enterDataView:', mode);
             var self = this;
             this._loadAllScripts().then(function() {
+                console.log('[SPA] scripts loaded, setting mode:', mode);
                 self._setAppMode(mode);
+            }).catch(function(err) {
+                console.error('[SPA] script load failed:', err);
             });
         },
 
         _setAppMode: function(mode) {
+            console.log('[SPA] _setAppMode:', mode, 'app:', !!this._app);
             if (!this._app) {
                 window.LOF_PAGE_MODE = mode;
+                console.log('[SPA] creating LofFundMonitor...');
                 this._app = new LofFundMonitor();
                 this._currentMode = mode;
                 return;
@@ -802,8 +821,10 @@
     })();
 
     // 路由监听
-    window.addEventListener('hashchange', function() { SPA._route(); });
+    console.log('[SPA] loaded, hash:', location.hash);
+    window.addEventListener('hashchange', function() { console.log('[SPA] hashchange'); SPA._route(); });
     if (location.hash && location.hash !== '#/' && location.hash !== '#') {
+        console.log('[SPA] routing to:', location.hash);
         SPA._route();
     }
 
@@ -861,8 +882,8 @@
             // 加载轻量脚本 → 拉取数据 → 缓存
             var scripts = [
                 'js/kpi-cards.js?v=1',
-                'js/config.js?v=15',
-                'js/api.js?v=15',
+                'js/config.js?v=22',
+                'js/api.js?v=22',
                 'js/cache.js?v=1',
                 'js/supabase.js?v=1',
                 'js/auth.js?v=1',
@@ -874,7 +895,7 @@
             var loaded = 0;
             function loadNext() {
                 if (loaded >= scripts.length) {
-                    // 脚本就绪，拉数据
+                    // 脚本就绪，拉数据（v2 API）
                     if (typeof api !== 'undefined' && typeof Cache !== 'undefined') {
                         api.getFunds(1, 600, true, true).then(function(result) {
                             var funds = result.data.filter(function(f) {
@@ -882,8 +903,8 @@
                             });
                             Cache.set('funds', funds, 300000);
                             var meta = {
-                                last_fetch: result.meta ? result.meta.last_fetch : null,
-                                interval: result.meta ? (result.meta.refresh_interval_sec || 300) / 60 : 5,
+                                last_fetch: result.meta ? result.meta.data_timestamp : null,
+                                interval: 5,
                                 total: result.data.length
                             };
                             Cache.set('fundsMeta', meta, 300000);
@@ -901,8 +922,8 @@
                 document.head.appendChild(s);
             }
             loadNext();
-            // 预热后端连接
-            fetch('/health').catch(function(){});
+            // 预热后端连接（v2 API）
+            fetch((window.LOF_CONFIG?.API_BASE_URL || '') + '/api/v1/health').catch(function(){});
         }
         // 1s 后开始预加载
         setTimeout(preload, 1000);

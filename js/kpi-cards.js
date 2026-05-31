@@ -10,9 +10,9 @@ var KPI_CARD_REGISTRY = [
     { id: 'fdPremiumRate',    label: '溢价率',       defaultVisible: true,  critical: false },
     { id: 'fdAvgPremium',     label: '三日均溢',     defaultVisible: true,  critical: false },
     { id: 'fdAmount',         label: '成交额',       defaultVisible: true,  critical: false },
-    { id: 'fdEstProfitRate',  label: '预计收益率',   defaultVisible: true,  critical: false },
-    { id: 'fdEstProfitAmount',label: '预计收益额',   defaultVisible: true,  critical: false },
-    { id: 'fdStatus',         label: '状态',         defaultVisible: false,  critical: false },
+    { id: 'fdEstProfitRate',  label: '预计收益率',    defaultVisible: true,  critical: false },
+    { id: 'fdEstProfitAmount',label: '预计收益额',    defaultVisible: true,  critical: false },
+    { id: 'fdStatus',         label: '状态',         defaultVisible: false, critical: false },
     { id: 'fdPurchaseLimit',  label: '申购限额',     defaultVisible: true,  critical: false },
     { id: 'fdNavDate',        label: '净值日期',     defaultVisible: true,  critical: false },
     { id: 'fdVolume',         label: '成交量',       defaultVisible: false, critical: false },
@@ -22,6 +22,21 @@ var KPI_CARD_REGISTRY = [
     { id: 'fdDataDate',       label: '数据日期',     defaultVisible: false, critical: false },
     { id: 'fdTurnoverRate',   label: '换手率',       defaultVisible: false, critical: false },
     { id: 'fdOnExchangeShares',label: '场内份额',    defaultVisible: false, critical: false },
+    // === 新增字段（数据库已有） ===
+    { id: 'fdFundType',       label: '基金类型',     defaultVisible: true,  critical: false },
+    { id: 'fdMarket',         label: '市场',         defaultVisible: false, critical: false },
+    { id: 'fdIndexCode',      label: '跟踪指数',     defaultVisible: false, critical: false },
+    { id: 'fdAum',            label: '规模(亿)',     defaultVisible: false, critical: false },
+    { id: 'fdRedeemStatus',   label: '赎回状态',     defaultVisible: false, critical: false },
+    { id: 'fdRedemptionFee',  label: '赎回费率',     defaultVisible: false, critical: false },
+    { id: 'fdFetchedAt',      label: '数据更新',     defaultVisible: false, critical: false },
+    // === 腾讯qt新增字段 ===
+    { id: 'fdAmplitude',      label: '振幅',         defaultVisible: false, critical: false },
+    { id: 'fdFloatMarketCap', label: '流通市值(亿)', defaultVisible: false, critical: false },
+    { id: 'fdTotalMarketCap', label: '总市值(亿)',   defaultVisible: false, critical: false },
+    { id: 'fdLimitUp',        label: '涨停价',       defaultVisible: false, critical: false },
+    { id: 'fdLimitDown',      label: '跌停价',       defaultVisible: false, critical: false },
+    { id: 'fdVolumeRatio',    label: '量比',         defaultVisible: false, critical: false },
 ];
 
 var KPI_PREFS_KEY = 'lof_kpi_card_prefs_v1';

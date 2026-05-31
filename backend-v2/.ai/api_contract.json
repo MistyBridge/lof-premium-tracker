@@ -1,0 +1,417 @@
+{
+  "GET /api/v1/health": {
+    "version": "v1",
+    "auth": "none",
+    "response_fields": [
+      "status",
+      "version",
+      "db",
+      "redis",
+      "uptime"
+    ],
+    "required_fields": [
+      "status",
+      "version"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/funds": {
+    "version": "v1",
+    "auth": "optional",
+    "params": [
+      "page",
+      "size",
+      "sort",
+      "order",
+      "search",
+      "premium_min",
+      "premium_max",
+      "amount_min",
+      "fund_type",
+      "data_type"
+    ],
+    "sort_whitelist": [
+      "premium_rate",
+      "close",
+      "amount",
+      "turnover_rate",
+      "change_pct",
+      "three_day_avg_premium",
+      "float_share"
+    ],
+    "response_fields": [
+      "code",
+      "name",
+      "close",
+      "nav",
+      "premium_rate",
+      "three_day_avg_premium",
+      "amount",
+      "turnover_rate",
+      "change_pct",
+      "float_share",
+      "fund_type",
+      "purchase_status",
+      "redeem_status",
+      "data_type",
+      "nav_date"
+    ],
+    "required_fields": [
+      "code",
+      "name"
+    ],
+    "meta_fields": [
+      "page",
+      "size",
+      "total",
+      "data_timestamp",
+      "data_type",
+      "realtime_available"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/funds/{code}": {
+    "version": "v1",
+    "auth": "optional",
+    "response_fields": [
+      "info.code",
+      "info.name",
+      "info.fund_type",
+      "info.index_code",
+      "info.market",
+      "info.aum",
+      "info.listing_date",
+      "fee.purchase_fee_rate",
+      "fee.redemption_fee_rate",
+      "fee.purchase_limit",
+      "fee.purchase_status",
+      "fee.redeem_status",
+      "holdings[].code",
+      "holdings[].name",
+      "holdings[].pct",
+      "latest_daily.close",
+      "latest_daily.nav",
+      "latest_daily.premium_rate",
+      "latest_daily.amount",
+      "latest_daily.change_pct"
+    ],
+    "required_fields": [
+      "info.code",
+      "info.name"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/funds/{code}/chart": {
+    "version": "v1",
+    "auth": "optional",
+    "params": [
+      "days"
+    ],
+    "params_whitelist_days": [
+      7,
+      30,
+      90,
+      180,
+      365
+    ],
+    "response_fields": [
+      "dates[]",
+      "close[]",
+      "nav[]",
+      "premium_rate[]",
+      "amount[]"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/funds/{code}/holdings": {
+    "version": "v1",
+    "auth": "optional",
+    "response_fields": [
+      "code",
+      "quarter",
+      "holdings[].code",
+      "holdings[].name",
+      "holdings[].pct",
+      "updated_at"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/funds/{code}/daily": {
+    "version": "v1",
+    "auth": "optional",
+    "params": [
+      "start_date",
+      "end_date",
+      "fields"
+    ],
+    "fields_whitelist": [
+      "open",
+      "high",
+      "low",
+      "close",
+      "volume",
+      "amount",
+      "nav",
+      "premium_rate",
+      "turnover_rate",
+      "change_pct",
+      "float_share"
+    ],
+    "response_fields": [
+      "code",
+      "trade_date",
+      "[requested_fields]"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/assets": {
+    "v": "v1",
+    "auth": "none",
+    "params": [
+      "page",
+      "size",
+      "search",
+      "asset_type"
+    ],
+    "changed": "M8"
+  },
+  "POST /api/v1/formulas": {
+    "v": "v1",
+    "auth": "required",
+    "request": [
+      "name",
+      "expression"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/formulas": {
+    "v": "v1",
+    "auth": "required",
+    "changed": "M8"
+  },
+  "PUT /api/v1/formulas/{id}": {
+    "v": "v1",
+    "auth": "required",
+    "params": [
+      "version"
+    ],
+    "error_codes": {
+      "40900": "version conflict"
+    },
+    "changed": "M8"
+  },
+  "DELETE /api/v1/formulas/{id}": {
+    "v": "v1",
+    "auth": "required",
+    "response": [
+      "deleted"
+    ],
+    "changed": "M8"
+  },
+  "POST /api/v1/watchlist": {
+    "v": "v1",
+    "auth": "required",
+    "request": [
+      "fund_code"
+    ],
+    "changed": "M8"
+  },
+  "DELETE /api/v1/watchlist/{fund_code}": {
+    "v": "v1",
+    "auth": "required",
+    "changed": "M8"
+  },
+  "GET /api/v1/watchlist": {
+    "v": "v1",
+    "auth": "required",
+    "changed": "M8"
+  },
+  "POST /api/v1/alerts": {
+    "v": "v1",
+    "auth": "required",
+    "request": [
+      "name",
+      "condition"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/diagnose/{target}": {
+    "version": "v1",
+    "auth": "admin",
+    "targets_whitelist": [
+      "redis",
+      "db",
+      "fetcher",
+      "queue",
+      "fund"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/admin/monitor": {
+    "v": "v1",
+    "auth": "admin",
+    "changed": "M8"
+  },
+  "GET /api/v1/stream": {
+    "version": "v1",
+    "auth": "optional",
+    "content_type": "text/event-stream",
+    "events": [
+      "fund_update",
+      "alert_triggered"
+    ],
+    "last_changed": "2026-05-30",
+    "change_reason": "初始定义"
+  },
+  "GET /api/v1/funds/batch": {
+    "v": "v1",
+    "auth": "none",
+    "params": [
+      "codes"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/funds/rankings": {
+    "v": "v1",
+    "auth": "none",
+    "changed": "M8"
+  },
+  "GET /api/v1/assets/{code}": {
+    "v": "v1",
+    "auth": "none",
+    "changed": "M8"
+  },
+  "GET /api/v1/assets/{code}/funds": {
+    "v": "v1",
+    "auth": "none",
+    "changed": "M8"
+  },
+  "GET /api/v1/assets/{code}/chart": {
+    "v": "v1",
+    "auth": "none",
+    "params": [
+      "days"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/data/fund/{code}": {
+    "v": "v1",
+    "auth": "none",
+    "params": [
+      "fields",
+      "from_date",
+      "to_date",
+      "limit"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/data/asset/{code}": {
+    "v": "v1",
+    "auth": "none",
+    "params": [
+      "fields",
+      "from_date",
+      "to_date",
+      "limit"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/data/batch": {
+    "v": "v1",
+    "auth": "none",
+    "params": [
+      "codes",
+      "fields",
+      "from_date",
+      "to_date"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/formulas/groups": {
+    "v": "v1",
+    "auth": "required",
+    "changed": "M8"
+  },
+  "POST /api/v1/formulas/groups": {
+    "v": "v1",
+    "auth": "required",
+    "request": [
+      "name"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/alerts": {
+    "v": "v1",
+    "auth": "required",
+    "changed": "M8"
+  },
+  "DELETE /api/v1/alerts/{id}": {
+    "v": "v1",
+    "auth": "required",
+    "changed": "M8"
+  },
+  "PUT /api/v1/alerts/{id}/toggle": {
+    "v": "v1",
+    "auth": "required",
+    "request": [
+      "is_active"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/diagnose/redis": {
+    "v": "v1",
+    "auth": "admin",
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/diagnose/db": {
+    "v": "v1",
+    "auth": "admin",
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/diagnose/fetcher": {
+    "v": "v1",
+    "auth": "admin",
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/diagnose/queue": {
+    "v": "v1",
+    "auth": "admin",
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/diagnose/fund": {
+    "v": "v1",
+    "auth": "admin",
+    "params": [
+      "code"
+    ],
+    "changed": "M8"
+  },
+  "POST /api/v1/admin/ops/mv-refresh": {
+    "v": "v1",
+    "auth": "admin",
+    "changed": "M8"
+  },
+  "POST /api/v1/admin/ops/cache-clear": {
+    "v": "v1",
+    "auth": "admin",
+    "params": [
+      "pattern"
+    ],
+    "changed": "M8"
+  },
+  "GET /api/v1/admin/audit-log": {
+    "v": "v1",
+    "auth": "admin",
+    "params": [
+      "limit"
+    ],
+    "changed": "M8"
+  }
+}
