@@ -95,7 +95,26 @@
       "Bash(gh pr *)",
       "Bash(sed -n '538,543p' \"D:/开发/金快查/repo-lof-premium-tracker/js/app.js\")",
       "Bash(sed -n '1986,2000p' \"D:/开发/金快查/repo-lof-premium-tracker/js/app.js\")",
-      "Bash(git commit -m 'fix: 场内份额/图表/成交额/换手率修复 + 日志更新 *)"
+      "Bash(git commit -m 'fix: 场内份额/图表/成交额/换手率修复 + 日志更新 *)",
+      "Bash(scp -o ConnectTimeout=10 D:/开发/金快查/repo-lof-premium-tracker/backend-v2/services/fund_service.py D:/开发/金快查/repo-lof-premium-tracker/backend-v2/processors/normalize.py root@101.200.129.61:/opt/jinkuaicha/backend-v2/services/)",
+      "Bash(scp -o ConnectTimeout=10 D:/开发/金快查/repo-lof-premium-tracker/backend-v2/processors/normalize.py root@101.200.129.61:/opt/jinkuaicha/backend-v2/processors/)",
+      "Bash(scp -o ConnectTimeout=10 D:/开发/金快查/repo-lof-premium-tracker/js/app.js root@101.200.129.61:/opt/jinkuaicha/)",
+      "Bash(git commit *)",
+      "Bash(npx wrangler *)",
+      "Bash(git fetch *)",
+      "Bash(ls -la export_docs.py fetch_*.py upload_to_aliyun.py test-api.html loaderio-*.txt railway.json \"状态：规划完成，待实施\" \"生成时间：2026-05-30\")",
+      "Bash(ls backend/fee_cache.json backend/history_seed.json backend/seed_kline_v2.py)",
+      "Bash(du -sh node_modules/)",
+      "Bash(ls backend/fetchers/)",
+      "Bash(ls backend-v2/_diag.py backend-v2/all_lof_codes.json backend-v2/fund_categories.json backend-v2/verify.sh backend-v2/conftest.py backend-v2/pytest.ini)",
+      "Bash(ls backend-v2/tasks/)",
+      "Bash(rm -f export_docs.py fetch_all_kline.py fetch_all_kline_multi.py fetch_remaining_kline.py upload_to_aliyun.py test-api.html)",
+      "Bash(rm -f loaderio-ef379a2cf8bfe8f5723ae8d412c46556.txt)",
+      "Bash(rm -f railway.json)",
+      "Bash(rm -f requirements.txt)",
+      "Bash(rm -f \"状态：规划完成，待实施\" \"生成时间：2026-05-30\")",
+      "Bash(rm -rf data/)",
+      "Bash(ls -la *.py *.json *.txt *.xml *.html *.toml)"
     ]
   }
 }
