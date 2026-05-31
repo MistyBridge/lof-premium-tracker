@@ -114,7 +114,9 @@
       "Bash(rm -f requirements.txt)",
       "Bash(rm -f \"状态：规划完成，待实施\" \"生成时间：2026-05-30\")",
       "Bash(rm -rf data/)",
-      "Bash(ls -la *.py *.json *.txt *.xml *.html *.toml)"
+      "Bash(ls -la *.py *.json *.txt *.xml *.html *.toml)",
+      "Bash(git mv *)",
+      "Bash(git rm *)"
     ]
   }
 }

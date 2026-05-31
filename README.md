@@ -12,7 +12,7 @@
 
 **全市场 ~540 只深沪 LOF 实时折溢价监控 · 365天日线图表 · 套利收益测算 · 溢价率排行 · PC + 移动端**
 
-[在线使用](https://jinkuaicha.com) · [更新日志](CHANGELOG_USER.md) · [API 文档](https://api.jinkuaicha.com/docs) · [技术文档](docs/TECH.md)
+[在线使用](https://jinkuaicha.com) · [更新日志](docs/CHANGELOG_USER.md) · [API 文档](https://api.jinkuaicha.com/docs) · [技术文档](docs/TECH.md)
 
 </div>
 
@@ -214,9 +214,9 @@ lof-premium-tracker/
 │   └── .ai/                      # AI 治理元数据
 ├── functions/                    # Cloudflare Functions
 ├── docs/                         # 文档
-├── CHANGELOG.md                  # 技术更新日志
-├── CHANGELOG_USER.md             # 用户更新日志
-├── HANDOFF.md                    # 交接文档
+├── docs/CHANGELOG.md                  # 技术更新日志
+├── docs/CHANGELOG_USER.md             # 用户更新日志
+├── docs/HANDOFF.md                    # 交接文档
 └── LICENSE                       # AGPL-3.0
 ```
 

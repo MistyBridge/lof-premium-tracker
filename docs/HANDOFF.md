@@ -80,17 +80,17 @@ repo-lof-premium-tracker/
 ├── pages/                        # 用户协议/隐私政策
 ├── functions/                    # CF Functions代理
 ├── credentials.md                # 密钥文件(.gitignore)
-├── HANDOFF.md                    # 本交接文档
-├── CHANGELOG.md                  # 技术更新日志
-├── CHANGELOG_USER.md             # 用户更新日志
-├── ROADMAP.md                    # 开发路线图
+├── docs/HANDOFF.md                    # 本交接文档
+├── docs/CHANGELOG.md                  # 技术更新日志
+├── docs/CHANGELOG_USER.md             # 用户更新日志
+├── docs/ROADMAP.md                    # 开发路线图
 ├── README.md                     # 项目说明
 ├── LICENSE                       # AGPL-3.0
 ├── railway.json                  # Railway部署配置
 ├── wrangler.toml                 # Cloudflare配置
 ├── _headers                      # CF Pages缓存策略
 ├── requirements.txt              # Python依赖
-├── Procfile                      # Railway启动命令
+
 ├── package.json                  # Node依赖(wrangler)
 ├── robots.txt / sitemap.xml      # SEO
 
