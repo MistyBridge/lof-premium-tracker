@@ -245,7 +245,7 @@ async def get_fund_chart(
     async with session_factory() as session:
         result = await session.execute(text("""
             SELECT trade_date, close, nav, premium_rate,
-                   volume, amount, change_pct, float_share
+                   volume, amount, change_pct, float_share, turnover_rate
             FROM fund_daily
             WHERE code = :code
             ORDER BY trade_date DESC
@@ -266,22 +266,35 @@ async def get_fund_chart(
     # 字段名对齐前端期望
     chart = []
     for row in rows:
+        vol = row.get("volume")
+        tr = row.get("turnover_rate")
+        cl = row.get("close")
+        amt = row.get("amount")
+
+        # 场内份额：从 volume/turnover_rate 计算
+        shares = round(vol / tr, 2) if vol and tr and tr > 0 else row.get("float_share")
+
+        # 成交额补算
+        if (not amt or amt == 0) and vol and vol > 0 and cl and cl > 0:
+            amt = round(vol * 100 * cl, 2)
+
         chart.append({
             "date": str(row["trade_date"]),
-            "price": row.get("close"),
+            "price": cl,
             "nav": row.get("nav"),
             "premium_rate": row.get("premium_rate"),
-            "volume": row.get("volume"),
-            "amount": row.get("amount"),
+            "volume": vol,
+            "amount": amt,
             "change_pct": row.get("change_pct"),
-            "on_exchange_shares": row.get("float_share"),
+            "on_exchange_shares": shares,
+            "turnover_rate": tr,
             "avg_premium_3d": row.get("avg_premium_3d"),
         })
 
     # 截取请求的天数
     chart = chart[-days:] if len(chart) > days else chart
 
-    return {"chart": chart}
+    return chart
 
 
 # ── 持仓查询 ────────────────────────────────────────────────
@@ -491,8 +504,12 @@ def _normalize_frontend_fields(rows: list[dict]) -> None:
         cl = row.get("close")
         if cp is not None and cl and cl > 0:
             row["change_amount"] = round(cp / 100 * cl, 4)
-        # 场内份额别名（前端 fund.on_exchange_shares 引用）
-        if row.get("on_exchange_shares") is None:
+        # 场内份额（从 volume + turnover_rate 实时计算）
+        vol = row.get("volume")
+        tr = row.get("turnover_rate")
+        if vol and tr and tr > 0:
+            row["on_exchange_shares"] = round(vol / tr, 2)
+        elif row.get("on_exchange_shares") is None:
             row["on_exchange_shares"] = row.get("float_share")
         # can_purchase 布尔值
         if row.get("can_purchase") is None:

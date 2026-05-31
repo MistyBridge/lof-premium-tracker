@@ -1,7 +1,7 @@
 /**
  * Cloudflare Pages Functions - /health 代理
  */
-const RAILWAY = "https://lof-premium-tracker-production.up.railway.app";
+const BACKEND = "https://api.jinkuaicha.com";
 
 export async function onRequest(context) {
   if (context.request.method === "OPTIONS") {
@@ -17,7 +17,7 @@ export async function onRequest(context) {
   }
 
   try {
-    const response = await fetch(RAILWAY + "/health", {
+    const response = await fetch(BACKEND + "/api/v1/health", {
       headers: { "User-Agent": "CF-Pages-Proxy/1.0", "Accept": "application/json" },
     });
     const body = await response.text();
@@ -31,7 +31,7 @@ export async function onRequest(context) {
     });
   } catch (err) {
     return new Response(
-      JSON.stringify({ code: 503, message: "Railway unreachable: " + err.message }),
+      JSON.stringify({ code: 503, message: "Backend unreachable: " + err.message }),
       {
         status: 503,
         headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
