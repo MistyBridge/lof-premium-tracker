@@ -1,0 +1,3292 @@
+[
+  {
+    "code": "000673",
+    "name": "融通四季添利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "001883",
+    "name": "中欧新动力混合(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "001886",
+    "name": "中欧行业成长混合(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "001888",
+    "name": "中欧盛世成长混合(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "001889",
+    "name": "中欧增强回报债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "002592",
+    "name": "中欧纯债债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "003144",
+    "name": "华宝新机遇混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "003297",
+    "name": "招商双债增强债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "003494",
+    "name": "富国天惠成长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "003721",
+    "name": "易方达标普信息科技指数(QDII-LOF)A(美元现汇)",
+    "market": "SZ"
+  },
+  {
+    "code": "003722",
+    "name": "易方达纳斯达克100ETF联接(QDII-LOF)A(美元现汇)",
+    "market": "SZ"
+  },
+  {
+    "code": "004231",
+    "name": "中欧行业成长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "004233",
+    "name": "中欧盛世成长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "004236",
+    "name": "中欧新动力混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "004267",
+    "name": "金鹰持久增利债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "004333",
+    "name": "金鹰元盛债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "004348",
+    "name": "南方中证500ETF联接(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "005491",
+    "name": "兴全合宜混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "005627",
+    "name": "富国中证高端制造指数增强型(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "006057",
+    "name": "鹏华丰和债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "006127",
+    "name": "华宝港股通标普香港上市中国中小盘指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "006355",
+    "name": "华宝港股通恒生中国(香港上市)30ETF联接(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "006938",
+    "name": "鹏华中证500指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "006939",
+    "name": "鹏华沪深300ETF联接(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "007230",
+    "name": "兴全沪深300指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "007446",
+    "name": "中欧增强回报债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "007501",
+    "name": "万家科创主题灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "007762",
+    "name": "富国天盈债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "007799",
+    "name": "申万菱信中小企业100指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "008973",
+    "name": "大成中华沪深港300指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009132",
+    "name": "广发小盘成长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009208",
+    "name": "建信沪深300指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009239",
+    "name": "融通人工智能指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009241",
+    "name": "融通领先成长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009300",
+    "name": "西部利得中证500指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009510",
+    "name": "天弘同利债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "009512",
+    "name": "天弘添利债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "009580",
+    "name": "招商双债增强债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "009637",
+    "name": "招商信用添利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "009663",
+    "name": "华泰紫金创新先锋混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "009860",
+    "name": "易方达中证银行ETF联接(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010224",
+    "name": "海富通中证A100指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010228",
+    "name": "平安鼎弘混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010229",
+    "name": "平安鼎弘混合(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "010356",
+    "name": "诺安创业板指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010364",
+    "name": "鹏华空天军工指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010365",
+    "name": "鹏华中证香港银行指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010366",
+    "name": "鹏华中证医药指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010419",
+    "name": "申万菱信中证环保产业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010531",
+    "name": "申万中证申万电子行业投资指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010572",
+    "name": "易方达中证万得生物科技指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010789",
+    "name": "汇添富恒生指数(QDII-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "010871",
+    "name": "中银信用增利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "011159",
+    "name": "大成中小盘混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012040",
+    "name": "鹏华中证信息技术指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012041",
+    "name": "鹏华中证国防指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012042",
+    "name": "鹏华中证银行指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012044",
+    "name": "鹏华中证全指证券公司指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012414",
+    "name": "招商中证白酒指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012417",
+    "name": "招商国证生物医药指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012808",
+    "name": "鹏华中证A股资源产业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012809",
+    "name": "鹏华中证沪港深科技龙头指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012810",
+    "name": "鹏华国证钢铁行业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012842",
+    "name": "易方达中证军工(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012868",
+    "name": "易方达标普信息科技指数(QDII-LOF)C(人民币)",
+    "market": "SZ"
+  },
+  {
+    "code": "012869",
+    "name": "易方达标普信息科技指数(QDII-LOF)C(美元现汇)",
+    "market": "SZ"
+  },
+  {
+    "code": "012870",
+    "name": "易方达纳斯达克100ETF联接(QDII-LOF)C(人民币)",
+    "market": "SZ"
+  },
+  {
+    "code": "012871",
+    "name": "易方达纳斯达克100ETF联接(QDII-LOF)C(美元现汇)",
+    "market": "SZ"
+  },
+  {
+    "code": "012872",
+    "name": "易方达中小企业100(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012873",
+    "name": "易方达中证国企改革(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012874",
+    "name": "易方达中证全指证券公司指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012875",
+    "name": "易方达上证50指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "012884",
+    "name": "华夏港股通精选股票发起式(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013027",
+    "name": "银华富久食品饮料精选混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013035",
+    "name": "富国中证军工指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013048",
+    "name": "富国中证新能源汽车指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013080",
+    "name": "中信保诚中证800医药指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013081",
+    "name": "中信保诚中证800有色指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013082",
+    "name": "中信保诚中证基建工程指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013083",
+    "name": "中信保诚中证信息安全指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013084",
+    "name": "中信保诚中证智能家居指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013119",
+    "name": "中信保诚中证500指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013120",
+    "name": "中信保诚沪深300指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013121",
+    "name": "中信保诚中证800金融指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013122",
+    "name": "中信保诚中证TMT(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013154",
+    "name": "长信医疗保健混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013275",
+    "name": "富国中证煤炭指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013276",
+    "name": "富国中证全指证券公司指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013278",
+    "name": "富国中证体育产业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013292",
+    "name": "富国中证智能汽车(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013330",
+    "name": "富国中证银行指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013331",
+    "name": "富国中证1000指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013332",
+    "name": "富国中证500指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013413",
+    "name": "交银中证环境治理(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013453",
+    "name": "交银国证新能源指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013479",
+    "name": "金鹰先进制造股票(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013596",
+    "name": "招商中证煤炭等权指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013597",
+    "name": "招商中证全指证券公司指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013600",
+    "name": "九泰锐富事件驱动混合发起式(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013786",
+    "name": "兴全积极配置混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013787",
+    "name": "交银智选星光混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013788",
+    "name": "华泰柏瑞信用增利债(LOF)B",
+    "market": "SZ"
+  },
+  {
+    "code": "013825",
+    "name": "广发优选配置混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013832",
+    "name": "中欧汇选混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013918",
+    "name": "申万菱信量化小盘股票(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013932",
+    "name": "富国智鑫行业精选股票(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013933",
+    "name": "工银睿智进取股票(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013944",
+    "name": "招商智星稳健配置混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013945",
+    "name": "交银中证海外中国互联网指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "013954",
+    "name": "广发积极优势混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014048",
+    "name": "银华鑫盛灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014079",
+    "name": "华夏行业配置股票(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014130",
+    "name": "融通中证云计算与大数据主题指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014171",
+    "name": "富国新兴成长量化精选混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014172",
+    "name": "富国中证工业4.0指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014173",
+    "name": "富国中证移动互联网指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014174",
+    "name": "富国中证国有企业改革指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014197",
+    "name": "国泰行业轮动股票(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014256",
+    "name": "富国中证娱乐主题指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014335",
+    "name": "中信保诚周期轮动混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014349",
+    "name": "银华鑫锐灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014372",
+    "name": "浙商沪深300指数增强(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014537",
+    "name": "中银中国混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014627",
+    "name": "财通多策略福瑞混合发起式(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014628",
+    "name": "财通福盛混合发起(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "014982",
+    "name": "华安标普全球石油指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015017",
+    "name": "国泰融丰外延增长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015040",
+    "name": "国泰国证食品饮料行业(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015147",
+    "name": "华夏兴融混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015176",
+    "name": "申万菱信中证申万医药生物指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015177",
+    "name": "申万菱信深证成份指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015178",
+    "name": "申万菱信中证申万证券行业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015271",
+    "name": "财通多策略升级混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015383",
+    "name": "长城久富混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015491",
+    "name": "博时科创主题灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015546",
+    "name": "大成恒生指数(QDII-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015563",
+    "name": "天弘丰利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015596",
+    "name": "国泰国证有色金属行业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015598",
+    "name": "国泰中证申万证券行业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015599",
+    "name": "国泰国证航天军工指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015600",
+    "name": "国泰创业板指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015652",
+    "name": "国投瑞银瑞利混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015661",
+    "name": "天弘同利债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "015673",
+    "name": "鹏华创业板指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015674",
+    "name": "鹏华中证800地产指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015675",
+    "name": "鹏华中证传媒指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015676",
+    "name": "鹏华中证移动互联网指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015677",
+    "name": "鹏华中证一带一路主题指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015678",
+    "name": "鹏华中证高铁产业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015685",
+    "name": "鹏华中证环保产业指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015688",
+    "name": "九泰泰富灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015693",
+    "name": "鹏华中证800证券保险指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015849",
+    "name": "富国创新企业灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015937",
+    "name": "中信保诚鼎利混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "015950",
+    "name": "华夏蓝筹混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016062",
+    "name": "大成多策略混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016071",
+    "name": "华安智联混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016198",
+    "name": "大成科创主题混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016209",
+    "name": "申万菱信中证军工指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016347",
+    "name": "招商中证煤炭等权指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "016398",
+    "name": "九泰锐益混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016616",
+    "name": "国泰估值优势混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016617",
+    "name": "国泰价值优选灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "016667",
+    "name": "景顺长城全球半导体芯片股票A(QDII-LOF)(美元现汇)",
+    "market": "SZ"
+  },
+  {
+    "code": "016668",
+    "name": "景顺长城全球半导体芯片股票C(QDII-LOF)(人民币)",
+    "market": "SZ"
+  },
+  {
+    "code": "016823",
+    "name": "天弘全球新能源汽车股票(QDII-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "017156",
+    "name": "易方达岁丰添利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "017204",
+    "name": "华宝海外科技股票(QDII-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "017290",
+    "name": "中欧科创主题混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "017767",
+    "name": "嘉实欣荣混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "017820",
+    "name": "鹏华丰利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018007",
+    "name": "招商瑞利灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018008",
+    "name": "大成优选混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018238",
+    "name": "广发恒生中型股指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "018389",
+    "name": "国投瑞银新兴产业混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018533",
+    "name": "南方中证互联网指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018543",
+    "name": "汇添富黄金及贵金属(QDII-LOF-FOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018545",
+    "name": "国投瑞银瑞盛混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018546",
+    "name": "国投瑞银瑞盈混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018561",
+    "name": "中信保诚多策略混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018588",
+    "name": "易方达优势回报混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018600",
+    "name": "景顺长城鼎益混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018860",
+    "name": "嘉实产业优选混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018948",
+    "name": "东方红睿满沪港深混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018949",
+    "name": "东方红睿华沪港深混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "018952",
+    "name": "安信宝利债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "019005",
+    "name": "国投瑞银白银期货(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "019122",
+    "name": "安信中短利率债(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "019206",
+    "name": "大成产业升级股票(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "019208",
+    "name": "大成创新成长混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "019267",
+    "name": "富国新天锋债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "019317",
+    "name": "银华纯债信用债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "019344",
+    "name": "广发聚源债券(LOF)B",
+    "market": "SZ"
+  },
+  {
+    "code": "019391",
+    "name": "招商双债增强债券(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "019684",
+    "name": "万家添利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "019710",
+    "name": "广发道琼斯石油指数(QDII-LOF)人民币E",
+    "market": "SZ"
+  },
+  {
+    "code": "019711",
+    "name": "广发道琼斯石油指数(QDII-LOF)美元现汇E",
+    "market": "SZ"
+  },
+  {
+    "code": "019789",
+    "name": "鹏华优质治理混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "020059",
+    "name": "博时卓越品牌混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "020254",
+    "name": "鹏华盛世创新混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "020346",
+    "name": "易方达如意招享混合(FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "020738",
+    "name": "安信宝利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "020920",
+    "name": "天弘同利债券(LOF)F",
+    "market": "SZ"
+  },
+  {
+    "code": "020962",
+    "name": "中信保诚双盈债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "020969",
+    "name": "中信保诚全球商品主题(QDII-FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "021059",
+    "name": "南方中证500ETF联接(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "021130",
+    "name": "信澳鑫安债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "021290",
+    "name": "安信宝利债券(LOF)F",
+    "market": "SZ"
+  },
+  {
+    "code": "021434",
+    "name": "融通通福债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "021461",
+    "name": "国投瑞银中证资源指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "021494",
+    "name": "长盛沪深300指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "021556",
+    "name": "长盛中证证券公司指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "021606",
+    "name": "易方达中债新综指发起式(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "021694",
+    "name": "银华抗通胀主题(QDII-FOF-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "021886",
+    "name": "嘉实沪深300ETF联接(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "022146",
+    "name": "金鹰元盛债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "022171",
+    "name": "富国新天锋债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "022182",
+    "name": "招商智星稳健配置混合(FOF-LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "022188",
+    "name": "鹏华丰泽债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "022251",
+    "name": "中信保诚增强收益债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "022260",
+    "name": "鹏华丰利债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "022261",
+    "name": "鹏华丰利债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "022273",
+    "name": "鹏华丰和债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "022519",
+    "name": "东海祥龙(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "022520",
+    "name": "泓德红利优选混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "022557",
+    "name": "天弘丰利债券(LOF)F",
+    "market": "SZ"
+  },
+  {
+    "code": "022583",
+    "name": "天弘添利债券(LOF)F",
+    "market": "SZ"
+  },
+  {
+    "code": "022645",
+    "name": "富国天惠成长混合(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "022743",
+    "name": "鹏华增瑞混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "022774",
+    "name": "鹏华沪深300ETF联接(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "022823",
+    "name": "鹏华中证高铁产业指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "022825",
+    "name": "鹏华中证一带一路主题指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "022834",
+    "name": "鹏华中证沪港深科技龙头指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "022890",
+    "name": "嘉实沪深300ETF联接(LOF)Y",
+    "market": "SZ"
+  },
+  {
+    "code": "022921",
+    "name": "南方中证500ETF联接(LOF)Y",
+    "market": "SZ"
+  },
+  {
+    "code": "022937",
+    "name": "西部利得中证500指数增强(LOF)Y",
+    "market": "SZ"
+  },
+  {
+    "code": "022953",
+    "name": "富国中证500指数增强(LOF)Y",
+    "market": "SZ"
+  },
+  {
+    "code": "022962",
+    "name": "兴全沪深300指数增强(LOF)Y",
+    "market": "SZ"
+  },
+  {
+    "code": "022965",
+    "name": "广发中证500ETF联接(LOF)Y",
+    "market": "SZ"
+  },
+  {
+    "code": "022987",
+    "name": "鹏华沪深300ETF联接(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "022992",
+    "name": "鹏华中证500指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023262",
+    "name": "景顺长城资源垄断混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "023376",
+    "name": "鹏华中证传媒指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023377",
+    "name": "鹏华中证移动互联网指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023378",
+    "name": "鹏华中证环保产业指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023379",
+    "name": "鹏华中证800证券保险指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023380",
+    "name": "鹏华中证800地产指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023381",
+    "name": "鹏华创业板指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "023406",
+    "name": "汇添富纯债(LOF)B",
+    "market": "SZ"
+  },
+  {
+    "code": "023574",
+    "name": "长信利众债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023592",
+    "name": "中信保诚中证800医药指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023593",
+    "name": "中信保诚中证800有色指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023594",
+    "name": "中信保诚中证信息安全指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023595",
+    "name": "中信保诚中证智能家居指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023596",
+    "name": "中信保诚中证基建工程指数(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023611",
+    "name": "中信保诚双盈债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "023618",
+    "name": "富国天丰强化债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "023711",
+    "name": "中金中证优选300指数(LOF)B",
+    "market": "SZ"
+  },
+  {
+    "code": "023770",
+    "name": "平安鼎弘混合(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "023784",
+    "name": "中欧增强回报债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "023881",
+    "name": "兴全商业模式混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "024114",
+    "name": "泓德丰泽混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "024184",
+    "name": "鹏华国证钢铁行业指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "024206",
+    "name": "长信利鑫债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "024241",
+    "name": "鹏华空天军工指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "024242",
+    "name": "鹏华中证A股资源产业指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "024859",
+    "name": "中银信用增利(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "025127",
+    "name": "鹏华中证香港银行指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "025130",
+    "name": "鹏华中证银行指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "025136",
+    "name": "鹏华中证信息技术指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "025137",
+    "name": "鹏华中证医药指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "025140",
+    "name": "鹏华中证国防指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "025141",
+    "name": "鹏华中证全指证券公司指数(LOF)I",
+    "market": "SZ"
+  },
+  {
+    "code": "025162",
+    "name": "国泰大宗商品(QDII-LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "025330",
+    "name": "银华恒生国企指数(QDII-LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "025336",
+    "name": "博时稳健回报债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "025988",
+    "name": "鹏华创新未来混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "026290",
+    "name": "红土创新科技创新股票(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "027672",
+    "name": "交银信用添利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160105",
+    "name": "南方积极配置混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160106",
+    "name": "南方高增长混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160107",
+    "name": "南方高增长混合(LOF)(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "160119",
+    "name": "南方中证500ETF联接(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160120",
+    "name": "南方中证500ETF联接(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "160127",
+    "name": "南方新兴消费增长股票(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160133",
+    "name": "南方天元新产业股票(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160135",
+    "name": "南方中证高铁产业指数(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160137",
+    "name": "南方中证互联网指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160142",
+    "name": "南方优势产业(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160144",
+    "name": "南方新兴消费增长股票(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160211",
+    "name": "国泰中小盘成长混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160212",
+    "name": "国泰估值优势混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160215",
+    "name": "国泰价值经典混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160216",
+    "name": "国泰大宗商品(QDII-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160220",
+    "name": "国泰民益混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160221",
+    "name": "国泰国证有色金属行业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160222",
+    "name": "国泰国证食品饮料行业(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160223",
+    "name": "国泰创业板指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160226",
+    "name": "国泰民益混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160311",
+    "name": "华夏蓝筹混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160314",
+    "name": "华夏行业混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160322",
+    "name": "华夏港股通精选股票发起式(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160323",
+    "name": "华夏磐泰混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160324",
+    "name": "华夏磐晟混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160326",
+    "name": "华夏优选配置股票(FOF-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160416",
+    "name": "华安标普全球石油指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160505",
+    "name": "博时主题行业混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160512",
+    "name": "博时卓越品牌混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160513",
+    "name": "博时稳健回报债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160514",
+    "name": "博时稳健回报债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160527",
+    "name": "博时研究优选混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160528",
+    "name": "博时研究优选混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160607",
+    "name": "鹏华价值优势混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160610",
+    "name": "鹏华动力增长混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160611",
+    "name": "鹏华优质治理混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160613",
+    "name": "鹏华盛世创新混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160615",
+    "name": "鹏华沪深300ETF联接(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160616",
+    "name": "鹏华中证500指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160617",
+    "name": "鹏华丰润债券(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160618",
+    "name": "鹏华丰泽债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160620",
+    "name": "鹏华中证A股资源产业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160621",
+    "name": "鹏华丰和债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160622",
+    "name": "鹏华丰利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160625",
+    "name": "鹏华中证800证券保险指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160626",
+    "name": "鹏华中证信息技术指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160628",
+    "name": "鹏华中证800地产指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160629",
+    "name": "鹏华中证传媒指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160630",
+    "name": "鹏华中证国防指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160631",
+    "name": "鹏华中证银行指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160633",
+    "name": "鹏华中证全指证券公司指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160634",
+    "name": "鹏华中证环保产业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160635",
+    "name": "鹏华中证医药指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160636",
+    "name": "鹏华中证移动互联网指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160637",
+    "name": "鹏华创业板指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160638",
+    "name": "鹏华中证一带一路主题指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160639",
+    "name": "鹏华中证高铁产业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160641",
+    "name": "鹏华丰锐债券LOF",
+    "market": "SZ"
+  },
+  {
+    "code": "160642",
+    "name": "鹏华增瑞混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160643",
+    "name": "鹏华空天军工指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160646",
+    "name": "鹏华中证沪港深科技龙头指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160716",
+    "name": "嘉实基本面50指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160717",
+    "name": "嘉实H股指数(QDII-LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160722",
+    "name": "嘉实惠泽混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160723",
+    "name": "嘉实原油(QDII-LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160725",
+    "name": "嘉实基本面50指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "160805",
+    "name": "长盛同智优势混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160806",
+    "name": "长盛同庆中证800(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160807",
+    "name": "长盛沪深300指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160812",
+    "name": "长盛同益成长回报(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160813",
+    "name": "长盛同盛成长优选(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "160910",
+    "name": "大成创新成长混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160916",
+    "name": "大成优选混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160918",
+    "name": "大成中小盘混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160919",
+    "name": "大成产业升级股票(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160921",
+    "name": "大成多策略混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160924",
+    "name": "大成恒生指数(QDII-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "160925",
+    "name": "大成中华沪深港300指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161005",
+    "name": "富国天惠成长混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161006",
+    "name": "富国天惠成长混合(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161010",
+    "name": "富国天丰强化债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161015",
+    "name": "富国天盈债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "161017",
+    "name": "富国中证500指数增强(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161018",
+    "name": "富国天丰强化债券(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161019",
+    "name": "富国新天锋债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161020",
+    "name": "富国新天锋债券(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161021",
+    "name": "富国中证500指数增强(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161024",
+    "name": "富国中证军工指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161025",
+    "name": "富国中证移动互联网指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161026",
+    "name": "富国中证国有企业改革指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161027",
+    "name": "富国中证全指证券公司指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161028",
+    "name": "富国中证新能源汽车指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161029",
+    "name": "富国中证银行指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161030",
+    "name": "富国中证体育产业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161031",
+    "name": "富国中证工业4.0指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161032",
+    "name": "富国中证煤炭指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161033",
+    "name": "富国中证智能汽车(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161036",
+    "name": "富国中证娱乐主题指数增强(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161037",
+    "name": "富国中证高端制造指数增强型(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161038",
+    "name": "富国新兴成长量化精选混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161039",
+    "name": "富国中证1000指数增强(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161115",
+    "name": "易方达岁丰添利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161118",
+    "name": "易方达中小企业100(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161119",
+    "name": "易方达中债新综指发起式(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161120",
+    "name": "易方达中债新综指发起式(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "161121",
+    "name": "易方达中证银行ETF联接(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161122",
+    "name": "易方达中证万得生物科技指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161123",
+    "name": "易方达中证万得并购重组(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161128",
+    "name": "易方达标普信息科技指数(QDII-LOF)A(人民币)",
+    "market": "SZ"
+  },
+  {
+    "code": "161130",
+    "name": "易方达纳斯达克100ETF联接(QDII-LOF)A(人民币)",
+    "market": "SZ"
+  },
+  {
+    "code": "161131",
+    "name": "易方达科润混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161133",
+    "name": "易方达优势回报混合(FOF-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161216",
+    "name": "国投瑞银双债债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161217",
+    "name": "国投瑞银中证资源指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161218",
+    "name": "国投瑞银中证资源指数(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161219",
+    "name": "国投瑞银新兴产业混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161220",
+    "name": "国投瑞银新兴产业混合(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161222",
+    "name": "国投瑞银瑞利混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161224",
+    "name": "国投瑞银新丝路混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161225",
+    "name": "国投瑞银瑞盈混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161226",
+    "name": "国投瑞银白银期货(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161232",
+    "name": "国投瑞银瑞盛混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161505",
+    "name": "银河通利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161506",
+    "name": "银河通利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "161607",
+    "name": "融通巨潮100指数A(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161610",
+    "name": "融通领先成长混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161614",
+    "name": "融通四季添利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161626",
+    "name": "融通通福债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161627",
+    "name": "融通通福债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "161628",
+    "name": "融通中证云计算与大数据主题指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161631",
+    "name": "融通人工智能指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161657",
+    "name": "融通巨潮100指数A(LOF)(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161660",
+    "name": "融通领先成长混合(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161706",
+    "name": "招商优质成长混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161707",
+    "name": "招商优质成长混合(LOF)(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "161713",
+    "name": "招商信用添利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161715",
+    "name": "招商大宗商品(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161716",
+    "name": "招商双债增强债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "161720",
+    "name": "招商中证全指证券公司指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161722",
+    "name": "招商丰泰混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161724",
+    "name": "招商中证煤炭等权指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161725",
+    "name": "招商中证白酒指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161726",
+    "name": "招商国证生物医药指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161727",
+    "name": "招商增荣混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161728",
+    "name": "招商瑞智优选混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161729",
+    "name": "招商瑞利灵活配置混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161730",
+    "name": "招商智星稳健配置混合(FOF-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161810",
+    "name": "银华内需精选混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161812",
+    "name": "银华深证100指数(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161815",
+    "name": "银华抗通胀主题(QDII-FOF-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161816",
+    "name": "银华中证等权重90指数(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161820",
+    "name": "银华纯债信用债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161831",
+    "name": "银华恒生国企指数(QDII-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161834",
+    "name": "银华鑫锐灵活配置混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "161903",
+    "name": "万家行业优选混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "161908",
+    "name": "万家添利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "162006",
+    "name": "长城久富混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162105",
+    "name": "金鹰持久增利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "162107",
+    "name": "金鹰先进制造股票(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162108",
+    "name": "金鹰元盛债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "162207",
+    "name": "宏利效率优选混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "162215",
+    "name": "宏利聚利债券(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "162216",
+    "name": "宏利500指数增强(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "162307",
+    "name": "海富通中证A100指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162414",
+    "name": "华宝新机遇混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162509",
+    "name": "国联安中证A100指数(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "162511",
+    "name": "国联安双佳信用债券(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "162605",
+    "name": "景顺长城鼎益混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162606",
+    "name": "景顺长城鼎益混合(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "162607",
+    "name": "景顺长城资源垄断混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162703",
+    "name": "广发小盘成长混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162712",
+    "name": "广发聚利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162715",
+    "name": "广发聚源债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "162716",
+    "name": "广发聚源债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "162721",
+    "name": "广发积极优势混合(FOF-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163001",
+    "name": "长信医疗保健混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163003",
+    "name": "长信利鑫债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "163005",
+    "name": "长信利众债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "163007",
+    "name": "长信利众债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163008",
+    "name": "长信利鑫债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163109",
+    "name": "申万菱信深证成份指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163110",
+    "name": "申万菱信量化小盘股票(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163111",
+    "name": "申万菱信中小企业100指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163113",
+    "name": "申万菱信中证申万证券行业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163114",
+    "name": "申万菱信中证环保产业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163115",
+    "name": "申万菱信中证军工指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163116",
+    "name": "申万中证申万电子行业投资指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163118",
+    "name": "申万菱信中证申万医药生物指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163209",
+    "name": "诺安创业板指数增强(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163302",
+    "name": "大摩资源优选混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "163402",
+    "name": "兴全趋势投资混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "163403",
+    "name": "兴全趋势投资混合(LOF)(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "163407",
+    "name": "兴全沪深300指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163408",
+    "name": "兴全沪深300指数(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "163409",
+    "name": "兴全绿色投资混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "163410",
+    "name": "兴全绿色投资混合(LOF)(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "163412",
+    "name": "兴全轻资产混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "163413",
+    "name": "兴全轻资产混合(LOF)(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "163415",
+    "name": "兴全商业模式混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163416",
+    "name": "兴全商业模式混合(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "163417",
+    "name": "兴全合宜混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163503",
+    "name": "天治核心成长混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "163801",
+    "name": "中银中国混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "163819",
+    "name": "中银信用增利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164105",
+    "name": "华富强化回报债券(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "164206",
+    "name": "天弘添利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "164208",
+    "name": "天弘丰利债券(LOF)E",
+    "market": "SZ"
+  },
+  {
+    "code": "164210",
+    "name": "天弘同利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "164212",
+    "name": "天弘全球新能源汽车股票(QDII-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164508",
+    "name": "国富中证A100指数增强(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "164509",
+    "name": "国富恒利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164510",
+    "name": "国富恒利债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "164606",
+    "name": "华泰柏瑞信用增利债(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164701",
+    "name": "汇添富黄金及贵金属(QDII-LOF-FOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164703",
+    "name": "汇添富纯债(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164705",
+    "name": "汇添富恒生指数(QDII-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164902",
+    "name": "交银信用添利债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164903",
+    "name": "交银信用添利债券(LOF)A(后端)",
+    "market": "SZ"
+  },
+  {
+    "code": "164905",
+    "name": "交银国证新能源指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164906",
+    "name": "交银中证海外中国互联网指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "164908",
+    "name": "交银中证环境治理(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165309",
+    "name": "建信沪深300指数(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "165310",
+    "name": "建信沪深300指数增强(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165311",
+    "name": "建信信用增强债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165312",
+    "name": "建信央视财经50指数(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "165313",
+    "name": "建信优势动力混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "165314",
+    "name": "建信信用增强债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "165508",
+    "name": "中信保诚深度价值混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "165509",
+    "name": "中信保诚增强收益债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165511",
+    "name": "中信保诚中证500指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165512",
+    "name": "中信保诚新机遇混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "165513",
+    "name": "中信保诚全球商品主题(QDII-FOF-LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165515",
+    "name": "中信保诚沪深300指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165516",
+    "name": "中信保诚周期轮动混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165517",
+    "name": "中信保诚双盈债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165519",
+    "name": "中信保诚中证800医药指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165520",
+    "name": "中信保诚中证800有色指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165521",
+    "name": "中信保诚中证800金融指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165522",
+    "name": "中信保诚中证TMT(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165523",
+    "name": "中信保诚中证信息安全指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165524",
+    "name": "中信保诚中证智能家居指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165525",
+    "name": "中信保诚中证基建工程指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165526",
+    "name": "中信保诚新旺混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165527",
+    "name": "中信保诚新旺混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "165528",
+    "name": "中信保诚鼎利混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "165531",
+    "name": "中信保诚多策略混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166006",
+    "name": "中欧行业成长混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166008",
+    "name": "中欧增强回报债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166009",
+    "name": "中欧新动力混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166011",
+    "name": "中欧盛世成长混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166016",
+    "name": "中欧纯债债券(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "166023",
+    "name": "中欧瑞丰灵活配置混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166105",
+    "name": "信澳鑫安债券(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166107",
+    "name": "信澳量化多因子混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166108",
+    "name": "信澳量化多因子混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "166109",
+    "name": "信澳量化先锋(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "166110",
+    "name": "信澳量化先锋(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "166802",
+    "name": "浙商沪深300指数增强(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "167001",
+    "name": "平安鼎泰混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "167002",
+    "name": "平安鼎越混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "167003",
+    "name": "平安鼎弘混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "167302",
+    "name": "方正富邦大湾区综指(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "167501",
+    "name": "安信宝利债券(LOF)D",
+    "market": "SZ"
+  },
+  {
+    "code": "167504",
+    "name": "安信中短利率债(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "167505",
+    "name": "安信中短利率债(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "167506",
+    "name": "安信深圳科技指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "167507",
+    "name": "安信深圳科技指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "167508",
+    "name": "安信价值发现两年定开混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "167702",
+    "name": "德邦量化优选股票(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "167703",
+    "name": "德邦量化优选股票(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "168101",
+    "name": "九泰锐智事件驱动混合(LOF)",
+    "market": "SZ"
+  },
+  {
+    "code": "168102",
+    "name": "九泰锐富事件驱动混合发起式(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168103",
+    "name": "九泰锐益混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168104",
+    "name": "九泰锐丰灵活配置混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168105",
+    "name": "九泰泰富灵活配置混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168111",
+    "name": "九泰锐丰灵活配置混合(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "168203",
+    "name": "国联国证钢铁行业指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168204",
+    "name": "国联中证煤炭指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168301",
+    "name": "东海祥龙(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168401",
+    "name": "红土精选混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168701",
+    "name": "合煦智远金融科技指数(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "168702",
+    "name": "合煦智远金融科技指数(LOF)C",
+    "market": "SZ"
+  },
+  {
+    "code": "169104",
+    "name": "东方红睿满沪港深混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "169105",
+    "name": "东方红睿华沪港深混合(LOF)A",
+    "market": "SZ"
+  },
+  {
+    "code": "501001",
+    "name": "财通多策略精选混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501005",
+    "name": "汇添富中证精准医疗指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501006",
+    "name": "汇添富中证精准医疗指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501007",
+    "name": "汇添富中证互联网医疗指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501008",
+    "name": "汇添富中证互联网医疗指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501009",
+    "name": "汇添富中证生物科技指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501010",
+    "name": "汇添富中证生物科技指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501011",
+    "name": "汇添富中证中药ETF联接(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501012",
+    "name": "汇添富中证中药ETF联接(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501015",
+    "name": "财通多策略升级混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501016",
+    "name": "国泰中证申万证券行业指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501017",
+    "name": "国泰融丰外延增长混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501019",
+    "name": "国泰国证航天军工指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501021",
+    "name": "华宝港股通标普香港上市中国中小盘指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501022",
+    "name": "银华鑫盛灵活配置混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501025",
+    "name": "鹏华中证香港银行指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501026",
+    "name": "财通多策略福享混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501028",
+    "name": "财通多策略福瑞混合发起式(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501029",
+    "name": "华宝标普中国A股红利机会ETF联接A(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501030",
+    "name": "汇添富中证环境治理指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501031",
+    "name": "汇添富中证环境治理指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501032",
+    "name": "财通福盛混合发起(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501036",
+    "name": "汇添富中证500ETF联接(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501037",
+    "name": "汇添富中证500ETF联接(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501043",
+    "name": "汇添富沪深300指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501045",
+    "name": "汇添富沪深300指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501047",
+    "name": "汇添富中证全指证券公司ETF联接(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501048",
+    "name": "汇添富中证全指证券公司ETF联接(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501051",
+    "name": "圆信永丰汇利混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501057",
+    "name": "汇添富中证新能源汽车产业指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501058",
+    "name": "汇添富中证新能源汽车产业指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501060",
+    "name": "中金中证优选300指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501061",
+    "name": "中金中证优选300指数(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501062",
+    "name": "南方瑞合定开混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501064",
+    "name": "国泰价值优选灵活配置混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501071",
+    "name": "泓德丰泽混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501073",
+    "name": "华安智联混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501075",
+    "name": "万家科创主题灵活配置混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501076",
+    "name": "鹏华创新动力混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501077",
+    "name": "富国创新企业灵活配置混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501078",
+    "name": "广发科创主题灵活配置混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501079",
+    "name": "大成科创主题混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501080",
+    "name": "中金科创主题灵活配置混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501081",
+    "name": "中欧科创主题混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501082",
+    "name": "博时科创主题灵活配置混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501083",
+    "name": "银华科创主题灵活配置混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501085",
+    "name": "财通科创主题灵活配置混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501087",
+    "name": "交银瑞丰混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501089",
+    "name": "方正富邦消费红利指数增强(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501091",
+    "name": "嘉实欣荣混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501092",
+    "name": "交银瑞思混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501095",
+    "name": "中银证券科技创新混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501096",
+    "name": "国联安科创混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501097",
+    "name": "国寿安保科技创新混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501098",
+    "name": "建信优享科技创新混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501099",
+    "name": "平安新兴产业混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501100",
+    "name": "博时安康定开债(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501186",
+    "name": "华夏兴融混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501188",
+    "name": "汇添富核心精选混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501189",
+    "name": "嘉实产业优选混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501200",
+    "name": "民生加银科技创新混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501201",
+    "name": "红土创新科技创新股票(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501202",
+    "name": "华泰紫金创新先锋混合(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501203",
+    "name": "易方达创新未来混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501205",
+    "name": "鹏华创新未来混合(LOF)C",
+    "market": "SH"
+  },
+  {
+    "code": "501206",
+    "name": "汇添富创新未来混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501207",
+    "name": "华夏创新未来混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501208",
+    "name": "中欧创新未来混合(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501209",
+    "name": "银华富久食品饮料精选混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501210",
+    "name": "交银智选星光混合(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501211",
+    "name": "民生加银优享6个月定开混合(FOF-LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "501212",
+    "name": "广发优选配置混合(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501213",
+    "name": "中欧汇选混合(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501215",
+    "name": "兴全积极配置混合(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501216",
+    "name": "富国智鑫行业精选股票(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501217",
+    "name": "华夏行业配置股票(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501218",
+    "name": "工银睿智进取股票(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501219",
+    "name": "华夏智胜先锋股票(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501220",
+    "name": "国泰行业轮动股票(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501222",
+    "name": "易方达如意招享混合(FOF-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501225",
+    "name": "景顺长城全球半导体芯片股票A(QDII-LOF)(人民币)",
+    "market": "SH"
+  },
+  {
+    "code": "501227",
+    "name": "泓德红利优选混合(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501301",
+    "name": "华宝港股通恒生中国(香港上市)30ETF联接(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501302",
+    "name": "南方恒指ETF联接(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501303",
+    "name": "广发恒生中型股指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "501312",
+    "name": "华宝海外科技股票(QDII-LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502000",
+    "name": "西部利得中证500指数增强(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502003",
+    "name": "易方达中证军工(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502006",
+    "name": "易方达中证国企改革(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502010",
+    "name": "易方达中证全指证券公司指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502013",
+    "name": "长盛中证申万一带一路指数(LOF)",
+    "market": "SH"
+  },
+  {
+    "code": "502023",
+    "name": "鹏华国证钢铁行业指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502048",
+    "name": "易方达上证50指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502053",
+    "name": "长盛中证证券公司指数(LOF)A",
+    "market": "SH"
+  },
+  {
+    "code": "502056",
+    "name": "广发中证医疗ETF联接(LOF)A",
+    "market": "SH"
+  }
+]

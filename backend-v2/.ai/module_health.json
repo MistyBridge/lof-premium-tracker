@@ -1,0 +1,128 @@
+{
+  "config.py": {
+    "test_coverage": 0,
+    "complexity": "low",
+    "last_modified": "2026-05-30",
+    "known_bugs": 0,
+    "lines": 30,
+    "health": "needs_attention",
+    "notes": "占位代码，待阶段3实现 Pydantic Settings"
+  },
+  "database.py": {
+    "test_coverage": 0,
+    "complexity": "low",
+    "last_modified": "2026-05-30",
+    "known_bugs": 0,
+    "lines": 25,
+    "health": "needs_attention",
+    "notes": "占位代码，待阶段3实现 SQLAlchemy async engine"
+  },
+  "exceptions.py": {
+    "test_coverage": 0,
+    "complexity": "low",
+    "last_modified": "2026-05-30",
+    "known_bugs": 0,
+    "lines": 40,
+    "health": "needs_attention",
+    "notes": "基础异常类已定义，待阶段3补充完整错误码和全局处理器"
+  },
+  "constants.py": {
+    "test_coverage": 0,
+    "complexity": "low",
+    "last_modified": "2026-05-30",
+    "known_bugs": 0,
+    "lines": 28,
+    "health": "needs_attention",
+    "notes": "部分常量已定义，待补充完整业务常量"
+  },
+  "app.py": {
+    "test_coverage": 0,
+    "complexity": "low",
+    "last_modified": "2026-05-30",
+    "known_bugs": 0,
+    "lines": 42,
+    "health": "needs_attention",
+    "notes": "骨架代码，health 端点可用，lifespan 待实现"
+  },
+  "models.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，16 张 ORM 模型"
+  },
+  "cache.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，Redis 缓存封装 + 降级"
+  },
+  "processors/calculator.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，6 个 calc 函数 + 派生字段计算"
+  },
+  "processors/pipeline.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，Stream 消费者主循环"
+  },
+  "services/fund_service.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，含缓存击穿保护逻辑"
+  },
+  "formula_engine/parser.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，AST 解析 + 环检测"
+  },
+  "formula_engine/evaluator.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，安全求值核心"
+  },
+  "auth/middleware.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，JWT 验证 + Supabase 集成"
+  },
+  "scheduler.py": {
+    "test_coverage": 0,
+    "complexity": "medium",
+    "last_modified": "pending",
+    "known_bugs": 0,
+    "lines": 0,
+    "health": "deprecated",
+    "notes": "待创建，9 个定时任务"
+  }
+}

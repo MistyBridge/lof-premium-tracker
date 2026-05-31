@@ -1,0 +1,202 @@
+{
+  "config.py": {
+    "depends_on": [],
+    "depended_by": ["database.py", "cache.py", "mq.py", "metrics.py", "app.py", "所有 fetcher", "所有 router"],
+    "tests": ["tests/test_m1_smoke.py"],
+    "affected_docs": ["ARCHITECTURE.md", "DATA_DICTIONARY.md"],
+    "risk": "high",
+    "notes": "配置变更影响所有模块，修改后必须全量回归测试"
+  },
+  "database.py": {
+    "depends_on": ["config.py"],
+    "depended_by": ["models.py", "所有 service", "所有 processor", "migration.py"],
+    "tests": ["tests/test_m1_smoke.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "high",
+    "notes": "连接池参数变更影响并发能力，expire_on_commit=False 很重要"
+  },
+  "models.py": {
+    "depends_on": ["database.py"],
+    "depended_by": ["所有 service", "processors/saver.py", "migration.py"],
+    "tests": ["tests/test_m1_smoke.py"],
+    "affected_docs": ["DATA_DICTIONARY.md", "ARCHITECTURE.md"],
+    "risk": "high",
+    "notes": "ORM 模型变更必须配套迁移脚本，16 张表的字段修改影响面广"
+  },
+  "cache.py": {
+    "depends_on": ["config.py"],
+    "depended_by": ["services/fund_service.py", "services/formula_service.py", "processors/pipeline.py", "hub/service.py"],
+    "tests": ["tests/test_m1_smoke.py", "tests/test_services.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "high",
+    "notes": "所有 Redis 操作必须有降级逻辑，修改后全量回归测试"
+  },
+  "mq.py": {
+    "depends_on": ["config.py", "cache.py"],
+    "depended_by": ["所有 fetcher", "processors/pipeline.py"],
+    "tests": ["tests/test_m1_smoke.py", "tests/test_processors.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "medium",
+    "notes": "Stream 格式变更影响所有生产者和消费者"
+  },
+  "fetchers/realtime.py": {
+    "depends_on": ["mq.py", "metrics.py", "trade_calendar.py"],
+    "depended_by": ["scheduler.py"],
+    "tests": ["tests/test_fetchers.py"],
+    "affected_docs": [],
+    "risk": "medium",
+    "notes": "push2 字段码是硬编码魔法数，修改前先确认字段映射"
+  },
+  "fetchers/fundamental.py": {
+    "depends_on": ["mq.py", "metrics.py"],
+    "depended_by": ["scheduler.py"],
+    "tests": ["tests/test_fetchers.py"],
+    "affected_docs": [],
+    "risk": "medium",
+    "notes": "lsjz 并发 Semaphore(5) 控制限流，修改需注意外部 API 限制"
+  },
+  "fetchers/historical.py": {
+    "depends_on": ["mq.py", "metrics.py"],
+    "depended_by": ["scheduler.py"],
+    "tests": ["tests/test_fetchers.py"],
+    "affected_docs": [],
+    "risk": "medium",
+    "notes": "8 级降级链，修改任何一级需确认后续降级不受影响"
+  },
+  "fetchers/info.py": {
+    "depends_on": ["mq.py", "metrics.py", "trade_calendar.py"],
+    "depended_by": ["scheduler.py"],
+    "tests": ["tests/test_fetchers.py"],
+    "affected_docs": [],
+    "risk": "medium",
+    "notes": "fundf10 HTML 解析依赖页面结构，改版时需更新解析逻辑"
+  },
+  "processors/normalize.py": {
+    "depends_on": [],
+    "depended_by": ["processors/pipeline.py"],
+    "tests": ["tests/test_processors.py"],
+    "affected_docs": ["DATA_DICTIONARY.md"],
+    "risk": "low",
+    "notes": "字段映射变更需同步更新 DATA_DICTIONARY"
+  },
+  "processors/validator.py": {
+    "depends_on": ["constants.py"],
+    "depended_by": ["processors/pipeline.py"],
+    "tests": ["tests/test_processors.py"],
+    "affected_docs": [],
+    "risk": "low",
+    "notes": "校验阈值来自 constants.py"
+  },
+  "processors/calculator.py": {
+    "depends_on": ["formula_engine/fields.py", "exceptions.py"],
+    "depended_by": ["processors/pipeline.py", "formula_engine/evaluator.py"],
+    "tests": ["tests/test_processors.py", "tests/test_formula_consistency.py"],
+    "affected_docs": ["DATA_DICTIONARY.md"],
+    "risk": "medium",
+    "notes": "修改计算公式后必须更新前后端一致性测试"
+  },
+  "processors/saver.py": {
+    "depends_on": ["database.py", "models.py"],
+    "depended_by": ["processors/pipeline.py"],
+    "tests": ["tests/test_processors.py"],
+    "affected_docs": [],
+    "risk": "medium",
+    "notes": "批量 UPSERT 分批 100 条/事务，修改批大小需测试性能"
+  },
+  "processors/pipeline.py": {
+    "depends_on": ["mq.py", "cache.py", "processors/normalize.py", "processors/validator.py", "processors/calculator.py", "processors/saver.py"],
+    "depended_by": ["app.py (lifespan consumer)"],
+    "tests": ["tests/test_processors.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "high",
+    "notes": "5 种事件处理逻辑，毒消息 3 次失败强制 ack，修改需全量测试"
+  },
+  "formula_engine/fields.py": {
+    "depends_on": [],
+    "depended_by": ["formula_engine/parser.py", "formula_engine/evaluator.py", "processors/calculator.py", "前端 fields.ts"],
+    "tests": ["tests/test_formula_engine.py"],
+    "affected_docs": ["DATA_DICTIONARY.md", "ARCHITECTURE.md"],
+    "risk": "medium",
+    "notes": "25 个字段白名单，修改需同步前端 fields.ts"
+  },
+  "formula_engine/parser.py": {
+    "depends_on": ["formula_engine/fields.py", "exceptions.py"],
+    "depended_by": ["formula_engine/evaluator.py", "services/formula_service.py", "前端 parser.ts"],
+    "tests": ["tests/test_parser.py", "tests/test_formula_consistency.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "low",
+    "notes": "修改校验规则后必须同步前端 parser.ts"
+  },
+  "formula_engine/evaluator.py": {
+    "depends_on": ["formula_engine/fields.py", "formula_engine/parser.py", "exceptions.py"],
+    "depended_by": ["services/formula_service.py", "前端 evaluator.ts"],
+    "tests": ["tests/test_formula_engine.py", "tests/test_formula_consistency.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "medium",
+    "notes": "安全性核心：AST 白名单 + 递归深度限制 + 执行时间限制"
+  },
+  "services/fund_service.py": {
+    "depends_on": ["database.py", "cache.py", "models.py", "exceptions.py"],
+    "depended_by": ["hub/service.py"],
+    "tests": ["tests/test_services.py", "tests/test_m1_smoke.py"],
+    "affected_docs": ["ARCHITECTURE.md", "api_contract.json"],
+    "risk": "high",
+    "notes": "含缓存击穿保护逻辑，修改缓存相关代码需谨慎"
+  },
+  "services/formula_service.py": {
+    "depends_on": ["database.py", "cache.py", "models.py", "formula_engine/"],
+    "depended_by": ["hub/service.py"],
+    "tests": ["tests/test_services.py"],
+    "affected_docs": ["api_contract.json"],
+    "risk": "medium",
+    "notes": "乐观锁 version 字段，并发限制每用户最多 50 公式"
+  },
+  "services/system_service.py": {
+    "depends_on": ["database.py", "cache.py", "mq.py", "metrics.py"],
+    "depended_by": ["hub/service.py"],
+    "tests": ["tests/test_services.py"],
+    "affected_docs": [],
+    "risk": "medium",
+    "notes": "物化视图并发刷新锁，admin_write 操作审计"
+  },
+  "auth/middleware.py": {
+    "depends_on": ["config.py", "exceptions.py"],
+    "depended_by": ["auth/dependencies.py", "所有 router"],
+    "tests": ["tests/test_auth.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "high",
+    "notes": "鉴权逻辑修改影响所有 API 端点"
+  },
+  "auth/dependencies.py": {
+    "depends_on": ["auth/middleware.py"],
+    "depended_by": ["所有 router"],
+    "tests": ["tests/test_auth.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "high",
+    "notes": "get_user_id / require_admin 权限注入，修改影响全部端点权限"
+  },
+  "scheduler.py": {
+    "depends_on": ["所有 fetcher", "trade_calendar.py", "metrics.py"],
+    "depended_by": ["app.py (lifespan)"],
+    "tests": ["tests/test_m1_smoke.py"],
+    "affected_docs": ["ARCHITECTURE.md"],
+    "risk": "medium",
+    "notes": "9 个定时任务，重启补执行逻辑，QDII 延迟重试"
+  },
+  "routers/funds.py": {
+    "depends_on": ["hub/service.py", "schemas/request.py", "schemas/response.py", "auth/dependencies.py"],
+    "depended_by": [],
+    "tests": ["tests/test_services.py"],
+    "affected_docs": ["api_contract.json"],
+    "risk": "medium",
+    "notes": "最高频 API，6 个端点，修改响应结构必须更新 api_contract.json"
+  },
+  "routers/admin.py": {
+    "depends_on": ["services/system_service.py", "auth/dependencies.py"],
+    "depended_by": [],
+    "tests": ["tests/test_services.py"],
+    "affected_docs": ["api_contract.json"],
+    "risk": "medium",
+    "notes": "15 个管理端点，全部需要 admin 权限，操作记录审计日志"
+  }
+}

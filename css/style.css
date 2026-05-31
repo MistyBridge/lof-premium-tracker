@@ -719,7 +719,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .fund-detail-modal {
     overscroll-behavior: contain;
     background: var(--card); border-radius: 16px;
-    max-width: 680px; width: 95%; max-height: calc(100vh - 48px);
+    max-width: 680px; width: 95%; height: calc(100vh - 48px);
     overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     animation: fd-fadein 0.25s ease;
 }
@@ -826,7 +826,7 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .fd-code-name:hover { color: var(--primary); }
 
 .fd-kpi-item.fd-kpi-hidden { display: none; }
-.fd-kpi-config-btn { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text2); padding: 0 4px; line-height: 1; }
+.fd-kpi-config-btn { background: none; border: 1px solid var(--border); font-size: 0.75rem; cursor: pointer; color: var(--text2); padding: 2px 8px; line-height: 1; border-radius: 4px; }
 .fd-kpi-config-btn:hover { color: var(--primary); }
 #kpiCardEditor { z-index: 2000 !important; }
 

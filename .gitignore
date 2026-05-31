@@ -17,10 +17,34 @@ Thumbs.db
 __pycache__/
 *.pyc
 *.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+
+# 环境变量（所有 .env 开头的文件，但保留 .env.example 和 .env.dev）
 .env
+.env.local
+.env.production
+
+# v1 遗留
 backend/fee_cache.json
+
+# v2 日志
+backend-v2/logs/
+*.log
+
+# v2 快照
+backend-v2/snapshots/
+
 # 密钥文件
 credentials.md
 secrets.md
-.env
+
+# Node
 node_modules/
+
+# Docker 数据
+pgdata/

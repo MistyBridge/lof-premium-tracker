@@ -1,0 +1,43 @@
+# 金快查 v2 本地开发环境
+# 启动: docker-compose -f docker-compose.dev.yml up -d
+# 停止: docker-compose -f docker-compose.dev.yml down
+# 清除数据: docker-compose -f docker-compose.dev.yml down -v
+
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: jinkuaicha-pg
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: jinkuaicha_dev
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d jinkuaicha_dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: jinkuaicha-redis
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:

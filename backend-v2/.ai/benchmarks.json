@@ -1,0 +1,107 @@
+{
+  "fund_list_api": {
+    "p50_ms": 25,
+    "p95_ms": 80,
+    "p99_ms": 150,
+    "measured_at": "pending",
+    "conditions": "1500 funds, Redis warm, sort=amount desc, page=1"
+  },
+  "fund_detail_api": {
+    "p50_ms": 15,
+    "p95_ms": 40,
+    "p99_ms": 80,
+    "measured_at": "pending",
+    "conditions": "single fund, Redis warm"
+  },
+  "fund_batch_api_50": {
+    "p50_ms": 30,
+    "p95_ms": 60,
+    "p99_ms": 100,
+    "measured_at": "pending",
+    "conditions": "50 funds batch query, Redis warm"
+  },
+  "chart_api_7days": {
+    "p50_ms": 20,
+    "p95_ms": 50,
+    "p99_ms": 90,
+    "measured_at": "pending",
+    "conditions": "single fund, 7 days, Redis warm"
+  },
+  "chart_api_365days": {
+    "p50_ms": 40,
+    "p95_ms": 80,
+    "p99_ms": 150,
+    "measured_at": "pending",
+    "conditions": "single fund, 365 days, DB query"
+  },
+  "formula_eval_1500_funds_5_formulas": {
+    "p50_ms": 180,
+    "p95_ms": 350,
+    "p99_ms": 500,
+    "measured_at": "pending",
+    "conditions": "JS engine, compile+evaluate, 1500 funds x 5 formulas"
+  },
+  "formula_eval_1500_funds_1_formula_python": {
+    "p50_ms": 100,
+    "p95_ms": 200,
+    "p99_ms": 350,
+    "measured_at": "pending",
+    "conditions": "Python engine, compile+evaluate, 1500 funds x 1 formula"
+  },
+  "push2_fetch_all": {
+    "p50_ms": 800,
+    "p95_ms": 2000,
+    "p99_ms": 3500,
+    "measured_at": "pending",
+    "conditions": "single request, ~1500 funds, push2.eastmoney.com"
+  },
+  "tencent_fetch_all": {
+    "p50_ms": 1200,
+    "p95_ms": 2500,
+    "p99_ms": 4000,
+    "measured_at": "pending",
+    "conditions": "single request, ~600 SZ funds, qt.gtimg.cn"
+  },
+  "lsjz_fetch_1500": {
+    "p50_ms": 150000,
+    "p95_ms": 180000,
+    "p99_ms": 200000,
+    "measured_at": "pending",
+    "conditions": "1500 sequential, Semaphore(5), 0.3s interval"
+  },
+  "push2his_fetch_single": {
+    "p50_ms": 300,
+    "p95_ms": 800,
+    "p99_ms": 1500,
+    "measured_at": "pending",
+    "conditions": "single fund, 365 days kline"
+  },
+  "daily_save_1500_funds": {
+    "p50_ms": 3000,
+    "p95_ms": 5000,
+    "p99_ms": 8000,
+    "measured_at": "pending",
+    "conditions": "batch 100, 15 batches, fund_daily UPSERT"
+  },
+  "mv_refresh": {
+    "p50_ms": 2000,
+    "p95_ms": 4000,
+    "p99_ms": 6000,
+    "measured_at": "pending",
+    "conditions": "REFRESH MATERIALIZED VIEW fund_snapshot"
+  },
+  "fundf10_info_single": {
+    "p50_ms": 500,
+    "p95_ms": 1200,
+    "p99_ms": 2000,
+    "measured_at": "pending",
+    "conditions": "single fund, HTML parse, fundf10.eastmoney.com"
+  },
+  "health_check": {
+    "p50_ms": 5,
+    "p95_ms": 10,
+    "p99_ms": 20,
+    "measured_at": "pending",
+    "conditions": "DB ping + Redis ping + uptime"
+  }
+}

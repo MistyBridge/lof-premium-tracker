@@ -2,6 +2,20 @@
  * LOF基金监控系统 - 主应用逻辑
  */
 
+/**
+ * 金额格式化（输入单位：元）
+ * < 1万 → 显示元
+ * < 1亿 → 显示万元
+ * >= 1亿 → 显示亿元
+ */
+function formatAmount(val) {
+    if (val == null) return '--';
+    var abs = Math.abs(val);
+    if (abs < 10000) return val.toFixed(0) + '元';
+    if (abs < 100000000) return (val / 10000).toFixed(2) + '万';
+    return (val / 100000000).toFixed(2) + '亿';
+}
+
 class LofFundMonitor {
     constructor() {
         this.funds = [];
@@ -135,10 +149,13 @@ class LofFundMonitor {
         }
         // Phase 2: 后台拉取最新数据
         try {
-            var result = await api.getFunds(1, 600, true, true);
-            if (result.meta && result.meta.last_fetch) {
-                self._lastServerFetch = result.meta.last_fetch;
-                self._updateToolbarTimestamp(result.meta.last_fetch, (result.meta.refresh_interval_sec || 300) / 60);
+            var result = await api.getFunds(1, 600);
+            // v2 meta: data_timestamp / data_type / realtime_available
+            // v1 meta: last_fetch / refresh_interval_sec (兼容)
+            var ts = result.meta ? (result.meta.data_timestamp || result.meta.last_fetch) : null;
+            if (ts) {
+                self._lastServerFetch = ts;
+                self._updateToolbarTimestamp(ts, 5);
             }
             var totalFromApi = result.data.length;
             self.funds = result.data.filter(function(f) {
@@ -146,9 +163,11 @@ class LofFundMonitor {
             });
             Cache.set('funds', self.funds, 300000);
             Cache.set('fundsMeta', {
-                last_fetch: result.meta ? result.meta.last_fetch : null,
-                interval: result.meta ? (result.meta.refresh_interval_sec || 300) / 60 : 5,
-                total: totalFromApi
+                last_fetch: ts,
+                interval: 5,
+                total: totalFromApi,
+                data_type: result.meta ? result.meta.data_type : null,
+                realtime_available: result.meta ? result.meta.realtime_available : null
             }, 300000);
             self.applyFilters();
             self.renderTable();
@@ -455,12 +474,7 @@ class LofFundMonitor {
                 var avgTxt = (avg != null) ? avgS + avg.toFixed(2) + '%' : '--';
                 return '<td class="col-avg-premium ' + avgCls + '">' + avgTxt + '</td>';
             case 'amount':
-                var amt = '--';
-                if (fund.amount != null) {
-                    var aW = fund.amount / 10000;
-                    amt = aW >= 10000 ? (aW / 10000).toFixed(2) + '亿' : aW.toFixed(2) + '万';
-                }
-                return '<td class="col-amount">' + amt + '</td>';
+                return '<td class="col-amount">' + formatAmount(fund.amount) + '</td>';
             case 'est_profit_rate':
                 var est = this.calcEstimatedProfit(fund);
                 infoBtn = (est && est.rate != null) ? '<button class="btn-profit-info" data-code="' + fund.code + '" title="查看收益构成">?</button>' : '';
@@ -501,13 +515,45 @@ class LofFundMonitor {
                 var fee = (fund.purchase_fee_rate != null) ? fund.purchase_fee_rate.toFixed(3) + '%' : '--';
                 return '<td class="col-purchase-fee">' + fee + '</td>';
             case 'data_date':
-                return '<td class="col-data-date">' + (fund.data_date || '-') + '</td>';
+                return '<td class="col-data-date">' + (fund.trade_date || '-') + '</td>';
             case 'holdings':
                 return '<td class="col-holdings"><button class="btn-holdings" data-code="' + fund.code + '">点击查看</button></td>';
             case 'turnover_rate':
                 return '<td class="col-turnover">' + (fund.turnover_rate != null ? fund.turnover_rate.toFixed(2) + '%' : '--') + '</td>';
             case 'on_exchange_shares':
                 return '<td class="col-shares">' + (fund.on_exchange_shares != null ? (fund.on_exchange_shares / 10000).toFixed(2) + '万份' : '--') + '</td>';
+            case 'fund_type':
+                return '<td class="col-fund-type">' + (fund.fund_type || '--') + '</td>';
+            case 'market':
+                return '<td class="col-market">' + (fund.market || '--') + '</td>';
+            case 'index_code':
+                return '<td class="col-index-code">' + (fund.index_code || '--') + '</td>';
+            case 'aum':
+                return '<td class="col-aum">' + (fund.aum != null ? fund.aum.toFixed(2) + '亿' : '--') + '</td>';
+            case 'redeem_status':
+                var rs = fund.redeem_status === 'open' ? '开放赎回' : fund.redeem_status === 'suspended' ? '暂停赎回' : (fund.redeem_status || '--');
+                return '<td class="col-redeem-status">' + rs + '</td>';
+            case 'redemption_fee_rate':
+                return '<td class="col-redemption-fee">' + (fund.redemption_fee_rate != null ? fund.redemption_fee_rate.toFixed(2) + '%' : '--') + '</td>';
+            case 'purchase_limit':
+                var pl = fund.purchase_limit;
+                var plTxt = pl == null ? '不限额' : pl >= 10000 ? (pl / 10000).toFixed(0) + '万' : Math.round(pl) + '元';
+                if (fund.can_purchase === false) plTxt = '暂停申购';
+                return '<td class="col-purchase-limit">' + plTxt + '</td>';
+            case 'fetched_at':
+                return '<td class="col-fetched-at">' + (fund.fetched_at ? this.formatTime(fund.fetched_at) : '--') + '</td>';
+            case 'amplitude':
+                return '<td class="col-amplitude">' + (fund.amplitude != null ? fund.amplitude.toFixed(2) + '%' : '--') + '</td>';
+            case 'float_market_cap':
+                return '<td class="col-float-mcap">' + (fund.float_market_cap != null ? fund.float_market_cap.toFixed(2) + '亿' : '--') + '</td>';
+            case 'total_market_cap':
+                return '<td class="col-total-mcap">' + (fund.total_market_cap != null ? fund.total_market_cap.toFixed(2) + '亿' : '--') + '</td>';
+            case 'limit_up':
+                return '<td class="col-limit-up">' + (fund.limit_up != null ? fund.limit_up.toFixed(3) : '--') + '</td>';
+            case 'limit_down':
+                return '<td class="col-limit-down">' + (fund.limit_down != null ? fund.limit_down.toFixed(3) : '--') + '</td>';
+            case 'volume_ratio':
+                return '<td class="col-volume-ratio">' + (fund.volume_ratio != null ? fund.volume_ratio.toFixed(2) : '--') + '</td>';
             default:
                 return '<td class="col-unknown">--</td>';
         }
@@ -526,11 +572,7 @@ class LofFundMonitor {
         var navType = fund.is_formal_nav ? '正式' : '估算';
         var navText = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
         var priceText = (fund.price != null) ? fund.price.toFixed(3) : '--';
-        var amountText = '--';
-        if (fund.amount != null) {
-            var aW = fund.amount / 10000;
-            amountText = aW >= 10000 ? (aW / 10000).toFixed(2) + '亿' : aW.toFixed(2) + '万';
-        }
+        var amountText = formatAmount(fund.amount);
         var est = this.calcEstimatedProfit(fund);
         var erText = '--', erClass = 'premium-zero', eaText = '--', eaClass = 'premium-zero', infoBtn = '';
         if (est) {
@@ -1028,9 +1070,11 @@ class LofFundMonitor {
         this._updateFundTypeCounts(total, cache);
         const ts = document.getElementById('toolbarTimestamp');
         if (ts) {
-            const time = data.last_fetch ? this.formatTime(data.last_fetch) : null;
-            const interval = (data.refresh_interval_sec || 300) / 60;
-            ts.textContent = time ? time + ' · ' + interval + '分钟刷新' : '等待首次刷新...';
+            // v2: data.timestamp / data.latest_data_date
+            // v1: data.last_fetch / data.refresh_interval_sec
+            const time = data.last_fetch || data.timestamp || data.latest_data_date;
+            const formatted = time ? this.formatTime(time) : null;
+            ts.textContent = formatted ? formatted : '等待首次刷新...';
         }
         if (data.market_status) {
             this._updateMarketStatus(data.market_status, data.market_status_text);
@@ -1676,7 +1720,7 @@ class LofFundMonitor {
 
         try {
             const healthResult = await this.checkHealth();
-            const serverLastFetch = healthResult.data?.last_fetch;
+            const serverLastFetch = healthResult.data?.last_fetch || healthResult.data?.timestamp || healthResult.data?.latest_data_date;
             if (serverLastFetch && this._lastServerFetch === serverLastFetch) {
                 this._softToast('数据已是最新');
                 return;
@@ -1780,15 +1824,16 @@ class LofFundMonitor {
         body.innerHTML = '';
         var fund = this.funds.find(function (f) { return f.code === code; });
         title.textContent = (fund ? fund.code + ' ' + fund.name : code) + ' — 十大持仓';
-        var url = api.baseUrl + '/api/funds/' + code + '/holdings';
-        fetch(url).then(function (r) { return r.json(); }).then(function (result) {
+        api.getFundHoldings(code).then(function (result) {
             var data = result.data;
-            if (!data.available) {
-                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">' + data.reason + '</td></tr>';
-                source.textContent = '仅对不停牌、可申购且成交额大于100万的基金提供持仓明细';
+            if (!data || !data.holdings || data.holdings.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">暂无持仓数据</td></tr>';
+                source.textContent = data && data.quarter ? ('报告期: ' + data.quarter) : '';
             } else if (data.holdings && data.holdings.length > 0) {
                 body.innerHTML = data.holdings.map(function (h) {
-                    return '<tr><td>' + h.rank + '</td><td>' + h.code + '</td><td>' + h.name + '</td><td>' + h.pct + '</td><td>' + h.shares + '</td><td style="text-align:right">' + h.market_value + '</td></tr>';
+                    var pct = h.pct != null ? h.pct + '%' : '-';
+                    var shares = h.shares != null ? Number(h.shares).toLocaleString() : '-';
+                    return '<tr><td>' + (h.rank || '-') + '</td><td>' + h.code + '</td><td>' + h.name + '</td><td>' + pct + '</td><td colspan="2">' + shares + '</td></tr>';
                 }).join('');
                 source.textContent = '数据来源：天天基金 | ' + (data.quarter || '季度更新');
             } else {
@@ -1856,7 +1901,7 @@ class LofFundMonitor {
         }
         const days = this._detailDays || 7;
         api.getFundChart(code, days).then(chartResult => {
-            const chartData = chartResult.data?.chart || [];
+            const chartData = chartResult.data || [];
             if (chartData.length > 0) {
                 this._renderDetailChart(chartData);
             }
@@ -1920,11 +1965,7 @@ class LofFundMonitor {
 
         const navType = fund.is_formal_nav ? '正式' : '估算';
 
-        let amountText = '--';
-        if (fund.amount != null) {
-            const aw = fund.amount / 10000;
-            amountText = aw >= 10000 ? (aw / 10000).toFixed(2) + '亿' : aw.toFixed(2) + '万';
-        }
+        let amountText = formatAmount(fund.amount);
 
         const est = this.calcEstimatedProfit(fund);
 
@@ -1963,10 +2004,23 @@ class LofFundMonitor {
         setVal('fdChangeAmount', fund.change_amount != null ? fund.change_amount.toFixed(4) : '--');
         setVal('fdSuspended', fund.is_suspended ? '停牌' : '正常');
         setVal('fdPurchaseFee', fund.purchase_fee_rate != null ? fund.purchase_fee_rate.toFixed(2) + '%' : '--');
-        setVal('fdDataDate', fund.data_date || '-');
+        setVal('fdDataDate', fund.trade_date || '-');
         setVal('fdTurnoverRate', fund.turnover_rate != null ? fund.turnover_rate.toFixed(2) + '%' : '--');
         var shares = fund.on_exchange_shares;
         setVal('fdOnExchangeShares', shares != null ? (shares / 10000).toFixed(2) + '万份' : '--');
+        setVal('fdFundType', fund.fund_type || '--');
+        setVal('fdMarket', fund.market || '--');
+        setVal('fdIndexCode', fund.index_code || '--');
+        setVal('fdAum', fund.aum != null ? fund.aum.toFixed(2) + '亿' : '--');
+        setVal('fdRedeemStatus', fund.redeem_status === 'open' ? '开放赎回' : fund.redeem_status === 'suspended' ? '暂停赎回' : (fund.redeem_status || '--'));
+        setVal('fdRedemptionFee', fund.redemption_fee_rate != null ? fund.redemption_fee_rate.toFixed(2) + '%' : '--');
+        setVal('fdFetchedAt', fund.fetched_at ? this.formatTime(fund.fetched_at) : '--');
+        setVal('fdAmplitude', fund.amplitude != null ? fund.amplitude.toFixed(2) + '%' : '--');
+        setVal('fdFloatMarketCap', fund.float_market_cap != null ? fund.float_market_cap.toFixed(2) + '亿' : '--');
+        setVal('fdTotalMarketCap', fund.total_market_cap != null ? fund.total_market_cap.toFixed(2) + '亿' : '--');
+        setVal('fdLimitUp', fund.limit_up != null ? fund.limit_up.toFixed(3) : '--');
+        setVal('fdLimitDown', fund.limit_down != null ? fund.limit_down.toFixed(3) : '--');
+        setVal('fdVolumeRatio', fund.volume_ratio != null ? fund.volume_ratio.toFixed(2) : '--');
 
         this._detailEstProfit = est;
         this._detailFundCode = fund.code;
