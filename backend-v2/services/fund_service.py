@@ -498,6 +498,12 @@ def _normalize_frontend_fields(rows: list[dict]) -> None:
         if row.get("can_purchase") is None:
             ps = row.get("purchase_status")
             row["can_purchase"] = STATUS_TO_CAN.get(ps)
+        # 成交额补算：amount=0 但 volume>0 时，用 volume*100*close 估算
+        amt = row.get("amount")
+        vol = row.get("volume")
+        cl = row.get("close")
+        if (amt is None or amt == 0) and vol and vol > 0 and cl and cl > 0:
+            row["amount"] = round(vol * 100 * cl, 2)
 
 
 async def _batch_avg_premium_3d(

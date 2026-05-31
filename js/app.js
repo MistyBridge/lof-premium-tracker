@@ -8,12 +8,19 @@
  * < 1亿 → 显示万元
  * >= 1亿 → 显示亿元
  */
+/**
+ * 金额分级格式化（输入单位：元）
+ * >= 10亿 → X.XX亿
+ * >= 10万 → X.XX万
+ * < 10万 → X元
+ * 非1单位保留两位小数
+ */
 function formatAmount(val) {
     if (val == null) return '--';
     var abs = Math.abs(val);
-    if (abs < 10000) return val.toFixed(0) + '元';
-    if (abs < 100000000) return (val / 10000).toFixed(2) + '万';
-    return (val / 100000000).toFixed(2) + '亿';
+    if (abs >= 1000000000) return (val / 100000000).toFixed(2) + '亿';
+    if (abs >= 100000) return (val / 10000).toFixed(2) + '万';
+    return val.toFixed(0) + '元';
 }
 
 class LofFundMonitor {
@@ -521,7 +528,7 @@ class LofFundMonitor {
             case 'turnover_rate':
                 return '<td class="col-turnover">' + (fund.turnover_rate != null ? fund.turnover_rate.toFixed(2) + '%' : '--') + '</td>';
             case 'on_exchange_shares':
-                return '<td class="col-shares">' + (fund.on_exchange_shares != null ? (fund.on_exchange_shares / 10000).toFixed(2) + '万份' : '--') + '</td>';
+                return '<td class="col-shares">' + (fund.on_exchange_shares != null ? fund.on_exchange_shares.toFixed(2) + '万份' : '--') + '</td>';
             case 'fund_type':
                 return '<td class="col-fund-type">' + (fund.fund_type || '--') + '</td>';
             case 'market':
@@ -2007,7 +2014,7 @@ class LofFundMonitor {
         setVal('fdDataDate', fund.trade_date || '-');
         setVal('fdTurnoverRate', fund.turnover_rate != null ? fund.turnover_rate.toFixed(2) + '%' : '--');
         var shares = fund.on_exchange_shares;
-        setVal('fdOnExchangeShares', shares != null ? (shares / 10000).toFixed(2) + '万份' : '--');
+        setVal('fdOnExchangeShares', shares != null ? shares.toFixed(2) + '万份' : '--');
         setVal('fdFundType', fund.fund_type || '--');
         setVal('fdMarket', fund.market || '--');
         setVal('fdIndexCode', fund.index_code || '--');
