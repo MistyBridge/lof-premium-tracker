@@ -1,5 +1,33 @@
 # 金快查 更新日志
 
+## 2026-06-01
+
+### v2 后端重写
+| 内容 | 说明 | 文件 |
+|------|------|------|
+| FastAPI 后端 | 完整重写：FastAPI + SQLAlchemy async + PostgreSQL + Redis + APScheduler | `backend-v2/` |
+| 16 张 ORM 模型 | fund_info/fund_daily/fund_fee/fund_holdings/fund_code_list/asset_master/asset_daily/fund_asset_map/trade_calendar/fetch_progress/job_log/admin_audit_log/user_formula/user_formula_group/user_watchlist/user_alert | `backend-v2/models.py` |
+| 9 个路由模块 | funds/assets/data/formulas/watchlist/alerts/admin/system/stream | `backend-v2/routers/` |
+| 停牌判断 | 基于最近交易日 fund_daily 数据，每 5 分钟快照更新 | `backend-v2/processors/suspension.py` |
+| AI 治理层 | .ai/ 完整元数据（context/file_index/impact_matrix/benchmarks/module_health/api_contract/knowledge_base/conventions/prompts） | `backend-v2/.ai/` |
+| 测试 | test_routers.py 20 项 + test_integration.py 10 项 | `backend-v2/tests/` |
+| SQL 种子数据 | 2025-2026 交易日历 + 50 只代表性 LOF 基金 | `backend-v2/sql/seed/` |
+| 迁移脚本 | 停牌状态字段迁移 + 回滚 | `backend-v2/sql/migrations/` |
+
+### 前端修复
+| 内容 | 说明 | 文件 |
+|------|------|------|
+| 金额分级格式化 | formatAmount(): >=10亿用亿, >=10万用万, 否则用元 | `js/app.js` |
+| 详情弹窗字段补全 | 补全 13 个缺失的 setVal 调用（fund_type/market/aum/redeem_status 等） | `js/app.js` |
+| 表头列补全 | 补全 14 个 _renderCell case（振幅/市值/涨停跌停/量比等） | `js/app.js` |
+| 场内份额计算 | 从 volume/turnover_rate 实时计算，移除季度更新的市值公式 | `backend-v2/services/fund_service.py` |
+| 成交额补算 | amount=0 但 volume>0 时，用 volume*100*close 估算 | `backend-v2/services/fund_service.py` |
+| 图表数据修复 | 返回值从 {chart:[...]} 改为 [...]，消除双重嵌套 | `backend-v2/services/fund_service.py` |
+| 换手率 tooltip | 直接显示每日实际换手率，移除错误的估算逻辑 | `js/app.js` |
+| 停牌状态 | API 返回 is_suspended 布尔值 + premium_status 溢价/折价/平价 | `backend-v2/services/fund_service.py` |
+| 申购限额 | 物化视图补全 purchase_limit 字段 | 阿里云 DB |
+| 物化视图重建 | 补全 nav_date/amplitude/float_market_cap/total_market_cap/limit_up/limit_down/volume_ratio/change_amount | 阿里云 DB |
+
 ## 2026-05-26
 
 ### M1 收尾

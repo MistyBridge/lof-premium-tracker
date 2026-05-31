@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head><title>API 诊断</title></head>
+<body style="font-family:monospace;padding:20px;background:#1a1a2e;color:#eee">
+<h2>金快查 API 诊断</h2>
+<div id="output"></div>
+<script>
+var out = document.getElementById('output');
+function log(msg, color) { 
+    out.innerHTML += '<div style="color:' + (color||'#fff') + '">' + msg + '</div>'; 
+}
+
+async function test() {
+    log('1. 测试 API health...');
+    try {
+        var r = await fetch('https://api.jinkuaicha.com/api/v1/health');
+        var d = await r.json();
+        log('   Status: ' + r.status + ' | ' + JSON.stringify(d), '#0f0');
+    } catch(e) {
+        log('   FAILED: ' + e.message, '#f00');
+    }
+
+    log('2. 测试 CORS (funds)...');
+    try {
+        var r2 = await fetch('https://api.jinkuaicha.com/api/v1/funds?page=1&page_size=3');
+        var d2 = await r2.json();
+        log('   Status: ' + r2.status + ' | data: ' + (d2.data||[]).length + ' funds', '#0f0');
+        if (d2.data) d2.data.forEach(function(f) {
+            log('   ' + f.code + ' ' + f.name + ' close=' + f.close + ' premium=' + f.premium_rate, '#aaa');
+        });
+    } catch(e) {
+        log('   FAILED: ' + e.message, '#f00');
+    }
+
+    log('3. 测试 SPA 对象...');
+    log('   SPA: ' + typeof SPA);
+    log('   LofFundMonitor: ' + typeof LofFundMonitor);
+    log('   api: ' + typeof api);
+    if (typeof api !== 'undefined') log('   api.baseUrl: ' + api.baseUrl);
+
+    log('4. 尝试手动加载基金...');
+    if (typeof api !== 'undefined') {
+        try {
+            var r3 = await api.getFunds(1, 10);
+            log('   getFunds result: ' + (r3.data||[]).length + ' funds', '#0f0');
+        } catch(e) {
+            log('   getFunds FAILED: ' + e.message + ' (' + (e.errorType||'') + ')', '#f00');
+        }
+    }
+}
+test();
+</script>
+</body>
+</html>

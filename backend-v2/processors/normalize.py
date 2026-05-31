@@ -72,7 +72,6 @@ def _calc_float_share_from_turnover(
     """
     从成交量和换手率反推场内份额（流通份额）。
     float_share(万份) = volume(手) / turnover_rate(%)
-    推导: turnover_rate(%) = volume(手)*100 / float_share(万份)/10000 * 100
     """
     if not volume or not turnover_rate or turnover_rate <= 0:
         return None

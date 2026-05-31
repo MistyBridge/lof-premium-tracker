@@ -60,3 +60,15 @@ class Config:
 
     # 日志
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+    # ── 认证配置 ──
+    # Supabase JWT密钥（从Supabase Dashboard获取）
+    SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
+
+    # 管理员邮箱列表（逗号分隔）
+    ADMIN_EMAILS = os.getenv("ADMIN_EMAILS", "")
+
+    # ── CORS配置 ──
+    CORS_ORIGINS = os.getenv("CORS_ORIGINS", "https://jinkuaicha.com")
+    CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "GET,POST,PUT,DELETE,OPTIONS")
+    CORS_ALLOW_HEADERS = os.getenv("CORS_ALLOW_HEADERS", "Authorization,Content-Type")
