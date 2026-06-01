@@ -44,12 +44,12 @@ class LofFundMonitor {
             this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable_v2') === '1';
             this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;
             this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;
-            this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 1000;
+            this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 10000;
             this.darkMode = localStorage.getItem('lof_darkMode') || 'light';
         } catch (e) {
             this.threshold = 0; this.avgThreshold = 0; this.minAmount = 100;
             this.showSuspended = false; this.showUnpurchasable = false;
-            this.commissionRate = 1.5; this.commissionMin = 5; this.maxCapital = 1000;
+            this.commissionRate = 1.5; this.commissionMin = 5; this.maxCapital = 10000;
             this.darkMode = 'light';
         }
         this.pageMode = (typeof window.LOF_PAGE_MODE !== 'undefined') ? window.LOF_PAGE_MODE : 'normal';
