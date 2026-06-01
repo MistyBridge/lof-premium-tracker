@@ -653,9 +653,9 @@
             // Phase 1: 无依赖脚本并行加载 (Chart.js 按需延迟，不在此处加载)
             this._loading = Promise.all([
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
-                self._loadScript('js/columns.js?v=22'),
+                self._loadScript('js/columns.js?v=23'),
                 self._loadScript('js/kpi-cards.js?v=1'),
-                self._loadScript('js/config.js?v=22'),
+                self._loadScript('js/config.js?v=23'),
                 self._loadScript('js/cache.js?v=1'),
                 self._loadScript('js/supabase.js?v=1'),
                 self._loadScript('js/auth.js?v=1'),
@@ -665,7 +665,7 @@
                 self._loadScript('js/admin.js?v=1')
             ]).then(function() {
                 // Phase 2: api.js 依赖 config.js
-                return self._loadScript('js/api.js?v=22');
+                return self._loadScript('js/api.js?v=23');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
                 return self._loadScript('js/app.js?v=22');
@@ -882,8 +882,8 @@
             // 加载轻量脚本 → 拉取数据 → 缓存
             var scripts = [
                 'js/kpi-cards.js?v=1',
-                'js/config.js?v=22',
-                'js/api.js?v=22',
+                'js/config.js?v=23',
+                'js/api.js?v=23',
                 'js/cache.js?v=1',
                 'js/supabase.js?v=1',
                 'js/auth.js?v=1',
