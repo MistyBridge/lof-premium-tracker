@@ -104,7 +104,7 @@ class LofApiService {
 
     // 1. 健康检查
     async getHealth() {
-        return this.requestWithRetry('/api/health');
+        return this.requestWithRetry('/api/v1/health');
     }
 
     // 2. 基金列表（v2: /api/funds）
@@ -119,12 +119,12 @@ class LofApiService {
         if (options.premium_min !== undefined) params += `&premium_min=${options.premium_min}`;
         if (options.premium_max !== undefined) params += `&premium_max=${options.premium_max}`;
         if (options.filter) params += `&filter=${options.filter}`;
-        return this.requestWithRetry(`/api/funds${params}`);
+        return this.requestWithRetry(`/api/v1/funds${params}`);
     }
 
     // 3. 基金详情
     async getFundDetail(code) {
-        return this.requestWithRetry(`/api/funds/${code}`);
+        return this.requestWithRetry(`/api/v1/funds/${code}`);
     }
 
     // 4. 排行榜（v2: 复用 /api/funds?sort=premium_rate）
@@ -132,22 +132,22 @@ class LofApiService {
         limit = limit || this.config.RANKING_LIMIT;
         const sort = type === 'discount' ? 'premium_rate' : 'premium_rate';
         const order = type === 'discount' ? 'asc' : 'desc';
-        return this.requestWithRetry(`/api/funds?page=1&size=${limit}&sort=${sort}&order=${order}`);
+        return this.requestWithRetry(`/api/v1/funds?page=1&size=${limit}&sort=${sort}&order=${order}`);
     }
 
     // 5. 基金图表数据
     async getFundChart(code, days = 7) {
-        return this.requestWithRetry(`/api/funds/${code}/chart?days=${days}`);
+        return this.requestWithRetry(`/api/v1/funds/${code}/chart?days=${days}`);
     }
 
     // 6. 基金持仓
     async getFundHoldings(code) {
-        return this.requestWithRetry(`/api/funds/${code}/holdings`);
+        return this.requestWithRetry(`/api/v1/funds/${code}/holdings`);
     }
 
     // 7. 刷新数据
     async refreshData() {
-        return this.requestWithRetry('/api/admin/ops/refresh', { method: 'POST' });
+        return this.requestWithRetry('/api/v1/admin/ops/refresh', { method: 'POST' });
     }
 
     // 过滤异常数据

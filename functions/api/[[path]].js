@@ -26,12 +26,8 @@ export async function onRequest(context) {
   }
 
   try {
-    // /api/v1/funds → /api/v1/funds（直接转发）
-    // /api/funds → /api/v1/funds（兼容旧路径）
-    const v1Path = pathname.startsWith("/api/v1/")
-      ? pathname
-      : pathname.replace(/^\/api\//, "/api/v1/");
-    const target = BACKEND + v1Path + url.search;
+    // 直接转发，前端已使用 /api/v1/ 路径
+    const target = BACKEND + pathname + url.search;
     const init = {
       method: context.request.method,
       headers: {
