@@ -510,7 +510,7 @@ class LofFundMonitor {
             case 'nav_date':
                 return '<td class="col-time">' + (fund.nav_date || '-') + '</td>';
             case 'volume':
-                var vol = (fund.volume != null) ? (fund.volume / 10000).toFixed(2) + '万手' : '--';
+                var vol = (fund.volume != null) ? (fund.volume < 100000 ? fund.volume.toLocaleString() + '手' : (fund.volume / 10000).toFixed(2) + '万手') : '--';
                 return '<td class="col-volume">' + vol + '</td>';
             case 'change_amount':
                 var ca = (fund.change_amount != null) ? fund.change_amount.toFixed(4) : '--';
@@ -2006,7 +2006,7 @@ class LofFundMonitor {
         }
 
         // 新增字段
-        setVal('fdVolume', fund.volume != null ? (fund.volume / 10000).toFixed(2) + '万手' : '--');
+        setVal('fdVolume', fund.volume != null ? (fund.volume < 100000 ? fund.volume.toLocaleString() + '手' : (fund.volume / 10000).toFixed(2) + '万手') : '--');
         setVal('fdChangeAmount', fund.change_amount != null ? fund.change_amount.toFixed(4) : '--');
         setVal('fdSuspended', fund.is_suspended ? '停牌' : '正常');
         setVal('fdPurchaseFee', fund.purchase_fee_rate != null ? fund.purchase_fee_rate.toFixed(2) + '%' : '--');
