@@ -665,7 +665,7 @@
                 self._loadScript('js/admin.js?v=1')
             ]).then(function() {
                 // Phase 2: api.js 依赖 config.js
-                return self._loadScript('js/api.js?v=23');
+                return self._loadScript('js/api.js?v=24');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
                 return self._loadScript('js/app.js?v=22');
@@ -883,7 +883,7 @@
             var scripts = [
                 'js/kpi-cards.js?v=1',
                 'js/config.js?v=23',
-                'js/api.js?v=23',
+                'js/api.js?v=24',
                 'js/cache.js?v=1',
                 'js/supabase.js?v=1',
                 'js/auth.js?v=1',
