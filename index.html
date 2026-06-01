@@ -453,7 +453,6 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">预计收益额</span><span class="fd-kpi-value" id="fdEstProfitAmount">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">状态</span><span class="fd-kpi-value" id="fdStatus">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">申购限额</span><span class="fd-kpi-value" id="fdPurchaseLimit">--</span></div>
-                    <div class="fd-kpi-item"><span class="fd-kpi-label">净值日期</span><span class="fd-kpi-value" id="fdNavDate">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">成交量</span><span class="fd-kpi-value" id="fdVolume">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">涨跌额</span><span class="fd-kpi-value" id="fdChangeAmount">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">停牌状态</span><span class="fd-kpi-value" id="fdSuspended">--</span></div>
@@ -467,7 +466,6 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">规模(亿)</span><span class="fd-kpi-value" id="fdAum">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">赎回状态</span><span class="fd-kpi-value" id="fdRedeemStatus">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">赎回费率</span><span class="fd-kpi-value" id="fdRedemptionFee">--</span></div>
-                    <div class="fd-kpi-item"><span class="fd-kpi-label">数据更新</span><span class="fd-kpi-value" id="fdFetchedAt">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">振幅</span><span class="fd-kpi-value" id="fdAmplitude">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">流通市值</span><span class="fd-kpi-value" id="fdFloatMarketCap">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">总市值</span><span class="fd-kpi-value" id="fdTotalMarketCap">--</span></div>
@@ -915,11 +913,23 @@
                     }
                     return;
                 }
-                var s = document.createElement('script');
-                s.src = scripts[loaded];
-                s.onload = function() { loaded++; loadNext(); };
-                s.onerror = function() { loaded++; loadNext(); };
-                document.head.appendChild(s);
+                // 关键：复用 SPA._loadScript 的去重逻辑，避免首页预加载与进入数据页时重复注入脚本
+                // 否则会触发类似 “Identifier 'LofApiService' has already been declared” 的错误，导致页面无数据/空表。
+                var src = scripts[loaded];
+                var p;
+                if (window.SPA && typeof SPA._loadScript === 'function') {
+                    p = SPA._loadScript(src);
+                } else {
+                    p = new Promise(function(resolve, reject) {
+                        var s = document.createElement('script');
+                        s.src = src;
+                        s.onload = resolve;
+                        s.onerror = reject;
+                        document.head.appendChild(s);
+                    });
+                }
+                p.then(function() { loaded++; loadNext(); })
+                 .catch(function() { loaded++; loadNext(); });
             }
             loadNext();
             // 预热后端连接（v2 API）
