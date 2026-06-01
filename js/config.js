@@ -19,7 +19,7 @@
         // 可通过URL参数临时切换：?api=https://xxx
         API_BASE_URL: isLocalDev
             ? 'http://localhost:8000'   // v2 后端端口
-            : 'https://api.jinkuaicha.com',  // 直连阿里云后端
+            : '',  // CF Pages Functions 同源代理（相对路径）
         
         // 数据刷新间隔（毫秒）- 前端1.5分钟轮询
         REFRESH_INTERVAL: 90 * 1000,
