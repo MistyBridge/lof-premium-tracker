@@ -2005,7 +2005,6 @@ class LofFundMonitor {
             }
         }
 
-        setVal('fdNavDate', fund.nav_date || '-');
         // 新增字段
         setVal('fdVolume', fund.volume != null ? (fund.volume / 10000).toFixed(2) + '万手' : '--');
         setVal('fdChangeAmount', fund.change_amount != null ? fund.change_amount.toFixed(4) : '--');
@@ -2021,7 +2020,6 @@ class LofFundMonitor {
         setVal('fdAum', fund.aum != null ? fund.aum.toFixed(2) + '亿' : '--');
         setVal('fdRedeemStatus', fund.redeem_status === 'open' ? '开放赎回' : fund.redeem_status === 'suspended' ? '暂停赎回' : (fund.redeem_status || '--'));
         setVal('fdRedemptionFee', fund.redemption_fee_rate != null ? fund.redemption_fee_rate.toFixed(2) + '%' : '--');
-        setVal('fdFetchedAt', fund.fetched_at ? this.formatTime(fund.fetched_at) : '--');
         setVal('fdAmplitude', fund.amplitude != null ? fund.amplitude.toFixed(2) + '%' : '--');
         setVal('fdFloatMarketCap', fund.float_market_cap != null ? fund.float_market_cap.toFixed(2) + '亿' : '--');
         setVal('fdTotalMarketCap', fund.total_market_cap != null ? fund.total_market_cap.toFixed(2) + '亿' : '--');
