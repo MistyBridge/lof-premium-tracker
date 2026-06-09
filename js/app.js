@@ -2187,6 +2187,7 @@ class LofFundMonitor {
         const mode = this._detailMode || 'price,nav';
         const isPremMode = mode === 'premium';
         const isSharesMode = mode === 'turnover';
+        const isEstNavMode = mode === 'est_nav,nav';
 
         // 价格/净值 Y轴范围
         const pnVals = prices.concat(navs).concat(estNavs).filter(v => v != null);
@@ -2211,7 +2212,7 @@ class LofFundMonitor {
                         _key: 'price', label: '场内价格', yAxisID: 'yPrice',
                         data: prices, borderColor: '#ff7a45', backgroundColor: 'rgba(255,122,69,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#ff7a45', tension: 0.2, fill: false,
-                        hidden: isPremMode || isSharesMode,
+                        hidden: isPremMode || isSharesMode || isEstNavMode,
                     },
                     {
                         _key: 'nav', label: '场外净值', yAxisID: 'yPrice',
