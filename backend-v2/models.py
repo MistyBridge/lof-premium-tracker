@@ -318,3 +318,20 @@ class UserAlert(Base):
     updated_at: Mapped[datetime] = mapped_column(
         TIMESTAMP(timezone=True), default=_utcnow, onupdate=_utcnow
     )
+
+
+# ── 17. fund_est_nav ────────────────────────────────────────
+
+class FundEstNav(Base):
+    """估算净值快照（每日收盘后保存）"""
+    __tablename__ = "fund_est_nav"
+
+    code: Mapped[str] = mapped_column(VARCHAR(6), primary_key=True)
+    trade_date: Mapped[date] = mapped_column(DATE, primary_key=True)
+    est_nav: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(12, 4))
+    est_change_pct: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(10, 4))
+    holdings_contrib: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(10, 4))
+    index_contrib: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(10, 4))
+    coverage: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(10, 4))
+    nav: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(12, 4))
+    created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=_utcnow)
