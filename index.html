@@ -521,6 +521,7 @@
                 <div class="fd-chart-controls">
                     <select class="fd-ind-select" id="fdIndSelect">
                         <option value="price,nav" selected>场内价格 + 场外净值</option>
+                        <option value="est_nav,nav">估算净值 + 场外净值</option>
                         <option value="premium">溢价率</option>
                         <option value="turnover">场内份额</option>
                     </select>
@@ -709,7 +710,7 @@
                 return self._loadScript('js/api.js?v=25');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
-                return self._loadScript('js/app.js?v=24');
+                return self._loadScript('js/app.js?v=25');
             }).then(function() {
                 self._scriptsReady = true;
             });
