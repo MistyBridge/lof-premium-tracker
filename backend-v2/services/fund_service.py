@@ -10,6 +10,7 @@ from typing import Any, Optional
 from sqlalchemy import text
 
 from cache import acquire_lock, cache_get, cache_set, is_redis_available, release_lock
+from utils import beijing_now
 from constants import PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX
 from exceptions import BadRequestException, NotFoundException
 from trade_calendar import get_latest_trading_date, is_trading_day
@@ -672,7 +673,7 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
 
         # ── 盘中注入估算净值 (9:25-20:00，20:00后用正式净值) ──
         code = row.get("code")
-        _now = datetime.now()
+        _now = beijing_now()
         _hm = _now.hour * 100 + _now.minute
         _in_trading = 925 <= _hm < 2000
         est = est_nav_map.get(code) if est_nav_map and code and _in_trading else None
