@@ -292,6 +292,16 @@ async def get_fund_chart(
         """), {"code": code, "limit": fetch_limit})
         rows = [dict(r._mapping) for r in result.fetchall()]
 
+        # 查询估算净值快照
+        est_result = await session.execute(text("""
+            SELECT trade_date, est_nav
+            FROM fund_est_nav
+            WHERE code = :code
+            ORDER BY trade_date DESC
+            LIMIT :limit
+        """), {"code": code, "limit": fetch_limit})
+        est_map = {str(r[0]): float(r[1]) for r in est_result.fetchall() if r[1] is not None}
+
     rows = list(reversed(rows))
 
     # 计算三日均溢（滚动 3 日算术平均）
@@ -317,10 +327,12 @@ async def get_fund_chart(
         if (not amt or amt == 0) and vol and vol > 0 and cl and cl > 0:
             amt = round(vol * 100 * cl, 2)
 
+        td = str(row["trade_date"])
         chart.append({
-            "date": str(row["trade_date"]),
+            "date": td,
             "price": cl,
             "nav": row.get("nav"),
+            "est_nav": est_map.get(td),
             "premium_rate": row.get("premium_rate"),
             "volume": vol,
             "amount": amt,
