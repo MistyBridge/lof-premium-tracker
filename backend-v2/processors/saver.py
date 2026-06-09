@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from models import FundDaily, FundFee, FundHoldings, FundInfo, AssetMaster, FundAssetMap
+from models import FundDaily, FundFee, FundHoldings, FundInfo, AssetMaster, FundAssetMap, FundEstNav
 
 logger = logging.getLogger("consumer")
 
@@ -335,3 +335,13 @@ async def save_job_log(
                 })
     except Exception:
         logger.error("job_log 写入失败", exc_info=True)
+
+
+# ── 估算净值快照 ────────────────────────────────────────────
+
+
+async def save_est_nav_batch(session_factory, records: list[dict], trade_date) -> dict:
+    """批量写入估算净值快照（每日收盘）"""
+    for r in records:
+        r['trade_date'] = trade_date
+    return await batch_upsert(session_factory, FundEstNav, records, ["code", "trade_date"])
