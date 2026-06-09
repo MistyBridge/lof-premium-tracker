@@ -25,15 +25,24 @@ def _get_pool():
 
 
 async def init_consumer_group() -> None:
-    """创建消费者组（已存在则跳过）"""
-    try:
-        await _get_pool().xgroup_create(STREAM_KEY, STREAM_GROUP, id="0", mkstream=True)
-        logger.info("Stream 消费者组初始化: %s/%s", STREAM_KEY, STREAM_GROUP)
-    except Exception as e:
-        if "BUSYGROUP" in str(e):
-            pass  # 已存在，忽略
-        else:
-            logger.error("Stream 消费者组创建失败", exc_info=True)
+    """创建消费者组（已存在则跳过），失败时重试"""
+    for attempt in range(3):
+        try:
+            pool = _get_pool()
+            if pool is None:
+                logger.warning("Redis 连接池未就绪，跳过消费者组初始化")
+                return
+            await pool.xgroup_create(STREAM_KEY, STREAM_GROUP, id="0", mkstream=True)
+            logger.info("Stream 消费者组初始化: %s/%s", STREAM_KEY, STREAM_GROUP)
+            return
+        except Exception as e:
+            if "BUSYGROUP" in str(e):
+                logger.info("Stream 消费者组已存在: %s/%s", STREAM_KEY, STREAM_GROUP)
+                return
+            logger.warning("Stream 消费者组创建失败 (attempt %d/3): %s", attempt + 1, e)
+            if attempt < 2:
+                await asyncio.sleep(1)
+    logger.error("Stream 消费者组创建失败，已重试 3 次")
 
 
 async def publish_event(event_type: str, payload: dict) -> str:

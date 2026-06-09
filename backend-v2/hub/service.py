@@ -56,6 +56,34 @@ class ServiceHub:
         from services.fund_service import get_fund_holdings
         return ok(data=await get_fund_holdings(self._sf, code))
 
+    async def get_fund_est_nav(self, code: str):
+        from services.est_nav_service import get_est_nav_cache, calc_single_est_nav
+        from services.fund_service import get_fund_holdings
+        cache = await get_est_nav_cache()
+        est = cache.get(code.zfill(6))
+        # 缓存数据必须包含完整字段（防止旧格式缓存污染）
+        if est and 'holding_details' not in est:
+            est = None
+        # 缓存未命中时按需计算（收盘后/缓存过期场景）
+        if not est:
+            try:
+                est = await calc_single_est_nav(self._sf, code)
+            except Exception:
+                pass
+        if not est:
+            return ok(data=None)
+        # 补充持仓名称
+        holdings_data = est.get('holding_details', [])
+        if holdings_data:
+            try:
+                h_result = await get_fund_holdings(self._sf, code)
+                h_map = {h['code']: h['name'] for h in h_result.get('holdings', [])}
+                for hd in holdings_data:
+                    hd['name'] = h_map.get(hd['code'], '')
+            except Exception:
+                pass
+        return ok(data=est)
+
     # ── 资产 ────────────────────────────────────────────────
 
     async def get_asset_list(self, **kwargs):

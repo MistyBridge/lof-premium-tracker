@@ -1,6 +1,11 @@
 # Cloudflare Pages 静态资源缓存规则
 # 保留 ?v=X 版本号机制作为缓存强制刷新手段
 
+/api/*
+  Cache-Control: no-store, no-cache, must-revalidate
+  Pragma: no-cache
+  Expires: 0
+
 /css/*
   Cache-Control: public, max-age=86400
 

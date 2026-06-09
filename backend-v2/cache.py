@@ -123,7 +123,7 @@ async def safe_set_realtime(data: dict, threshold: float = PARTIAL_DATA_THRESHOL
         )
         return False
 
-    await cache_set("rt:all", data, ttl=60)
+    await cache_set("rt:all", data, ttl=CACHE_RT_TTL)
     return True
 
 

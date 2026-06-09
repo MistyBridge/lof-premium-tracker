@@ -48,3 +48,5 @@ node_modules/
 
 # Docker 数据
 pgdata/
+docs/密钥与服务器.md
+.claude/

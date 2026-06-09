@@ -72,3 +72,8 @@ async def fund_profit(
 @router.get("/{code}/holdings")
 async def fund_holdings(code: str, hub: ServiceHub = Depends(get_hub)):
     return await hub.get_fund_holdings(code)
+
+
+@router.get("/{code}/est_nav")
+async def fund_est_nav(code: str, hub: ServiceHub = Depends(get_hub)):
+    return await hub.get_fund_est_nav(code)

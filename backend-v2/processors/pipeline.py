@@ -28,6 +28,7 @@ from processors.saver import (
     save_holdings_batch,
     save_info_batch,
     save_job_log,
+    save_kline_batch,
 )
 from processors.validator import (
     deduplicate,
@@ -146,33 +147,75 @@ async def process_realtime(data: dict, batch_id: str, session_factory) -> None:
 
 
 async def process_nav(data: dict, batch_id: str, session_factory) -> None:
-    """净值: normalize → validate → 写 Redis"""
+    """净值: normalize → validate → 写 Redis + 更新 DB"""
     records = data.get("data", [])
 
     normalized = [normalize_nav(r) for r in records]
     validated = [r for r in (validate_nav(r) for r in normalized) if r is not None]
 
     nav_map = {r["code"]: r for r in validated if r.get("code")}
-    await cache_set("nav:all", nav_map, ttl=300)
+    await cache_set("nav:all", nav_map, ttl=86400)  # 24小时，确保daily_save能读到
+
+    # 同步更新 fund_daily 表的 NAV 数据
+    from datetime import date as _date
+    updated = 0
+    async with session_factory() as session:
+        for item in validated:
+            code = item.get("code")
+            nav = item.get("nav")
+            nav_date = item.get("nav_date")
+            if not code or not nav or not nav_date:
+                continue
+            if isinstance(nav_date, str):
+                try:
+                    nav_date = _date.fromisoformat(nav_date)
+                except (ValueError, TypeError):
+                    continue
+            try:
+                result = await session.execute(text(
+                    "UPDATE fund_daily "
+                    "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
+                    "WHERE code = :code "
+                    "AND trade_date = (SELECT MAX(trade_date) FROM fund_daily WHERE code = :code)"
+                ), {"code": code, "nav": float(nav), "nav_date": nav_date})
+                if result.rowcount > 0:
+                    updated += 1
+            except Exception:
+                pass
+        await session.commit()
+
+    # 刷新物化视图
+    try:
+        from processors.saver import refresh_materialized_view
+        await refresh_materialized_view(session_factory)
+    except Exception as e:
+        logger.warning("[NAV] 物化视图刷新失败: %s", e)
 
     metrics.record_fetch("nav", success=True, duration_ms=0)
-    logger.info("净值处理完成: %d 条", len(nav_map))
+    logger.info("净值处理完成: %d 条，DB更新: %d 条", len(nav_map), updated)
 
 
 async def process_kline(data: dict, batch_id: str, session_factory) -> None:
-    """日线: normalize → validate → 写 Redis"""
+    """日线: normalize → validate → 写 Redis + DB"""
     ktype = data.get("type", "fund")
     kdata = data.get("data", {})
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
+
+    from processors.saver import save_kline_batch
+    total_saved = 0
 
     for code, records in kdata.items():
         normalized = [normalize_kline(r, source="push2his") for r in records]
         validated = [r for r in (validate_kline(r) for r in normalized) if r is not None]
         if validated:
+            # 写 Redis 缓存
             await cache_set(f"kline:{ktype}:{today}:{code}", validated, ttl=86400)
+            # 写 DB（更新成交额等字段）
+            saved = await save_kline_batch(session_factory, code, validated)
+            total_saved += saved
 
     metrics.record_fetch("kline", success=True, duration_ms=0)
-    logger.info("日线处理完成: %d 个代码", len(kdata))
+    logger.info("日线处理完成: %d 个代码, %d 条已保存到DB", len(kdata), total_saved)
 
 
 async def process_info(data: dict, batch_id: str, session_factory) -> None:
@@ -209,6 +252,7 @@ async def process_info(data: dict, batch_id: str, session_factory) -> None:
 async def process_daily_save(data: dict, batch_id: str, session_factory) -> None:
     """
     日终入库: 合并 Redis 收盘价+净值 → calculator → saver → 刷新物化视图。
+    缺失字段自动沿用最近历史数据作为替补。
     """
     today = datetime.now(timezone.utc).strftime("%Y%m%d")
     today_date = datetime.now(timezone.utc).date()
@@ -218,7 +262,7 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
     nav_data = await cache_get("nav:all") or {}
     suspension_data = await cache_get("suspension:all") or {}
 
-    # 2. 从 DB 读取基金列表 + 申购限额
+    # 2. 从 DB 读取基金列表 + 申购限额 + 最近历史数据（替补用）
     from sqlalchemy import text as sql_text
     async with session_factory() as session:
         rows = await session.execute(sql_text("SELECT code, name FROM fund_code_list"))
@@ -228,13 +272,28 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
             "SELECT code, purchase_limit FROM fund_fee"
         ))
         limit_map = {r[0]: r[1] for r in fee_rows.fetchall() if r[1] is not None}
+        # 读取每只基金最近一条有净值的记录（替补用）
+        fallback_rows = await session.execute(sql_text("""
+            WITH ranked AS (
+                SELECT code, nav, nav_date, close, open, high, low,
+                       volume, amount, float_share, turnover_rate,
+                       ROW_NUMBER() OVER (PARTITION BY code ORDER BY trade_date DESC) as rn
+                FROM fund_daily
+                WHERE nav IS NOT NULL
+            )
+            SELECT code, nav, nav_date, close, open, high, low,
+                   volume, amount, float_share, turnover_rate
+            FROM ranked WHERE rn = 1
+        """))
+        fallback_map = {r[0]: dict(r._mapping) for r in fallback_rows.fetchall()}
 
-    # 3. 合并数据
+    # 3. 合并数据（缺失字段从历史替补）
     merged = []
     for fund in code_list:
         code = fund["code"]
         closing = closing_data.get(code, {})
         nav = nav_data.get(code, {})
+        fallback = fallback_map.get(code, {})
 
         if not closing:
             continue
@@ -243,22 +302,34 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
         susp = suspension_data.get(code, {})
         susp_status = susp.get("status", closing.get("suspension_status", "unknown"))
 
+        # 净值：优先用当天获取的，没有则用最近历史
+        nav_val = nav.get("nav") or fallback.get("nav")
+        nav_date_val = nav.get("nav_date") or fallback.get("nav_date")
+        # nav_date 统一转 date 对象（Redis 里是字符串，DB 里是 date）
+        if isinstance(nav_date_val, str):
+            try:
+                from datetime import date as _date
+                nav_date_val = _date.fromisoformat(nav_date_val)
+            except (ValueError, TypeError):
+                nav_date_val = None
+        nav_source = "lsjz" if nav.get("nav") else "fallback"
+
         record = {
             "code": code,
             "trade_date": today_date,
-            "close": closing.get("realtime_price"),
-            "open": closing.get("open"),
-            "high": closing.get("high"),
-            "low": closing.get("low"),
-            "volume": closing.get("volume"),
-            "amount": closing.get("realtime_amount"),
-            "float_share": closing.get("float_share"),
-            "turnover_rate": closing.get("turnover_rate"),
-            "nav": nav.get("nav"),
-            "nav_date": nav.get("nav_date"),
+            "close": closing.get("realtime_price") or fallback.get("close"),
+            "open": closing.get("open") or fallback.get("open"),
+            "high": closing.get("high") or fallback.get("high"),
+            "low": closing.get("low") or fallback.get("low"),
+            "volume": closing.get("volume") or fallback.get("volume"),
+            "amount": closing.get("realtime_amount") or fallback.get("amount"),
+            "float_share": closing.get("float_share") or fallback.get("float_share"),
+            "turnover_rate": closing.get("turnover_rate") or fallback.get("turnover_rate"),
+            "nav": nav_val,
+            "nav_date": nav_date_val,
             "nav_type": "confirmed",
-            "nav_source": "lsjz",
-            "fetch_source": closing.get("fetch_source", "push2"),
+            "nav_source": nav_source,
+            "fetch_source": closing.get("fetch_source", "tencent"),
             "suspension_status": susp_status,
             "purchase_limit": limit_map.get(code),
             "fetch_batch_id": batch_id,
