@@ -1,12 +1,13 @@
 """
 请求参数 Pydantic 模型 — 9 个模型 + 排序白名单 + 代码清洗 + 日期校验
 """
-from datetime import date, datetime, timezone
+from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, Field, field_validator
 
 from constants import BATCH_CODES_MAX, PAGE_SIZE_MAX, DAILY_QUERY_LIMIT_MAX
+from utils import beijing_today_date
 
 # 排序白名单
 SORT_WHITELIST = frozenset([
@@ -90,7 +91,7 @@ class DataQueryRequest(BaseModel):
     @classmethod
     def clamp_to_date(cls, v: Optional[date]) -> Optional[date]:
         if v:
-            today = datetime.now(timezone.utc).date()
+            today = beijing_today_date()
             return min(v, today)
         return v
 

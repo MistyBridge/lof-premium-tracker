@@ -2,13 +2,14 @@
 日线数据查询服务 — 字段白名单 + 日期校验 + 批量查询
 """
 import logging
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, timedelta
 from typing import Optional
 
 from sqlalchemy import text
 
 from constants import BATCH_QUERY_CODES_MAX, DAILY_QUERY_LIMIT_MAX
 from exceptions import BadRequestException
+from utils import beijing_today_date
 
 logger = logging.getLogger("app")
 
@@ -43,7 +44,7 @@ def _validate_dates(
     to_date: Optional[str],
 ) -> tuple[date, date]:
     """校验日期参数，默认最近 60 天"""
-    today = datetime.now(timezone.utc).date()
+    today = beijing_today_date()
 
     if to_date:
         to_d = date.fromisoformat(to_date)

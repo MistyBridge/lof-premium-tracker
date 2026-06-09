@@ -10,6 +10,7 @@ from typing import Any, Optional
 from sqlalchemy import text
 
 from cache import acquire_lock, cache_get, cache_set, is_redis_available, release_lock
+from utils import beijing_now
 from constants import PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX
 from exceptions import BadRequestException, NotFoundException
 from trade_calendar import get_latest_trading_date, is_trading_day
@@ -427,9 +428,7 @@ async def _get_realtime_with_protection() -> tuple[Optional[dict], bool]:
         return None, False
 
     # 尝试读缓存（优先读当天的实时数据，使用北京时间）
-    from datetime import timedelta
-    beijing_now = datetime.now(timezone.utc) + timedelta(hours=8)
-    today = beijing_now.strftime("%Y%m%d")
+    today = beijing_now().strftime("%Y%m%d")
     data = await cache_get(f"rt:close:{today}")
     if not data:
         # 回退到 rt:all（兼容旧逻辑）
@@ -672,7 +671,7 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
 
         # ── 盘中注入估算净值 (9:25-20:00，20:00后用正式净值) ──
         code = row.get("code")
-        _now = datetime.now()
+        _now = beijing_now()
         _hm = _now.hour * 100 + _now.minute
         _in_trading = 925 <= _hm < 2000
         est = est_nav_map.get(code) if est_nav_map and code and _in_trading else None

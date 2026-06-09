@@ -222,6 +222,7 @@ FROM fund_info fi
 LEFT JOIN LATERAL (
     SELECT * FROM fund_daily
     WHERE code = fi.code
+      AND close IS NOT NULL
     ORDER BY trade_date DESC LIMIT 1
 ) fd ON TRUE"""
 

@@ -9,6 +9,7 @@ import uuid
 from datetime import datetime, timezone
 
 from cache import cache_get, cache_set, safe_set_realtime
+from utils import beijing_today_str, beijing_today_date
 from metrics import metrics
 from mq import ack_event, consume_events
 from processors.calculator import calc_daily_fields
@@ -138,8 +139,7 @@ async def process_realtime(data: dict, batch_id: str, session_factory) -> None:
     realtime_map = {r["code"]: r for r in marked if r.get("code")}
     await safe_set_realtime(realtime_map)
 
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
-    await cache_set(f"rt:close:{today}", realtime_map, ttl=86400)
+    await cache_set(f"rt:close:{beijing_today_str()}", realtime_map, ttl=86400)
 
     suspended_count = sum(1 for v in suspension_map.values() if v["status"] == "suspended")
     metrics.record_fetch("realtime", success=True, duration_ms=0)
@@ -172,17 +172,14 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
                 except (ValueError, TypeError):
                     continue
             try:
-                await session.execute(text(
-                    "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
-                    "VALUES (:code, CURRENT_DATE, :nav, :nav_date, 'confirmed', 'lsjz') "
-                    "ON CONFLICT (code, trade_date) DO UPDATE SET "
-                    "    nav = EXCLUDED.nav, "
-                    "    nav_date = EXCLUDED.nav_date, "
-                    "    nav_type = EXCLUDED.nav_type, "
-                    "    nav_source = EXCLUDED.nav_source, "
-                    "    updated_at = NOW()"
+                result = await session.execute(text(
+                    "UPDATE fund_daily "
+                    "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
+                    "WHERE code = :code "
+                    "AND trade_date = (SELECT MAX(trade_date) FROM fund_daily WHERE code = :code)"
                 ), {"code": code, "nav": float(nav), "nav_date": nav_date})
-                updated += 1
+                if result.rowcount > 0:
+                    updated += 1
             except Exception:
                 pass
         await session.commit()
@@ -202,7 +199,7 @@ async def process_kline(data: dict, batch_id: str, session_factory) -> None:
     """日线: normalize → validate → 写 Redis + DB"""
     ktype = data.get("type", "fund")
     kdata = data.get("data", {})
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    today = beijing_today_str()
 
     from processors.saver import save_kline_batch
     total_saved = 0
@@ -257,8 +254,8 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
     日终入库: 合并 Redis 收盘价+净值 → calculator → saver → 刷新物化视图。
     缺失字段自动沿用最近历史数据作为替补。
     """
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
-    today_date = datetime.now(timezone.utc).date()
+    today = beijing_today_str()
+    today_date = beijing_today_date()
 
     # 1. 从 Redis 读取
     closing_data = await cache_get(f"rt:close:{today}") or {}
