@@ -129,17 +129,30 @@ async def save_est_nav_snapshot(client: httpx.AsyncClient) -> int:
     """
     收盘后保存估算净值快照到数据库。
     复用 run_est_nav 的计算逻辑，将结果写入 fund_est_nav 表。
+    trade_date 取 fund_daily 最新日期（与估算基于的净值日期一致）。
     返回保存的记录数。
     """
     from processors.saver import save_est_nav_batch
-    from utils import beijing_today_date
+    from sqlalchemy import text as sql_text
 
     data = await run_est_nav(client)
     if not data:
         logger.warning("[EST_NAV_SNAPSHOT] 无数据可保存")
         return 0
 
-    trade_date = beijing_today_date()
+    # 取 fund_daily 最新交易日（估算净值基于该日的 nav 计算）
+    sf = database.async_session_factory
+    async with sf() as session:
+        r = await session.execute(sql_text(
+            "SELECT MAX(trade_date) FROM fund_daily WHERE nav IS NOT NULL"
+        ))
+        row = r.fetchone()
+        trade_date = row[0] if row and row[0] else None
+
+    if not trade_date:
+        logger.warning("[EST_NAV_SNAPSHOT] fund_daily 无数据，无法确定 trade_date")
+        return 0
+
     records = []
     for fc, info in data.items():
         records.append({
