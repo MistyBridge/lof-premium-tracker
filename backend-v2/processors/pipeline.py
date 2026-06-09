@@ -6,7 +6,7 @@ import asyncio
 import json
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from cache import cache_get, cache_set, safe_set_realtime
 from metrics import metrics
@@ -138,7 +138,8 @@ async def process_realtime(data: dict, batch_id: str, session_factory) -> None:
     realtime_map = {r["code"]: r for r in marked if r.get("code")}
     await safe_set_realtime(realtime_map)
 
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    _beijing = datetime.now(timezone.utc) + timedelta(hours=8)
+    today = _beijing.strftime("%Y%m%d")
     await cache_set(f"rt:close:{today}", realtime_map, ttl=86400)
 
     suspended_count = sum(1 for v in suspension_map.values() if v["status"] == "suspended")
@@ -199,7 +200,8 @@ async def process_kline(data: dict, batch_id: str, session_factory) -> None:
     """日线: normalize → validate → 写 Redis + DB"""
     ktype = data.get("type", "fund")
     kdata = data.get("data", {})
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
+    _beijing = datetime.now(timezone.utc) + timedelta(hours=8)
+    today = _beijing.strftime("%Y%m%d")
 
     from processors.saver import save_kline_batch
     total_saved = 0
@@ -254,8 +256,9 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
     日终入库: 合并 Redis 收盘价+净值 → calculator → saver → 刷新物化视图。
     缺失字段自动沿用最近历史数据作为替补。
     """
-    today = datetime.now(timezone.utc).strftime("%Y%m%d")
-    today_date = datetime.now(timezone.utc).date()
+    _beijing = datetime.now(timezone.utc) + timedelta(hours=8)
+    today = _beijing.strftime("%Y%m%d")
+    today_date = _beijing.date()
 
     # 1. 从 Redis 读取
     closing_data = await cache_get(f"rt:close:{today}") or {}
