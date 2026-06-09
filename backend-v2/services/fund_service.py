@@ -428,9 +428,7 @@ async def _get_realtime_with_protection() -> tuple[Optional[dict], bool]:
         return None, False
 
     # 尝试读缓存（优先读当天的实时数据，使用北京时间）
-    from datetime import timedelta
-    beijing_now = datetime.now(timezone.utc) + timedelta(hours=8)
-    today = beijing_now.strftime("%Y%m%d")
+    today = beijing_now().strftime("%Y%m%d")
     data = await cache_get(f"rt:close:{today}")
     if not data:
         # 回退到 rt:all（兼容旧逻辑）
