@@ -192,6 +192,19 @@ TABLES_SQL = [
         created_at         TIMESTAMPTZ DEFAULT NOW(),
         updated_at         TIMESTAMPTZ DEFAULT NOW()
     )""",
+    # 17. fund_est_nav
+    """CREATE TABLE IF NOT EXISTS fund_est_nav (
+        code               VARCHAR(6) NOT NULL,
+        trade_date         DATE NOT NULL,
+        est_nav            NUMERIC(12,4),
+        est_change_pct     NUMERIC(10,4),
+        holdings_contrib   NUMERIC(10,4),
+        index_contrib      NUMERIC(10,4),
+        coverage           NUMERIC(10,4),
+        nav                NUMERIC(12,4),
+        created_at         TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (code, trade_date)
+    )""",
 ]
 
 INDEXES_SQL = [
@@ -202,6 +215,7 @@ INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS idx_fam_asset ON fund_asset_map (asset_code)",
     "CREATE INDEX IF NOT EXISTS idx_alerts_active ON user_alert (user_id) WHERE is_active = TRUE",
     "CREATE INDEX IF NOT EXISTS idx_job_name ON job_log (job_name, started_at DESC)",
+    "CREATE INDEX IF NOT EXISTS idx_est_nav_date ON fund_est_nav (trade_date DESC)",
 ]
 
 MATERIALIZED_VIEW_SQL = """CREATE MATERIALIZED VIEW IF NOT EXISTS fund_snapshot AS
@@ -232,6 +246,7 @@ EXPECTED_TABLES = [
     "asset_master", "asset_daily", "fund_asset_map", "trade_calendar",
     "fetch_progress", "job_log", "admin_audit_log",
     "user_formula_group", "user_formula", "user_watchlist", "user_alert",
+    "fund_est_nav",
 ]
 
 

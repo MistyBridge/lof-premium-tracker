@@ -56,6 +56,9 @@ def create_scheduler():
     scheduler.add_job(job_check_calendar, CronTrigger(month=12, day=1, hour=9, minute=0), id="check_calendar")
     # 估算净值 — 交易时间内每5分钟
     scheduler.add_job(job_est_nav, IntervalTrigger(minutes=5), id="est_nav")
+    # 估算净值快照 — 交易日 15:05 保存一次
+    scheduler.add_job(job_save_est_nav, CronTrigger(hour=15, minute=5), id="save_est_nav",
+                      name="保存估算净值", replace_existing=True, misfire_grace_time=300)
     # 日历重载 — 每10分钟检查一次（如果日历加载失败则重试）
     scheduler.add_job(job_reload_calendar, IntervalTrigger(minutes=10), id="reload_calendar")
     return scheduler
@@ -407,3 +410,16 @@ async def job_est_nav() -> None:
         _ok("est_nav", (time.monotonic() - s) * 1000, len(data))
     except Exception as e:
         _fail("est_nav", e)
+
+
+async def job_save_est_nav() -> None:
+    """交易日 15:05 保存估算净值快照（每日一次）"""
+    if not is_trading_day():
+        return
+    s = time.monotonic()
+    try:
+        from services.est_nav_service import save_est_nav_snapshot
+        count = await save_est_nav_snapshot(_http_client)
+        _ok("save_est_nav", (time.monotonic() - s) * 1000, count)
+    except Exception as e:
+        _fail("save_est_nav", e)
