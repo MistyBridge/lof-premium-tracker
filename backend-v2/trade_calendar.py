@@ -4,10 +4,12 @@
 """
 import asyncio
 import logging
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from utils import beijing_today_date
 
 logger = logging.getLogger("app")
 
@@ -20,7 +22,7 @@ async def load_calendar(session: AsyncSession, max_retries: int = 3) -> None:
     global _calendar, _calendar_loaded
     for attempt in range(1, max_retries + 1):
         try:
-            year_start = datetime.now(timezone.utc).date().replace(month=1, day=1)
+            year_start = beijing_today_date().replace(month=1, day=1)
             result = await session.execute(
                 text("SELECT trade_date, is_trading FROM trade_calendar WHERE trade_date >= :d"),
                 {"d": year_start},
@@ -54,13 +56,13 @@ def is_trading_day(target: date | None = None) -> bool:
     """判断是否为交易日，日历未加载时返回 False"""
     if not _calendar_loaded:
         return False
-    d = target or datetime.now(timezone.utc).date()
+    d = target or beijing_today_date()
     return _calendar.get(d, False)
 
 
 def get_latest_trading_date() -> date:
     """获取最近一个交易日（含今天），最多回溯 10 天"""
-    today = datetime.now(timezone.utc).date()
+    today = beijing_today_date()
     for offset in range(0, 11):
         check = today - timedelta(days=offset)
         if _calendar.get(check, False):

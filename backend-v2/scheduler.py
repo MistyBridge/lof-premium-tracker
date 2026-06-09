@@ -14,6 +14,7 @@ from sqlalchemy import text
 from config import settings
 import database
 from metrics import alert
+from utils import beijing_now, beijing_today_str
 
 
 def _sf():
@@ -299,7 +300,7 @@ async def job_daily_save() -> None:
     s = time.monotonic()
     try:
         mid = await publish_event("daily_save", {
-            "date": datetime.now().strftime("%Y-%m-%d")
+            "date": beijing_today_str("%Y-%m-%d")
         })
         if mid:
             _ok("daily_save", (time.monotonic() - s) * 1000)
@@ -386,7 +387,7 @@ async def _qdii() -> list[str]:
 
 async def job_est_nav() -> None:
     """估算净值 — 交易日 9:25-20:00 运行，20:00后清理缓存切换正式净值"""
-    now = datetime.now()
+    now = beijing_now()
     hour_min = now.hour * 100 + now.minute
 
     # 20:00后清理缓存，切换正式净值
