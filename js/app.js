@@ -2053,6 +2053,7 @@ class LofFundMonitor {
             data: { labels: [], datasets: [
                 { _key: 'price', label: '场内价格', data: [], borderColor: '#ff7a45', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice' },
                 { _key: 'nav', label: '场外净值', data: [], borderColor: '#40a9ff', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice' },
+                { _key: 'est_nav', label: '估算净值', data: [], borderColor: '#faad14', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrice', borderDash: [6, 3] },
                 { _key: 'premium', label: '溢价率', data: [], borderColor: '#e74c3c', borderWidth: 2, pointRadius: 0, tension: 0.2, fill: false, yAxisID: 'yPrem', hidden: true },
             ]},
             options: {
@@ -2172,6 +2173,7 @@ class LofFundMonitor {
         const labels = chartData.map(d => d.date.slice(5));
         const prices = chartData.map(d => d.price);
         const navs = chartData.map(d => d.nav);
+        const estNavs = chartData.map(d => d.est_nav);
         const premiums = chartData.map(d => d.premium_rate);
         const sharesData = chartData.map(d => d.on_exchange_shares);
 
@@ -2187,7 +2189,7 @@ class LofFundMonitor {
         const isSharesMode = mode === 'turnover';
 
         // 价格/净值 Y轴范围
-        const pnVals = prices.concat(navs).filter(v => v != null);
+        const pnVals = prices.concat(navs).concat(estNavs).filter(v => v != null);
         const pnMin = pnVals.length > 0 ? Math.floor(Math.min(...pnVals) * 0.995 * 1000) / 1000 : 0;
         const pnMax = pnVals.length > 0 ? Math.ceil(Math.max(...pnVals) * 1.005 * 1000) / 1000 : 1;
 
@@ -2216,6 +2218,13 @@ class LofFundMonitor {
                         data: navs, borderColor: '#40a9ff', backgroundColor: 'rgba(64,169,255,0.08)',
                         borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#40a9ff', tension: 0.2, fill: false,
                         hidden: isPremMode || isSharesMode,
+                    },
+                    {
+                        _key: 'est_nav', label: '估算净值', yAxisID: 'yPrice',
+                        data: estNavs, borderColor: '#faad14', backgroundColor: 'rgba(250,173,20,0.08)',
+                        borderWidth: 2, pointRadius: pointR, pointBackgroundColor: '#faad14', tension: 0.2, fill: false,
+                        hidden: isPremMode || isSharesMode,
+                        borderDash: [6, 3],
                     },
                     {
                         _key: 'premium', label: '溢价率', yAxisID: 'yPrem',
@@ -2377,6 +2386,8 @@ class LofFundMonitor {
         } else {
             html += '<div class="arb-tooltip-row"><span>场内价格</span><span>' + (tPrice != null ? tPrice.toFixed(3) : '--') + '</span></div>';
             html += '<div class="arb-tooltip-row"><span>场外净值</span><span>' + (tNav != null ? tNav.toFixed(3) : '--') + '</span></div>';
+            var estNavVal = point.est_nav;
+            html += '<div class="arb-tooltip-row"><span>估算净值</span><span style="color:#faad14">' + (estNavVal != null ? estNavVal.toFixed(4) : '--') + '</span></div>';
         }
 
         html += '<div class="arb-tooltip-sep"></div>';
