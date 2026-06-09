@@ -483,7 +483,7 @@ class LofFundMonitor {
                 var avgTxt = (avg != null) ? avgS + avg.toFixed(2) + '%' : '--';
                 return '<td class="col-avg-premium ' + avgCls + '">' + avgTxt + '</td>';
             case 'amount':
-                var displayAmount = fund.realtime_amount || 0;
+                var displayAmount = fund.realtime_amount ?? fund.amount ?? 0;
                 return '<td class="col-amount">' + formatAmount(displayAmount) + '</td>';
             case 'est_profit_rate':
                 var est = this.calcEstimatedProfit(fund);
