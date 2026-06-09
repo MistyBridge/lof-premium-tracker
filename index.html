@@ -25,7 +25,7 @@
     <meta name="twitter:title" content="金快查 - LOF基金实时折溢价监控">
     <meta name="twitter:description" content="全市场LOF基金实时溢价率、折价率、套利收益计算。">
 
-    <link rel="stylesheet" href="css/style.css?v=22">
+    <link rel="stylesheet" href="css/style.css?v=24">
     <link rel="stylesheet" href="css/landing.css?v=5">
     <link rel="stylesheet" href="css/account.css?v=1">
     <link rel="stylesheet" href="css/admin.css?v=1">
@@ -172,9 +172,9 @@
                                     <span class="ft-opt-name">LOF基金</span>
                                     <span class="ft-opt-count" id="ftOptLofCount">--</span>
                                 </div>
-                                <div class="ft-option disabled" data-type="etf">
+                                <div class="ft-option" data-type="etf">
                                     <span class="ft-opt-name">ETF基金</span>
-                                    <span class="ft-opt-status">暂未开放</span>
+                                    <span class="ft-opt-count" id="ftOptEtfCount">--</span>
                                 </div>
                             </div>
                         </div>
@@ -381,10 +381,52 @@
             <div class="modal-body" style="padding:0">
                 <div class="holdings-loading" id="holdingsLoading" style="text-align:center;padding:40px;color:var(--text2)">加载中...</div>
                 <table class="holdings-table" id="holdingsTable" style="display:none;width:100%;border-collapse:collapse">
-                    <thead><tr><th style="width:40px">#</th><th style="width:100px">代码</th><th style="width:180px">名称</th><th style="width:100px">占净值比</th><th style="width:120px">持股数(万股)</th><th style="width:120px">市值(万元)</th></tr></thead>
+                    <thead><tr><th style="width:40px">#</th><th style="width:100px">代码</th><th style="width:180px">名称</th><th style="width:100px">占净值比</th><th style="width:120px">涨跌幅</th></tr></thead>
                     <tbody id="holdingsBody"></tbody>
                 </table>
                 <div class="holdings-source" id="holdingsSource" style="text-align:center;padding:12px;font-size:0.75rem;color:var(--text2)"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ 全局：估算净值详情弹窗 ═══════════════════════════════════════════ -->
+    <div id="estNavModal" class="modal-overlay" style="display:none">
+        <div class="modal-content" style="max-width:700px;max-height:85vh">
+            <div class="modal-header">
+                <h3 id="estNavTitle">估算净值计算过程</h3>
+                <button class="modal-close" id="estNavCloseBtn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:16px">
+                <div id="estNavLoading" style="text-align:center;padding:40px;color:var(--text2)">加载中...</div>
+                <div id="estNavContent" style="display:none">
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+                        <div style="background:var(--bg2);border-radius:8px;padding:12px;text-align:center">
+                            <div style="font-size:0.75rem;color:var(--text2)">昨日净值</div>
+                            <div id="estNavOfficial" style="font-size:1.2rem;font-weight:600;margin-top:4px">--</div>
+                        </div>
+                        <div style="background:var(--bg2);border-radius:8px;padding:12px;text-align:center">
+                            <div style="font-size:0.75rem;color:var(--text2)">估算涨跌幅</div>
+                            <div id="estNavChangePct" style="font-size:1.2rem;font-weight:600;margin-top:4px">--</div>
+                        </div>
+                        <div style="background:var(--bg2);border-radius:8px;padding:12px;text-align:center">
+                            <div style="font-size:0.75rem;color:var(--text2)">估算净值</div>
+                            <div id="estNavEst" style="font-size:1.2rem;font-weight:600;margin-top:4px">--</div>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:8px;font-size:0.8rem;color:var(--text2)">
+                        公式：估算净值 = 昨日净值 × (1 + 持仓贡献 + 指数贡献)
+                    </div>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
+                        <thead><tr>
+                            <th style="text-align:left;padding:8px 6px;border-bottom:1px solid var(--border)">资产</th>
+                            <th style="text-align:right;padding:8px 6px;border-bottom:1px solid var(--border)">权重</th>
+                            <th style="text-align:right;padding:8px 6px;border-bottom:1px solid var(--border)">涨跌幅</th>
+                            <th style="text-align:right;padding:8px 6px;border-bottom:1px solid var(--border)">贡献</th>
+                        </tr></thead>
+                        <tbody id="estNavBody"></tbody>
+                    </table>
+                    <div id="estNavFormula" style="margin-top:12px;padding:12px;background:var(--bg2);border-radius:8px;font-size:0.8rem;color:var(--text2)"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -444,7 +486,7 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">代码(点击可复制)</span><span class="fd-kpi-value fd-code-name" id="fdCode" data-copy>--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">名称(点击可复制)</span><span class="fd-kpi-value fd-code-name" id="fdName" data-copy>--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">现价</span><span class="fd-kpi-value" id="fdPrice">--</span></div>
-                    <div class="fd-kpi-item"><span class="fd-kpi-label">净值</span><span class="fd-kpi-value" id="fdNav">--</span></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">净值</span><span class="fd-kpi-value" id="fdNav">--</span><button class="btn-holdings btn-fd-holdings" id="fdNavBtn">查看</button></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">涨跌幅</span><span class="fd-kpi-value" id="fdChangePct">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">溢价率</span><span class="fd-kpi-value" id="fdPremiumRate">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">三日均溢</span><span class="fd-kpi-value" id="fdAvgPremium">--</span></div>
@@ -466,6 +508,7 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">规模(亿)</span><span class="fd-kpi-value" id="fdAum">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">赎回状态</span><span class="fd-kpi-value" id="fdRedeemStatus">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">赎回费率</span><span class="fd-kpi-value" id="fdRedemptionFee">--</span></div>
+                    <div class="fd-kpi-item fd-kpi-holdings"><span class="fd-kpi-label">十大持仓</span><span class="fd-kpi-value"><button class="btn-holdings btn-fd-holdings" id="fdHoldingsBtn">点击查看</button></span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">振幅</span><span class="fd-kpi-value" id="fdAmplitude">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">流通市值</span><span class="fd-kpi-value" id="fdFloatMarketCap">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">总市值</span><span class="fd-kpi-value" id="fdTotalMarketCap">--</span></div>
@@ -663,7 +706,7 @@
                 self._loadScript('js/admin.js?v=1')
             ]).then(function() {
                 // Phase 2: api.js 依赖 config.js
-                return self._loadScript('js/api.js?v=24');
+                return self._loadScript('js/api.js?v=25');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
                 return self._loadScript('js/app.js?v=22');
@@ -881,7 +924,7 @@
             var scripts = [
                 'js/kpi-cards.js?v=1',
                 'js/config.js?v=23',
-                'js/api.js?v=24',
+                'js/api.js?v=25',
                 'js/cache.js?v=1',
                 'js/supabase.js?v=1',
                 'js/auth.js?v=1',

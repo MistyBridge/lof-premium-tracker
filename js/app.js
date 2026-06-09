@@ -156,7 +156,7 @@ class LofFundMonitor {
         }
         // Phase 2: 后台拉取最新数据
         try {
-            var result = await api.getFunds(1, 600);
+            var result = await api.getFunds(1, 600, false, false, { filter_mode: self.filterMode || 'lof' });
             // v2 meta: data_timestamp / data_type / realtime_available
             // v1 meta: last_fetch / refresh_interval_sec (兼容)
             var ts = result.meta ? (result.meta.data_timestamp || result.meta.last_fetch) : null;
@@ -364,7 +364,8 @@ class LofFundMonitor {
             const keyword = this.searchKeyword.toLowerCase();
             filtered = filtered.filter(fund =>
                 fund.code.toLowerCase().includes(keyword) ||
-                fund.name.toLowerCase().includes(keyword)
+                fund.name.toLowerCase().includes(keyword) ||
+                (fund.short_name && fund.short_name.toLowerCase().includes(keyword))
             );
         }
         if (this.threshold > 0) {
@@ -454,9 +455,10 @@ class LofFundMonitor {
                 var starActive = this._isFavorite(fund.code) ? ' row-star--active' : '';
                 return '<td class="col-code frozen" style="left:36px"><button class="row-star' + starActive + '" data-code="' + fund.code + '">' + (starActive ? '★' : '☆') + '</button><span class="code-text">' + fund.code + '</span></td>';
             case 'name':
-                return '<td class="col-name frozen" style="left:135px" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>';
+                var displayName = fund.short_name || fund.name;
+                return '<td class="col-name frozen" style="left:135px" title="' + fund.name + '">' + this.truncateName(displayName) + '</td>';
             case 'price':
-                var p = (fund.price != null) ? fund.price.toFixed(3) : '--';
+                var p = (fund.realtime_price != null) ? fund.realtime_price.toFixed(3) : (fund.price != null) ? fund.price.toFixed(3) : '--';
                 return '<td class="col-price">' + p + '</td>';
             case 'nav':
                 var n = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
@@ -481,7 +483,8 @@ class LofFundMonitor {
                 var avgTxt = (avg != null) ? avgS + avg.toFixed(2) + '%' : '--';
                 return '<td class="col-avg-premium ' + avgCls + '">' + avgTxt + '</td>';
             case 'amount':
-                return '<td class="col-amount">' + formatAmount(fund.amount) + '</td>';
+                var displayAmount = fund.realtime_amount || 0;
+                return '<td class="col-amount">' + formatAmount(displayAmount) + '</td>';
             case 'est_profit_rate':
                 var est = this.calcEstimatedProfit(fund);
                 infoBtn = (est && est.rate != null) ? '<button class="btn-profit-info" data-code="' + fund.code + '" title="查看收益构成">?</button>' : '';
@@ -578,7 +581,7 @@ class LofFundMonitor {
         var changeText = (fund.change_pct != null) ? (fund.change_pct >= 0 ? '+' : '') + fund.change_pct.toFixed(2) + '%' : '--';
         var navType = fund.is_formal_nav ? '正式' : '估算';
         var navText = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
-        var priceText = (fund.price != null) ? fund.price.toFixed(3) : '--';
+        var priceText = (fund.realtime_price != null) ? fund.realtime_price.toFixed(3) : (fund.price != null) ? fund.price.toFixed(3) : '--';
         var amountText = formatAmount(fund.amount);
         var est = this.calcEstimatedProfit(fund);
         var erText = '--', erClass = 'premium-zero', eaText = '--', eaClass = 'premium-zero', infoBtn = '';
@@ -593,7 +596,7 @@ class LofFundMonitor {
         }
         return '<tr class="fund-row" data-code="' + fund.code + '">' +
             '<td class="col-code frozen">' + fund.code + '</td>' +
-            '<td class="col-name frozen" title="' + fund.name + '">' + this.truncateName(fund.name) + '</td>' +
+            '<td class="col-name frozen" title="' + fund.name + '">' + this.truncateName(fund.short_name || fund.name) + '</td>' +
             '<td class="col-price">' + priceText + '</td>' +
             '<td class="col-nav">' + navText + (fund.nav ? '<span class="nav-badge">' + navType + '</span>' : '') + '</td>' +
             '<td class="col-change ' + changeClass + '">' + changeText + '</td>' +
@@ -629,7 +632,7 @@ class LofFundMonitor {
         return `<div class="mobile-card" data-code="${fund.code}">
             <div class="mc-top-row">
                 <span class="mc-code">${fund.code}</span>
-                <span class="mc-name">${this.truncateName(fund.name, 8)}</span>
+                <span class="mc-name">${this.truncateName(fund.short_name || fund.name, 8)}</span>
                 <button class="mc-fav-btn${isFav ? ' mc-fav--active' : ''}" data-code="${fund.code}">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="mc-right">
@@ -1124,6 +1127,8 @@ class LofFundMonitor {
         const select = document.getElementById('fundTypeSelect');
         const dropdown = document.getElementById('fundTypeDropdown');
         if (!select || !dropdown) { console.warn('[LOF] fund type dropdown elements not found'); return; }
+        this.filterMode = 'lof'; // 默认 LOF
+        var self = this;
         select.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = dropdown.style.display === 'block';
@@ -1137,7 +1142,14 @@ class LofFundMonitor {
         dropdown.addEventListener('click', (e) => {
             const opt = e.target.closest('.ft-option');
             if (!opt || opt.classList.contains('disabled')) return;
+            dropdown.querySelectorAll('.ft-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            self.filterMode = opt.dataset.type || 'lof';
             dropdown.style.display = 'none';
+            // 更新按钮文字
+            var label = select.querySelector('.ft-select-label');
+            if (label) label.textContent = self.filterMode === 'etf' ? 'ETF基金' : 'LOF基金';
+            self.loadFunds();
         });
     }
 
@@ -1834,20 +1846,119 @@ class LofFundMonitor {
         api.getFundHoldings(code).then(function (result) {
             var data = result.data;
             if (!data || !data.holdings || data.holdings.length === 0) {
-                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">暂无持仓数据</td></tr>';
+                var reason = data && data.no_holdings_reason;
+                var msg = reason || '暂无持仓数据';
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">' + msg + '</td></tr>';
                 source.textContent = data && data.quarter ? ('报告期: ' + data.quarter) : '';
             } else if (data.holdings && data.holdings.length > 0) {
                 body.innerHTML = data.holdings.map(function (h) {
                     var pct = h.pct != null ? h.pct + '%' : '-';
-                    var shares = h.shares != null ? Number(h.shares).toLocaleString() : '-';
-                    return '<tr><td>' + (h.rank || '-') + '</td><td>' + h.code + '</td><td>' + h.name + '</td><td>' + pct + '</td><td colspan="2">' + shares + '</td></tr>';
+                    var chg = h.change_pct != null
+                        ? (h.change_pct >= 0 ? '+' : '') + h.change_pct.toFixed(2) + '%'
+                        : '-';
+                    var cls = h.change_pct != null
+                        ? (h.change_pct > 0 ? 'price-up' : h.change_pct < 0 ? 'price-down' : '')
+                        : '';
+                    return '<tr><td>' + (h.rank || '-') + '</td><td>' + h.code + '</td><td>' + h.name + '</td><td>' + pct + '</td><td class="' + cls + '">' + chg + '</td></tr>';
                 }).join('');
                 source.textContent = '数据来源：天天基金 | ' + (data.quarter || '季度更新');
             } else {
-                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text2)">暂无持仓数据</td></tr>';
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">暂无持仓数据</td></tr>';
             }
             loading.style.display = 'none';
             table.style.display = 'table';
+        }).catch(function () {
+            loading.textContent = '加载失败';
+        });
+    }
+
+    showEstNavDetail(code) {
+        var modal = document.getElementById('estNavModal');
+        var loading = document.getElementById('estNavLoading');
+        var content = document.getElementById('estNavContent');
+        var title = document.getElementById('estNavTitle');
+        var fund = this.funds.find(function (f) { return f.code === code; });
+        title.textContent = (fund ? fund.code + ' ' + fund.name : code) + ' — 估算净值';
+        modal.style.display = 'flex';
+        loading.style.display = 'block';
+        content.style.display = 'none';
+        document.getElementById('estNavBody').innerHTML = '';
+
+        var closeBtn = document.getElementById('estNavCloseBtn');
+        closeBtn.onclick = function () { modal.style.display = 'none'; };
+        modal.onclick = function (e) { if (e.target === modal) modal.style.display = 'none'; };
+
+        api.getFundEstNav(code).then(function (result) {
+            var d = result.data;
+            if (!d || d.nav == null) {
+                loading.textContent = '暂无估算数据（非交易时间或该基金无持仓数据）';
+                return;
+            }
+            document.getElementById('estNavOfficial').textContent = d.nav != null ? d.nav.toFixed(4) : '--';
+            var changeEl = document.getElementById('estNavChangePct');
+            var cp = d.est_change_pct;
+            changeEl.textContent = cp != null ? (cp >= 0 ? '+' : '') + cp.toFixed(2) + '%' : '--';
+            changeEl.className = '';
+            changeEl.style.color = cp > 0 ? 'var(--up)' : cp < 0 ? 'var(--down)' : 'var(--text2)';
+            document.getElementById('estNavEst').textContent = d.est_nav != null ? d.est_nav.toFixed(4) : '--';
+
+            var body = document.getElementById('estNavBody');
+            var rows = '';
+            var details = d.holding_details || [];
+            for (var i = 0; i < details.length; i++) {
+                var h = details[i];
+                var chg = h.change_pct;
+                var chgText = chg != null ? (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%' : '-';
+                var chgColor = chg > 0 ? 'var(--up)' : chg < 0 ? 'var(--down)' : 'var(--text2)';
+                var contrib = h.contrib;
+                var contribText = contrib != null ? (contrib >= 0 ? '+' : '') + contrib.toFixed(4) + '%' : '-';
+                var contribColor = contrib > 0 ? 'var(--up)' : contrib < 0 ? 'var(--down)' : 'var(--text2)';
+                rows += '<tr>' +
+                    '<td style="padding:6px;border-bottom:1px solid var(--border)">' + (h.name || h.code) + '</td>' +
+                    '<td style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">' + h.weight + '%</td>' +
+                    '<td style="text-align:right;padding:6px;border-bottom:1px solid var(--border);color:' + chgColor + '">' + chgText + '</td>' +
+                    '<td style="text-align:right;padding:6px;border-bottom:1px solid var(--border);color:' + contribColor + '">' + contribText + '</td>' +
+                    '</tr>';
+            }
+            // Index row
+            var idx = d.index_detail;
+            if (idx) {
+                var idxChg = idx.change_pct;
+                var idxChgText = idxChg != null ? (idxChg >= 0 ? '+' : '') + idxChg.toFixed(2) + '%' : '-';
+                var idxContrib = idx.contrib;
+                var idxContribText = idxContrib != null ? (idxContrib >= 0 ? '+' : '') + idxContrib.toFixed(4) + '%' : '-';
+                rows += '<tr style="font-weight:600">' +
+                    '<td style="padding:6px;border-bottom:1px solid var(--border)">其余仓位(指数)</td>' +
+                    '<td style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">' + idx.weight + '%</td>' +
+                    '<td style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">' + idxChgText + '</td>' +
+                    '<td style="text-align:right;padding:6px;border-bottom:1px solid var(--border)">' + idxContribText + '</td>' +
+                    '</tr>';
+            }
+            // Total row
+            rows += '<tr style="font-weight:700;background:var(--bg2)">' +
+                '<td style="padding:8px 6px">合计</td>' +
+                '<td style="text-align:right;padding:8px 6px">' + d.coverage + '%</td>' +
+                '<td style="text-align:right;padding:8px 6px"></td>' +
+                '<td style="text-align:right;padding:8px 6px;color:' + (d.est_change_pct > 0 ? 'var(--up)' : d.est_change_pct < 0 ? 'var(--down)' : 'var(--text2)') + '">' + (d.est_change_pct >= 0 ? '+' : '') + d.est_change_pct.toFixed(2) + '%</td>' +
+                '</tr>';
+            body.innerHTML = rows;
+
+            // Formula
+            var formula = document.getElementById('estNavFormula');
+            var f = '<strong>计算过程：</strong><br>';
+            f += '十大持仓贡献：' + (d.holdings_contrib >= 0 ? '+' : '') + d.holdings_contrib.toFixed(2) + '%（权重 ' + d.coverage + '%）<br>';
+            if (d.index_detail) {
+                f += '其余仓位贡献：' + (d.index_contrib >= 0 ? '+' : '') + d.index_contrib.toFixed(2) + '%（' + d.index_detail.code + ' ' + d.index_detail.change_pct + '% × ' + d.index_detail.weight + '%）<br>';
+            } else if (d.coverage < 100) {
+                f += '其余仓位：默认不涨不跌<br>';
+            }
+            f += '估算净值 = ' + d.nav.toFixed(4) + ' × (1 + ' + d.est_change_pct.toFixed(2) + '%)<br>';
+            f += '= ' + d.nav.toFixed(4) + ' × ' + (1 + d.est_change_pct / 100).toFixed(6) + '<br>';
+            f += '= <strong>' + d.est_nav.toFixed(4) + '</strong>';
+            formula.innerHTML = f;
+
+            loading.style.display = 'none';
+            content.style.display = 'block';
         }).catch(function () {
             loading.textContent = '加载失败';
         });
@@ -1887,6 +1998,16 @@ class LofFundMonitor {
         api.getFundDetail(code).then(detailResult => {
             const fund = detailResult.data;
             this._populateDetailKpi(fund);
+            // 十大持仓按钮
+            const holdingsBtn = document.getElementById('fdHoldingsBtn');
+            if (holdingsBtn) {
+                holdingsBtn.onclick = () => this.showHoldings(code);
+            }
+            // 估算净值详情按钮
+            const navBtn = document.getElementById('fdNavBtn');
+            if (navBtn) {
+                navBtn.onclick = () => this.showEstNavDetail(code);
+            }
             skeleton.classList.remove('show');
             phase1.classList.remove('hidden');
 
@@ -1978,7 +2099,7 @@ class LofFundMonitor {
 
         setVal('fdCode', fund.code); isCopy('fdCode');
         setVal('fdName', fund.name); isCopy('fdName');
-        setVal('fdPrice', fund.price != null ? fund.price.toFixed(3) : null);
+        setVal('fdPrice', fund.realtime_price != null ? fund.realtime_price.toFixed(3) : (fund.price != null ? fund.price.toFixed(3) : null));
         setVal('fdNav', fund.nav != null ? fund.nav.toFixed(3) + ' (' + navType + ')' : null);
         setVal('fdChangePct', cp != null ? cpSign + cp.toFixed(2) + '%' : null, cpCls);
         setVal('fdPremiumRate', pr != null ? prSign + pr.toFixed(2) + '%' : null, prCls);

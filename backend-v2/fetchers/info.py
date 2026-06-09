@@ -158,13 +158,22 @@ def _parse_fee(html):
     result = {}
 
     # ── 申购费率 ──
-    # 结构: <label class="left">申购费率</label> → <table> → <tbody> → <tr><td>金额</td><td><strike>1.50%</strike> | 0.15%</td>
+    # 结构1: <strike>1.50%</strike> 0.15%（优惠费率）
+    # 结构2: <td>1.20%</td>（无优惠标签）
     m = re.search(r'申购费率.*?<table[^>]*>(.*?)</table>', html, re.DOTALL)
     if m:
         table = m.group(1)
+        # 优先找 strike（优惠费率）
         strike = re.search(r"<strike[^>]*>([\d.]+)%</strike>", table)
         if strike:
             result["purchase_fee_rate"] = safe_float(strike.group(1))
+        else:
+            # 无 strike 时，找 tbody 中第一个百分比
+            tbody_m = re.search(r'<tbody>(.*?)</tbody>', table, re.DOTALL)
+            if tbody_m:
+                pct = re.search(r'>([\d.]+)%', tbody_m.group(1))
+                if pct:
+                    result["purchase_fee_rate"] = safe_float(pct.group(1))
 
     # ── 赎回费率（取 tbody 第一个百分比）──
     m = re.search(r'赎回费率.*?<tbody>(.*?)</tbody>', html, re.DOTALL)

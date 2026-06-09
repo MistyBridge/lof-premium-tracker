@@ -19,8 +19,8 @@ FUNDINFO_BATCH_DELAY = 2.0      # fundf10 请求间隔(秒)
 QDII_NAV_DELAY_HOURS = 3        # QDII 净值延迟小时数
 PUSH2_RETRY_COUNT = 3           # push2 重试次数
 PUSH2_RETRY_DELAY = 5           # push2 重试间隔(秒)
-LSJZ_CONCURRENCY = 1            # lsjz 并发数(串行，配合2秒间隔)
-LSJZ_INTERVAL = 2.0             # lsjz 请求间隔(秒)
+LSJZ_CONCURRENCY = 10           # lsjz 并发数(10并发)
+LSJZ_INTERVAL = 0.2             # lsjz 请求间隔(秒)
 
 # === 通用采集间隔 ===
 FETCH_INTERVAL_MIN = 2.0        # 所有数据源最小请求间隔(秒)
@@ -47,8 +47,8 @@ PROFIT_MAX_CAPITAL = 1000.0     # 最大投入金额(元)
 PROFIT_DEFAULT_REDEMPTION_FEE = 1.5  # 赎回费率默认值(%)，最短档
 
 # === 缓存 TTL（秒） ===
-CACHE_RT_TTL = 60               # rt:all 实时行情
-CACHE_NAV_TTL = 300             # nav:all 净值
+CACHE_RT_TTL = 360              # rt:all 实时行情（需 > 采集间隔 300s，避免两次采集间 miss）
+CACHE_NAV_TTL = 86400           # nav:all 净值(24小时，确保daily_save能读到)
 CACHE_FEE_TTL = 3600            # fee:{code} 费率
 CACHE_INFO_TTL = 86400          # info:{code} 基金基础信息
 CACHE_KLINE_TTL = 86400         # kline 日线（次日凌晨过期）

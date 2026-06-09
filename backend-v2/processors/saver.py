@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
-from models import FundDaily, FundFee, FundHoldings, FundInfo
+from models import FundDaily, FundFee, FundHoldings, FundInfo, AssetMaster, FundAssetMap
 
 logger = logging.getLogger("consumer")
 
@@ -77,6 +77,58 @@ async def save_daily_batch(session_factory, records: list[dict]) -> dict:
     return await batch_upsert(session_factory, FundDaily, records, ["code", "trade_date"])
 
 
+async def save_kline_batch(session_factory, code: str, records: list[dict]) -> int:
+    """
+    保存日线数据到 fund_daily（更新成交额等字段）
+
+    Args:
+        session_factory: 数据库session工厂
+        code: 基金代码
+        records: 日线数据列表
+
+    Returns:
+        成功保存的记录数
+    """
+    if not records:
+        return 0
+
+    # 转换为 fund_daily 格式
+    daily_records = []
+    for r in records:
+        trade_date = r.get("trade_date")
+        if not trade_date:
+            continue
+
+        # 确保 trade_date 是 date 对象
+        if isinstance(trade_date, str):
+            try:
+                from datetime import date as _date
+                trade_date = _date.fromisoformat(trade_date)
+            except (ValueError, TypeError):
+                continue
+
+        daily_records.append({
+            "code": code,
+            "trade_date": trade_date,
+            "open": r.get("open"),
+            "high": r.get("high"),
+            "low": r.get("low"),
+            "close": r.get("close"),
+            "volume": r.get("volume"),
+            "amount": r.get("amount"),
+            "change_pct": r.get("change_pct"),
+            "turnover_rate": r.get("turnover_rate"),
+            "float_share": r.get("float_share"),
+        })
+
+    if not daily_records:
+        return 0
+
+    # 批量保存（ON CONFLICT DO UPDATE）
+    result = await batch_upsert(session_factory, FundDaily, daily_records, ["code", "trade_date"])
+    return result.get("success", 0)
+
+
 async def save_info_batch(session_factory, records: list[dict]) -> dict:
     """写 fund_info"""
     return await batch_upsert(session_factory, FundInfo, records, ["code"])
@@ -88,8 +140,105 @@ async def save_fee_batch(session_factory, records: list[dict]) -> dict:
 
 
 async def save_holdings_batch(session_factory, records: list[dict]) -> dict:
-    """写 fund_holdings"""
-    return await batch_upsert(session_factory, FundHoldings, records, ["code"])
+    """写 fund_holdings + 自动维护 asset_master / fund_asset_map"""
+    result = await batch_upsert(session_factory, FundHoldings, records, ["code"])
+    try:
+        await _sync_asset_inventory(session_factory, records)
+    except Exception as e:
+        logger.error("资产清单同步失败: %s", e)
+    return result
+
+
+def _detect_market(code: str) -> str:
+    """从股票代码推断市场"""
+    import re
+    if not code:
+        return ""
+    # 已带前缀的指数代码
+    if code.startswith(("sh", "sz", "hk", "us", "bj")):
+        return code[:2].upper()
+    # 北交所: 920xxx, 8xxxxx, 4xxxxx
+    if re.match(r'^\d{6}$', code):
+        if code.startswith('920'):
+            return 'BJ'
+        if code.startswith(('6', '5')):
+            return 'SH'
+        return 'SZ'
+    # 港股: 5位纯数字
+    if re.match(r'^\d{5}$', code):
+        return 'HK'
+    # 美股: 2-5位大写字母
+    if re.match(r'^[A-Z]{2,5}$', code):
+        return 'US'
+    return ''
+
+
+async def _sync_asset_inventory(session_factory, holdings_records: list[dict]) -> None:
+    """
+    从持仓数据同步 asset_master + fund_asset_map。
+    每条 holdings_record: {code: fund_code, quarter: ..., holdings: [...]}
+    holdings 列表每项: {code, name?, pct, rank, shares?}
+    """
+    # 收集所有 (fund_code, stock_code, weight, report_date)
+    mappings = []
+    asset_set = {}  # code -> {name, market, asset_type}
+
+    from datetime import date as _date
+    default_date = _date(2025, 12, 31)
+
+    for rec in holdings_records:
+        fund_code = rec.get("code", "")
+        holdings = rec.get("holdings", [])
+        if not isinstance(holdings, list):
+            continue
+        for h in holdings:
+            scode = h.get("code", "")
+            if not scode:
+                continue
+            market = _detect_market(scode)
+            if not market:
+                continue
+            sname = h.get("name", scode)
+            weight = h.get("pct")
+            if scode not in asset_set:
+                asset_set[scode] = {
+                    "code": scode,
+                    "name": sname,
+                    "market": market,
+                    "asset_type": "stock",
+                }
+            mappings.append({
+                "fund_code": fund_code,
+                "asset_code": scode,
+                "report_date": default_date,
+                "weight": weight,
+            })
+
+    if not asset_set:
+        return
+
+    # Upsert asset_master
+    assets = list(asset_set.values())
+    await batch_upsert(session_factory, AssetMaster, assets, ["code"])
+
+    # Upsert fund_asset_map (去重: 同一 fund+asset+date 只保留一条)
+    if mappings:
+        seen = set()
+        unique_mappings = []
+        for m in mappings:
+            key = (m["fund_code"], m["asset_code"], m["report_date"])
+            if key not in seen:
+                seen.add(key)
+                unique_mappings.append(m)
+        await batch_upsert(
+            session_factory, FundAssetMap, unique_mappings,
+            ["fund_code", "asset_code", "report_date"],
+        )
+
+    logger.info(
+        "资产清单同步: %d 资产, %d 映射",
+        len(assets), len(mappings),
+    )
 
 
 # ── 物化视图刷新 ────────────────────────────────────────────
