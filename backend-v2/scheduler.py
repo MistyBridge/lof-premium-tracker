@@ -222,14 +222,17 @@ async def job_fetch_nav() -> None:
                             except (ValueError, TypeError):
                                 continue
                         try:
-                            result = await session.execute(sql_text(
-                                "UPDATE fund_daily "
-                                "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
-                                "WHERE code = :code "
-                                "AND trade_date = (SELECT MAX(trade_date) FROM fund_daily WHERE code = :code)"
+                            await session.execute(sql_text(
+                                "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
+                                "VALUES (:code, CURRENT_DATE, :nav, :nav_date, 'confirmed', 'lsjz') "
+                                "ON CONFLICT (code, trade_date) DO UPDATE SET "
+                                "    nav = EXCLUDED.nav, "
+                                "    nav_date = EXCLUDED.nav_date, "
+                                "    nav_type = EXCLUDED.nav_type, "
+                                "    nav_source = EXCLUDED.nav_source, "
+                                "    updated_at = NOW()"
                             ), {"code": code, "nav": float(nav), "nav_date": nav_date})
-                            if result.rowcount > 0:
-                                updated += 1
+                            updated += 1
                         except Exception:
                             pass
                     await session.commit()
