@@ -313,6 +313,7 @@ class UserAlert(Base):
     fund_code: Mapped[Optional[str]] = mapped_column(VARCHAR(6))
     condition: Mapped[dict] = mapped_column(JSONB, nullable=False)
     is_active: Mapped[bool] = mapped_column(BOOLEAN, default=True)
+    email: Mapped[Optional[str]] = mapped_column(VARCHAR(255))
     last_triggered_at: Mapped[Optional[datetime]] = mapped_column(TIMESTAMP(timezone=True))
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), default=_utcnow)
     updated_at: Mapped[datetime] = mapped_column(

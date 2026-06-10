@@ -817,6 +817,8 @@ class LofFundMonitor {
                         // 关闭详情弹窗
             const favoriteBtn = e.target.closest('#fdFavoriteBtn');
             if (favoriteBtn && this._detailFundCode) { this._toggleFavorite(this._detailFundCode); return; }
+            const alertBtn = e.target.closest('#fdAlertBtn');
+            if (alertBtn && this._detailFundCode) { this._openAlertModal(this._detailFundCode, this._detailFundData); return; }
             const closeBtn = e.target.closest('#fdCloseBtn');
             if (closeBtn) { this.closeFundDetail(); return; }
             if (e.target.id === 'fundDetailModal') { this.closeFundDetail(); return; }
@@ -2157,10 +2159,115 @@ class LofFundMonitor {
     closeFundDetail() {
         const modal = document.getElementById('fundDetailModal');
         if (modal) modal.style.display = 'none';
-        document.body.style.overflow = '';  
+        document.body.style.overflow = '';
         if (this._detailChart) {
             this._detailChart.destroy();
             this._detailChart = null;
+        }
+    }
+
+    // ===== 预警弹窗 =====
+    _openAlertModal(code, fund) {
+        const modal = document.getElementById('alertModal');
+        if (!modal) return;
+
+        // 填充基金信息
+        document.getElementById('alertFundCode').value = code;
+        document.getElementById('alertFundName').value = fund ? (fund.name || '') : '';
+
+        // 预填默认值
+        document.getElementById('alertName').value = '';
+        document.getElementById('alertField').value = 'premium_rate';
+        document.getElementById('alertOp').value = '>';
+        document.getElementById('alertValue').value = '';
+        document.getElementById('alertEmail').value = '';
+        document.getElementById('alertError').style.display = 'none';
+
+        // 如果用户已登录，预填邮箱
+        if (typeof AuthManager !== 'undefined' && AuthManager.currentUser) {
+            document.getElementById('alertEmail').value = AuthManager.currentUser.email || '';
+        }
+
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // 绑定事件（解绑旧事件避免重复）
+        const submitBtn = document.getElementById('alertSubmitBtn');
+        const closeBtn = document.getElementById('alertModalClose');
+
+        const newSubmitBtn = submitBtn.cloneNode(true);
+        submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+        newSubmitBtn.id = 'alertSubmitBtn';
+
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        newCloseBtn.id = 'alertModalClose';
+
+        newCloseBtn.addEventListener('click', () => this._closeAlertModal());
+        newSubmitBtn.addEventListener('click', () => this._submitAlert());
+
+        // 点击遮罩关闭
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) this._closeAlertModal();
+        });
+    }
+
+    _closeAlertModal() {
+        const modal = document.getElementById('alertModal');
+        if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+
+    async _submitAlert() {
+        const code = document.getElementById('alertFundCode').value;
+        const name = document.getElementById('alertName').value || `${code}预警`;
+        const field = document.getElementById('alertField').value;
+        const op = document.getElementById('alertOp').value;
+        const value = parseFloat(document.getElementById('alertValue').value);
+        const email = document.getElementById('alertEmail').value.trim();
+        const errorEl = document.getElementById('alertError');
+
+        // 校验
+        if (!code) {
+            errorEl.textContent = '基金代码不能为空';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (isNaN(value)) {
+            errorEl.textContent = '请输入有效的阈值';
+            errorEl.style.display = 'block';
+            return;
+        }
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            errorEl.textContent = '请输入有效的邮箱地址';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        errorEl.style.display = 'none';
+
+        const data = {
+            name: name,
+            fund_code: code,
+            condition: {
+                op: 'and',
+                conditions: [{ field: field, op: op, value: value }]
+            },
+            is_active: true
+        };
+        if (email) data.email = email;
+
+        try {
+            await api.createAlert(data);
+            this._closeAlertModal();
+            this._softToast('预警创建成功');
+        } catch (err) {
+            if (err.errorType === 'api' && err.statusCode === 401) {
+                errorEl.textContent = '请先登录后再创建预警';
+            } else {
+                errorEl.textContent = '创建失败：' + (err.message || '未知错误');
+            }
+            errorEl.style.display = 'block';
         }
     }
 

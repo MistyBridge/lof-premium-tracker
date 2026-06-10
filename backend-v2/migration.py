@@ -188,6 +188,7 @@ TABLES_SQL = [
         fund_code          VARCHAR(6),
         condition          JSONB NOT NULL,
         is_active          BOOLEAN DEFAULT TRUE,
+        email              VARCHAR(255),
         last_triggered_at  TIMESTAMPTZ,
         created_at         TIMESTAMPTZ DEFAULT NOW(),
         updated_at         TIMESTAMPTZ DEFAULT NOW()
@@ -216,6 +217,11 @@ INDEXES_SQL = [
     "CREATE INDEX IF NOT EXISTS idx_alerts_active ON user_alert (user_id) WHERE is_active = TRUE",
     "CREATE INDEX IF NOT EXISTS idx_job_name ON job_log (job_name, started_at DESC)",
     "CREATE INDEX IF NOT EXISTS idx_est_nav_date ON fund_est_nav (trade_date DESC)",
+]
+
+# 列迁移（ALTER TABLE ADD COLUMN IF NOT EXISTS，兼容已有表）
+ALTER_TABLE_SQL = [
+    "ALTER TABLE user_alert ADD COLUMN IF NOT EXISTS email VARCHAR(255)",
 ]
 
 MATERIALIZED_VIEW_SQL = """CREATE MATERIALIZED VIEW IF NOT EXISTS fund_snapshot AS
@@ -288,6 +294,11 @@ async def run_migration(conn: asyncpg.Connection) -> None:
     for sql in TABLES_SQL:
         await conn.execute(sql)
     logger.info("%d 张表创建完成", len(TABLES_SQL))
+
+    # 1.1 列迁移（ALTER TABLE ADD COLUMN IF NOT EXISTS）
+    for sql in ALTER_TABLE_SQL:
+        await conn.execute(sql)
+    logger.info("列迁移完成")
 
     # 2. 建索引
     for sql in INDEXES_SQL:

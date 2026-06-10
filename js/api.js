@@ -156,6 +156,31 @@ class LofApiService {
         return this.requestWithRetry('/api/v1/admin/ops/refresh', { method: 'POST' });
     }
 
+    // 8. 预警 CRUD
+    async listAlerts() {
+        return this.request('/api/v1/alerts');
+    }
+
+    async createAlert(data) {
+        return this.request('/api/v1/alerts', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+    }
+
+    async deleteAlert(alertId) {
+        return this.request(`/api/v1/alerts/${alertId}`, {
+            method: 'DELETE'
+        });
+    }
+
+    async toggleAlert(alertId, active) {
+        return this.request(`/api/v1/alerts/${alertId}/toggle`, {
+            method: 'PUT',
+            body: JSON.stringify({ is_active: active })
+        });
+    }
+
     // 过滤异常数据
     filterSafeFunds(funds) {
         const cfg = this.config;
