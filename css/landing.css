@@ -81,7 +81,8 @@
 @media (max-width: 768px) {
   .entry-list { width: calc(100vw - 48px); }
   .entry-item { padding: 14px 18px; }
-  .user-center-link { display: none; }
+  .user-center-link { display: inline-block; }
+  .market-status, .landing-timestamp, .btn-dark-mode { display: none; }
   .landing-container { padding: 0; }
   .spa-nav { padding: 6px 12px; border-radius: 0; margin-bottom: 10px; }
   .spa-nav-tab { padding: 5px 12px; font-size: 0.78rem; }
