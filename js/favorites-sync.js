@@ -32,8 +32,9 @@ var FavoritesSync = {
 
             // 同步云端（补上本地有云端没有的）
             var toPush = mergedList.filter(function (c) { return cloudCodes.indexOf(c) < 0; });
+            var uid = session.data.session.user.id;
             for (var i = 0; i < toPush.length; i++) {
-                await window._sb.from('fund_favorites').insert({ fund_code: toPush[i] });
+                await window._sb.from('fund_favorites').insert({ fund_code: toPush[i], user_id: uid });
             }
 
             console.log('[FavSync] Merged ' + localCodes.length + ' local + ' + cloudCodes.length + ' cloud = ' + mergedList.length + ' total');
@@ -51,7 +52,11 @@ var FavoritesSync = {
         try {
             var session = await window._sb.auth.getSession();
             if (!session.data || !session.data.session) return;
-            await window._sb.from('fund_favorites').upsert({ fund_code: code }, { onConflict: 'user_id,fund_code' });
+            var uid = session.data.session.user.id;
+            await window._sb.from('fund_favorites').upsert(
+                { fund_code: code, user_id: uid },
+                { onConflict: 'user_id,fund_code' }
+            );
         } catch (e) {
             console.error('[FavSync] Add failed:', e.message);
         }
@@ -63,7 +68,10 @@ var FavoritesSync = {
         try {
             var session = await window._sb.auth.getSession();
             if (!session.data || !session.data.session) return;
-            await window._sb.from('fund_favorites').delete().eq('fund_code', code);
+            var uid = session.data.session.user.id;
+            await window._sb.from('fund_favorites').delete()
+                .eq('fund_code', code)
+                .eq('user_id', uid);
         } catch (e) {
             console.error('[FavSync] Remove failed:', e.message);
         }
