@@ -38,6 +38,13 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str  # 必填
     ADMIN_EMAILS: str = ""
 
+    # === 阿里云 DirectMail ===
+    ALIYUN_ACCESS_KEY_ID: Optional[str] = None
+    ALIYUN_ACCESS_KEY_SECRET: Optional[str] = None
+    ALIYUN_DM_ACCOUNT_NAME: str = "noreply"
+    ALIYUN_DM_FROM_ALIAS: str = "金快查"
+    ALIYUN_DM_DOMAIN: str = "jinkuaicha.com"
+
     # === CORS ===
     CORS_ORIGINS: str = "https://jinkuaicha.com"
     CORS_ALLOW_METHODS: str = "GET,POST,PUT,DELETE,OPTIONS"
