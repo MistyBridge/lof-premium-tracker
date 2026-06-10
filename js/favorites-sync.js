@@ -33,8 +33,10 @@ var FavoritesSync = {
             // 同步云端（补上本地有云端没有的）
             var toPush = mergedList.filter(function (c) { return cloudCodes.indexOf(c) < 0; });
             var uid = session.data.session.user.id;
+            console.log('[FavSync] pullAndMerge: uid=', uid, 'toPush=', toPush.length);
             for (var i = 0; i < toPush.length; i++) {
-                await window._sb.from('fund_favorites').insert({ fund_code: toPush[i], user_id: uid });
+                var insRes = await window._sb.from('fund_favorites').insert({ fund_code: toPush[i], user_id: uid });
+                if (insRes.error) console.error('[FavSync] insert error:', JSON.stringify(insRes.error));
             }
 
             console.log('[FavSync] Merged ' + localCodes.length + ' local + ' + cloudCodes.length + ' cloud = ' + mergedList.length + ' total');
@@ -48,17 +50,20 @@ var FavoritesSync = {
 
     /** 添加单只收藏到云端 */
     addToCloud: async function (code) {
-        if (!window._sb) return;
+        if (!window._sb) { console.warn('[FavSync] addToCloud: _sb not ready'); return; }
         try {
             var session = await window._sb.auth.getSession();
-            if (!session.data || !session.data.session) return;
+            if (!session.data || !session.data.session) { console.warn('[FavSync] addToCloud: no session'); return; }
             var uid = session.data.session.user.id;
-            await window._sb.from('fund_favorites').upsert(
+            console.log('[FavSync] addToCloud:', code, 'uid:', uid);
+            var res = await window._sb.from('fund_favorites').upsert(
                 { fund_code: code, user_id: uid },
                 { onConflict: 'user_id,fund_code' }
             );
+            if (res.error) { console.error('[FavSync] upsert error:', JSON.stringify(res.error)); }
+            else { console.log('[FavSync] upsert OK, count:', res.data ? res.data.length : 0); }
         } catch (e) {
-            console.error('[FavSync] Add failed:', e.message);
+            console.error('[FavSync] Add failed:', e.message, e);
         }
     },
 
