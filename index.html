@@ -473,6 +473,7 @@
                 <h3 id="fundDetailTitle">基金详情</h3>
                 <button id="fdKpiConfigBtn" class="fd-kpi-config-btn" title="卡片管理">编辑</button>
                 <span class="fd-header-actions">
+                    <button id="fdAlertBtn" class="fd-alert-btn" title="设置预警">🔔</button>
                     <button id="fdFavoriteBtn" class="fd-star" title="收藏基金">☆</button>
                     <button id="fdCloseBtn" class="fd-close" title="关闭">&times;</button>
                 </span>
@@ -530,6 +531,55 @@
                     </select>
                 </div>
                 <div class="fd-chart-container"><canvas id="fdChart"></canvas><button class="fd-fullscreen-btn" id="fdFullscreenBtn" title="全屏横屏查看">⛶</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ 全局：预警创建弹窗 ═══════════════════════════════════════════ -->
+    <div id="alertModal" class="modal-overlay" style="display:none">
+        <div class="modal-content auth-modal">
+            <div class="modal-header">
+                <h3>创建预警</h3>
+                <button class="modal-close" id="alertModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>基金代码</label>
+                    <input type="text" id="alertFundCode" placeholder="如 501009" maxlength="6" readonly>
+                </div>
+                <div class="form-group">
+                    <label>基金名称</label>
+                    <input type="text" id="alertFundName" placeholder="" readonly>
+                </div>
+                <div class="form-group">
+                    <label>预警名称（可选）</label>
+                    <input type="text" id="alertName" placeholder="如：高溢价提醒" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label>触发条件</label>
+                    <div class="alert-condition-row">
+                        <select id="alertField">
+                            <option value="premium_rate">溢价率(%)</option>
+                            <option value="change_pct">涨跌幅(%)</option>
+                            <option value="amount">成交额(元)</option>
+                            <option value="close">现价(元)</option>
+                            <option value="nav">净值</option>
+                        </select>
+                        <select id="alertOp">
+                            <option value=">">大于</option>
+                            <option value="<">小于</option>
+                            <option value=">=">大于等于</option>
+                            <option value="<=">小于等于</option>
+                        </select>
+                        <input type="number" id="alertValue" placeholder="阈值" step="0.01">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>通知邮箱（可选，触发时发送邮件）</label>
+                    <input type="email" id="alertEmail" placeholder="your@email.com">
+                </div>
+                <div id="alertError" class="auth-error" style="display:none"></div>
+                <button class="btn-primary auth-submit-btn" id="alertSubmitBtn">创建预警</button>
             </div>
         </div>
     </div>

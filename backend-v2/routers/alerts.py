@@ -13,6 +13,7 @@ class AlertCreate(BaseModel):
     name: str
     fund_code: Optional[str] = None
     condition: dict
+    email: Optional[str] = None
 
 
 class AlertToggle(BaseModel):

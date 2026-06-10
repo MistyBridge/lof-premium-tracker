@@ -44,14 +44,15 @@ async def create_alert(session_factory, user_id: str, data: dict) -> dict:
 
     async with session_factory() as session:
         result = await session.execute(text("""
-            INSERT INTO user_alert (user_id, name, fund_code, condition, is_active)
-            VALUES (:uid, :name, :code, :cond::jsonb, :active) RETURNING *
+            INSERT INTO user_alert (user_id, name, fund_code, condition, is_active, email)
+            VALUES (:uid, :name, :code, :cond::jsonb, :active, :email) RETURNING *
         """), {
             "uid": user_id,
             "name": data.get("name", ""),
             "code": data.get("fund_code"),
             "cond": json.dumps(condition, ensure_ascii=False),
             "active": data.get("is_active", True),
+            "email": data.get("email"),
         })
         await session.commit()
         return dict(result.first()._mapping)
@@ -118,7 +119,36 @@ async def check_alerts(session_factory, realtime_data: dict) -> list[dict]:
                     await _mark_triggered(session_factory, alert["id"])
                     break
 
+    # 异步发送邮件通知（fire-and-forget，不阻塞主流程）
+    for alert in triggered:
+        email = alert.get("email")
+        if email:
+            import asyncio
+            asyncio.create_task(_send_alert_email_safe(alert))
+
     return triggered
+
+
+async def _send_alert_email_safe(alert: dict) -> None:
+    """发送预警邮件（带冷却机制，失败不抛异常）"""
+    alert_id = alert.get("id")
+    email = alert.get("email")
+    if not alert_id or not email:
+        return
+
+    # 冷却检查：同一 alert 同一小时内不重复发邮件
+    from cache import cache_get, cache_set
+    cooldown_key = f"alert:email_cooldown:{alert_id}"
+    if await cache_get(cooldown_key):
+        return
+
+    try:
+        from services.notify_service import send_alert_email
+        ok = await send_alert_email(email, alert)
+        if ok:
+            await cache_set(cooldown_key, True, ttl=3600)
+    except Exception as e:
+        logger.warning("[ALERT] 邮件发送失败 alert_id=%d: %s", alert_id, e)
 
 
 # ── 内部辅助 ────────────────────────────────────────────────

@@ -145,6 +145,18 @@ async def process_realtime(data: dict, batch_id: str, session_factory) -> None:
     metrics.record_fetch("realtime", success=True, duration_ms=0)
     logger.info("实时行情处理完成: %d 条, 停牌 %d 只", len(realtime_map), suspended_count)
 
+    # ── 预警检查（fire-and-forget，不阻塞主流程）──
+    try:
+        from services.alert_service import check_alerts
+        # 补充基金名称用于邮件展示
+        enriched = {}
+        for code, rd in realtime_map.items():
+            info = await cache_get(f"info:{code}") or {}
+            enriched[code] = {**rd, "name": info.get("name", code)}
+        await check_alerts(session_factory, enriched)
+    except Exception as e:
+        logger.warning("[ALERT] 预警检查失败: %s", e)
+
 
 async def process_nav(data: dict, batch_id: str, session_factory) -> None:
     """净值: normalize → validate → 写 Redis + 更新 DB"""
