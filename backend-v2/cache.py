@@ -8,7 +8,7 @@ from typing import Any, Optional
 
 import redis.asyncio as aioredis
 
-from constants import PARTIAL_DATA_THRESHOLD
+from constants import CACHE_RT_TTL, PARTIAL_DATA_THRESHOLD
 
 logger = logging.getLogger("app")
 
