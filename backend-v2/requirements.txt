@@ -13,3 +13,5 @@ pydantic-settings==2.5.0
 python-dotenv==1.0.1
 PyJWT==2.9.0
 psutil==6.0.0
+alibabacloud-dm20151123==1.0.2
+alibabacloud-tea-openapi==0.3.9
