@@ -108,9 +108,16 @@ def get_http_client() -> httpx.AsyncClient:
 # ── Stream Consumer ──────────────────────────────────────────
 
 async def _run_consumer(session_factory):
-    """Stream 消费者循环"""
+    """Stream 消费者循环（自动重启）"""
     from processors.pipeline import stream_consumer
-    await stream_consumer(session_factory)
+    while True:
+        try:
+            await stream_consumer(session_factory)
+        except asyncio.CancelledError:
+            raise  # 正常关闭，不重启
+        except Exception as e:
+            logger.error("[CONSUMER] 消费者异常退出，5秒后重启: %s", e, exc_info=True)
+            await asyncio.sleep(5)
 
 
 # ── lifespan ────────────────────────────────────────────────
