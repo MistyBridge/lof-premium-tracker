@@ -163,7 +163,13 @@ async def job_fetch_realtime() -> None:
     s = time.monotonic()
     try:
         from fetchers.realtime import fetch_realtime
-        r = await fetch_realtime(_http_client)
+        # 从数据库获取代码列表，传给 fetcher（避免依赖本地 JSON 文件路径）
+        codes = await _codes()
+        if not codes:
+            logger.error("[SCHEDULER] fetch_realtime 跳过: _codes() 返回空，fund_category 表无 LOF/ETF 数据")
+            _fail("fetch_realtime", ValueError("无 LOF/ETF 代码"))
+            return
+        r = await fetch_realtime(_http_client, codes=codes)
         _ok("fetch_realtime", (time.monotonic() - s) * 1000, len(r))
     except Exception as e:
         _fail("fetch_realtime", e)
