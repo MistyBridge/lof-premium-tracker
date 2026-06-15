@@ -26,7 +26,7 @@ async def diagnostics(hub: ServiceHub = Depends(get_hub)):
     公开诊断端点（无需管理员权限）。
     用于排查实时数据采集链路问题。
     """
-    from cache import get_stream_length
+    from mq import get_stream_length
     from metrics import metrics
 
     result = {
