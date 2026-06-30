@@ -24,7 +24,7 @@ logger = logging.getLogger("app")
 
 # Redis Key (v2 = 包含 holding_details/index_detail/nav 完整字段)
 EST_NAV_KEY = "est_nav:v2"
-EST_NAV_TTL = 36000  # 10小时 — 保留到次日开盘，收盘后仍可查看
+EST_NAV_TTL = 259200  # 72小时 — 覆盖周末及长假，非交易时段仍可查看最近估算值
 
 
 async def run_est_nav(client: httpx.AsyncClient) -> dict:

@@ -681,19 +681,18 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
             if isinstance(v, Decimal):
                 row[k] = float(v)
 
-        # ── 盘中注入估算净值 (9:25-20:00，20:00后用正式净值) ──
+        # ── 注入估算净值（缓存有则用，无则为 None）──
+        # nav 始终保留确认净值，est_nav 作为独立字段
         code = row.get("code")
-        _now = beijing_now()
-        _hm = _now.hour * 100 + _now.minute
-        _in_trading = 925 <= _hm < 2000
-        est = est_nav_map.get(code) if est_nav_map and code and _in_trading else None
+        est = est_nav_map.get(code) if est_nav_map and code else None
         if est and est.get("est_nav") is not None:
-            row["nav"] = est["est_nav"]
-            row["is_formal_nav"] = False
+            row["est_nav"] = est["est_nav"]
             row["est_change_pct"] = est.get("est_change_pct")
             row["est_coverage"] = est.get("coverage")
         else:
-            row["is_formal_nav"] = True
+            row["est_nav"] = None
+            row["est_change_pct"] = None
+            row["est_coverage"] = None
 
         # price: 优先用实时价 → close（前端 fund.price 引用）
         rt_price = row.get("realtime_price")
@@ -701,20 +700,17 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
             row["price"] = rt_price
         elif row.get("price") is None:
             row["price"] = row.get("close")
-        # 实时溢价率重算：realtime_price + nav → premium_rate
-        # 盘中有估算净值时，用 est_nav 重算（更准确）
+        # 实时溢价率重算：始终基于确认净值（不用 realtime_premium 缓存值）
         rt_price = row.get("realtime_price") or row.get("price")
         nav = row.get("nav")
-        if est and est.get("est_nav") is not None and rt_price is not None:
-            # 盘中：用估算净值算溢价
-            if nav and nav > 0:
-                row["premium_rate"] = round((rt_price - nav) / nav * 100, 2)
+        if rt_price is not None and nav and nav > 0:
+            row["premium_rate"] = round((rt_price - nav) / nav * 100, 2)
+        # 估算溢价率：基于估算净值
+        est_nav_val = row.get("est_nav")
+        if est_nav_val is not None and rt_price is not None and est_nav_val > 0:
+            row["est_premium_rate"] = round((rt_price - est_nav_val) / est_nav_val * 100, 2)
         else:
-            rt_prem = row.get("realtime_premium")
-            if rt_prem is not None:
-                row["premium_rate"] = rt_prem
-            elif rt_price is not None and nav and nav > 0:
-                row["premium_rate"] = round((rt_price - nav) / nav * 100, 2)
+            row["est_premium_rate"] = None
         # 涨跌额（前端 fund.change_amount 引用）
         cp = row.get("change_pct")
         cl = row.get("close")

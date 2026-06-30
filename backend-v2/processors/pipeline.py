@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from cache import cache_get, cache_set, safe_set_realtime
 from utils import beijing_today_str, beijing_today_date
 from metrics import metrics
-from mq import ack_event, consume_events
+from mq import ack_event, consume_events, consumer_group_exists, ensure_consumer_group
 from processors.calculator import calc_daily_fields
 from processors.suspension import judge_suspension
 from processors.normalize import (
@@ -54,12 +54,31 @@ async def stream_consumer(session_factory) -> None:
     """
     后台消费者：从 Redis Stream 读取事件 → 处理 → ack。
     每个事件独立处理，单个失败不影响其他事件。
+    每 60 秒检查一次消费者组健康状态，丢失时自动重建。
     """
     logger.info("Stream 消费者启动")
+
+    _last_group_check = 0.0  # 上次检查组的时间戳
 
     while True:
         try:
             events = await consume_events(count=10, block_ms=2000)
+
+            # ── 定期检查消费者组是否存在（每 60 秒）──
+            now = asyncio.get_event_loop().time()
+            if now - _last_group_check > 60:
+                _last_group_check = now
+                if not await consumer_group_exists():
+                    logger.error(
+                        "[CONSUMER] 消费者组丢失！尝试重建 pipeline_processor..."
+                    )
+                    if await ensure_consumer_group():
+                        logger.info("[CONSUMER] 消费者组已重建")
+                        metrics.alert("consumer_group_recreated", "消费者组丢失后自动重建")
+                    else:
+                        logger.critical("[CONSUMER] 消费者组重建失败！")
+                        metrics.alert("consumer_group_lost", "消费者组丢失且重建失败")
+
             for event in events:
                 try:
                     await dispatch(event, session_factory)
@@ -139,7 +158,7 @@ async def process_realtime(data: dict, batch_id: str, session_factory) -> None:
     realtime_map = {r["code"]: r for r in marked if r.get("code")}
     await safe_set_realtime(realtime_map)
 
-    await cache_set(f"rt:close:{beijing_today_str()}", realtime_map, ttl=86400)
+    await cache_set(f"rt:close:{beijing_today_str()}", realtime_map, ttl=259200)  # 3天TTL, 覆盖周末
 
     suspended_count = sum(1 for v in suspension_map.values() if v["status"] == "suspended")
     metrics.record_fetch("realtime", success=True, duration_ms=0)
@@ -188,7 +207,7 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
                     "UPDATE fund_daily "
                     "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
                     "WHERE code = :code "
-                    "AND trade_date = (SELECT MAX(trade_date) FROM fund_daily WHERE code = :code)"
+                    "AND trade_date = :nav_date"
                 ), {"code": code, "nav": float(nav), "nav_date": nav_date})
                 if result.rowcount > 0:
                     updated += 1
@@ -221,7 +240,7 @@ async def process_kline(data: dict, batch_id: str, session_factory) -> None:
         validated = [r for r in (validate_kline(r) for r in normalized) if r is not None]
         if validated:
             # 写 Redis 缓存
-            await cache_set(f"kline:{ktype}:{today}:{code}", validated, ttl=86400)
+            await cache_set(f"kline:{ktype}:{today}:{code}", validated, ttl=259200)  # 3天TTL, 覆盖周末
             # 写 DB（更新成交额等字段）
             saved = await save_kline_batch(session_factory, code, validated)
             total_saved += saved
@@ -266,13 +285,35 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
     日终入库: 合并 Redis 收盘价+净值 → calculator → saver → 刷新物化视图。
     缺失字段自动沿用最近历史数据作为替补。
     """
-    today = beijing_today_str()
-    today_date = beijing_today_date()
+    # 使用事件传入的日期（次日早上运行时为昨日），默认回退到今天
+    save_date_str = data.get("date", beijing_today_str("%Y-%m-%d"))
+    from datetime import datetime as _dt
+    try:
+        save_date_obj = _dt.strptime(save_date_str, "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        save_date_obj = beijing_today_date()
+    save_date_compact = save_date_obj.strftime("%Y%m%d")
 
     # 1. 从 Redis 读取
-    closing_data = await cache_get(f"rt:close:{today}") or {}
+    closing_data = await cache_get(f"rt:close:{save_date_compact}") or {}
     nav_data = await cache_get("nav:all") or {}
     suspension_data = await cache_get("suspension:all") or {}
+
+    # 1.1 读取 K线数据（OHLC），用于补充实时数据缺失的开盘/最高/最低
+    kline_ohlc: dict[str, dict] = {}
+    for code in closing_data:
+        kline_raw = await cache_get(f"kline:fund:{save_date_compact}:{code}")
+        if kline_raw and isinstance(kline_raw, list):
+            today_str = save_date_obj.isoformat()
+            for k in kline_raw:
+                if k.get("trade_date") == today_str or k.get("trade_date") == save_date_compact:
+                    kline_ohlc[code] = k
+                    break
+    ohlc_found = len(kline_ohlc)
+    if ohlc_found > 0:
+        logger.info("daily_save K线数据: %d 只有OHLC", ohlc_found)
+    else:
+        logger.warning("daily_save K线数据: 0 只! OHLC将使用替补数据")
 
     # 2. 从 DB 读取基金列表 + 申购限额 + 最近历史数据（替补用）
     from sqlalchemy import text as sql_text
@@ -326,15 +367,18 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
                 nav_date_val = None
         nav_source = "lsjz" if nav.get("nav") else "fallback"
 
+        # K线 OHLC 优先于 realtime 数据（K线有完整的开/高/低）
+        ohlc = kline_ohlc.get(code, {})
+
         record = {
             "code": code,
-            "trade_date": today_date,
-            "close": closing.get("realtime_price") or fallback.get("close"),
-            "open": closing.get("open") or fallback.get("open"),
-            "high": closing.get("high") or fallback.get("high"),
-            "low": closing.get("low") or fallback.get("low"),
-            "volume": closing.get("volume") or fallback.get("volume"),
-            "amount": closing.get("realtime_amount") or fallback.get("amount"),
+            "trade_date": save_date_obj,
+            "close": ohlc.get("close") or closing.get("realtime_price") or fallback.get("close"),
+            "open": ohlc.get("open") or closing.get("open") or fallback.get("open"),
+            "high": ohlc.get("high") or closing.get("high") or fallback.get("high"),
+            "low": ohlc.get("low") or closing.get("low") or fallback.get("low"),
+            "volume": ohlc.get("volume") or closing.get("volume") or fallback.get("volume"),
+            "amount": ohlc.get("amount") or closing.get("realtime_amount") or fallback.get("amount"),
             "float_share": closing.get("float_share") or fallback.get("float_share"),
             "turnover_rate": closing.get("turnover_rate") or fallback.get("turnover_rate"),
             "nav": nav_val,
