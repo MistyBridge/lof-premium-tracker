@@ -273,6 +273,14 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group">
+                            <label>溢价率计算基准</label>
+                            <select id="premiumBaseSelect">
+                                <option value="confirmed">正式净值</option>
+                                <option value="estimated">估算净值</option>
+                            </select>
+                            <p class="form-hint">溢价率 = (现价 − 净值) ÷ 净值，选择使用正式净值或实时估算净值</p>
+                        </div>
+                        <div class="form-group">
                             <label>溢价率/折价率绝对值阈值</label>
                             <div class="input-with-unit"><input type="number" id="thresholdInput" min="0" max="50" step="0.1" value="5"><span class="unit">%</span></div>
                             <p class="form-hint">只显示绝对值 ≥ 此值的基金（0 = 不过滤）</p>
@@ -487,7 +495,8 @@
                     <div class="fd-kpi-item"><span class="fd-kpi-label">代码(点击可复制)</span><span class="fd-kpi-value fd-code-name" id="fdCode" data-copy>--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">名称(点击可复制)</span><span class="fd-kpi-value fd-code-name" id="fdName" data-copy>--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">现价</span><span class="fd-kpi-value" id="fdPrice">--</span></div>
-                    <div class="fd-kpi-item"><span class="fd-kpi-label">净值</span><span class="fd-kpi-value" id="fdNav">--</span><button class="btn-holdings btn-fd-holdings" id="fdNavBtn">查看</button></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">净值</span><div class="fd-kpi-value-row"><span class="fd-kpi-value" id="fdNav">--</span><span class="fd-kpi-sub" id="fdNavDate"></span></div></div>
+                    <div class="fd-kpi-item"><span class="fd-kpi-label">估算净值</span><div class="fd-kpi-value-row"><span class="fd-kpi-value" id="fdEstNav">--</span><span class="fd-kpi-sub" id="fdEstNavTime"></span></div><button class="btn-holdings btn-fd-holdings" id="fdNavBtn">查看</button></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">涨跌幅</span><span class="fd-kpi-value" id="fdChangePct">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">溢价率</span><span class="fd-kpi-value" id="fdPremiumRate">--</span></div>
                     <div class="fd-kpi-item"><span class="fd-kpi-label">三日均溢</span><span class="fd-kpi-value" id="fdAvgPremium">--</span></div>
@@ -746,7 +755,7 @@
             this._loading = Promise.all([
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
                 self._loadScript('js/columns.js?v=23'),
-                self._loadScript('js/kpi-cards.js?v=1'),
+                self._loadScript('js/kpi-cards.js?v=2'),
                 self._loadScript('js/config.js?v=23'),
                 self._loadScript('js/cache.js?v=1'),
                 self._loadScript('js/supabase.js?v=1'),
@@ -760,7 +769,7 @@
                 return self._loadScript('js/api.js?v=25');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
-                return self._loadScript('js/app.js?v=26');
+                return self._loadScript('js/app.js?v=32');
             }).then(function() {
                 self._scriptsReady = true;
             });
@@ -973,7 +982,7 @@
             preloaded = true;
             // 加载轻量脚本 → 拉取数据 → 缓存
             var scripts = [
-                'js/kpi-cards.js?v=1',
+                'js/kpi-cards.js?v=2',
                 'js/config.js?v=23',
                 'js/api.js?v=25',
                 'js/cache.js?v=1',

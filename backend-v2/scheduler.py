@@ -48,10 +48,11 @@ def create_scheduler():
     scheduler.add_job(job_scan_codes, CronTrigger(day_of_week="mon", hour=8, minute=30), id="scan_codes")
     scheduler.add_job(job_fetch_info, CronTrigger(day_of_week="mon-fri", hour=9, minute=0), id="fetch_info")
     scheduler.add_job(job_fetch_realtime, IntervalTrigger(minutes=5), id="fetch_realtime")
-    scheduler.add_job(job_fetch_nav, CronTrigger(hour=20, minute=0), id="fetch_nav")
+    scheduler.add_job(job_fetch_nav, CronTrigger(hour=8, minute=0), id="fetch_nav")
     scheduler.add_job(job_fetch_kline, CronTrigger(hour=20, minute=30), id="fetch_kline")
-    scheduler.add_job(job_fetch_nav_qdii, CronTrigger(hour=23, minute=0), id="fetch_nav_qdii")
-    scheduler.add_job(job_daily_save, CronTrigger(hour=20, minute=30), id="daily_save")
+    scheduler.add_job(job_fetch_nav_qdii, CronTrigger(hour=8, minute=0), id="fetch_nav_qdii")
+    scheduler.add_job(job_daily_save, CronTrigger(hour=8, minute=30), id="daily_save",
+                      name="日终入库", replace_existing=True, misfire_grace_time=1800)
     scheduler.add_job(job_check_partitions, CronTrigger(day=1, hour=9, minute=0), id="check_partitions")
     scheduler.add_job(job_check_calendar, CronTrigger(month=12, day=1, hour=9, minute=0), id="check_calendar")
     # 估算净值 — 交易时间内每5分钟
@@ -191,9 +192,7 @@ async def job_fetch_realtime() -> None:
 
 
 async def job_fetch_nav() -> None:
-    if not is_trading_day():
-        logger.info("[SCHEDULER] fetch_nav 跳过: 非交易日")
-        return
+    # 每天 8:00 运行，拉取最新净值（次日早上净值已发布）
     s = time.monotonic()
     try:
         from fetchers.fundamental import fetch_fundamental
@@ -236,7 +235,7 @@ async def job_fetch_nav() -> None:
                                 "UPDATE fund_daily "
                                 "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
                                 "WHERE code = :code "
-                                "AND trade_date = (SELECT MAX(trade_date) FROM fund_daily WHERE code = :code)"
+                                "AND trade_date = :nav_date"
                             ), {"code": code, "nav": float(nav), "nav_date": nav_date})
                             if result.rowcount > 0:
                                 updated += 1
@@ -264,28 +263,26 @@ async def job_fetch_nav() -> None:
 
 async def job_fetch_kline() -> None:
     if not is_trading_day():
+        logger.info("[SCHEDULER] fetch_kline 跳过: 非交易日")
         return
     s = time.monotonic()
     try:
-        from fetchers.historical import fetch_historical
+        from fetchers.historical import fetch_historical, DAILY_KLINE_DAYS
         codes = await _codes()
         if not codes:
             logger.warning("[SCHEDULER] fetch_kline 跳过: 无 LOF 代码")
             _fail("fetch_kline", ValueError("无 LOF 代码"))
             return
-        r = await fetch_historical(_http_client, codes)
-        # 转换格式并发布到 Stream
-        kdata = {item["code"]: item["klines"] for item in r if item.get("klines")}
-        if kdata:
-            await publish_event("kline", {"type": "fund", "data": kdata})
+        # 日终只取最近 10 天，减少不必要的网络请求
+        r = await fetch_historical(_http_client, codes, days=DAILY_KLINE_DAYS)
+        # fetch_historical 已内部 publish_event，此处只记录日志
         _ok("fetch_kline", (time.monotonic() - s) * 1000, len(r))
     except Exception as e:
         _fail("fetch_kline", e)
 
 
 async def job_fetch_nav_qdii() -> None:
-    if not is_trading_day():
-        return
+    # 每天 8:00 运行，拉取 QDII 最新净值
     s = time.monotonic()
     try:
         from fetchers.fundamental import fetch_fundamental
@@ -304,12 +301,15 @@ async def job_fetch_nav_qdii() -> None:
 
 
 async def job_daily_save() -> None:
-    if not is_trading_day():
+    # 每天 8:30 运行，保存昨日（交易日）数据
+    from datetime import timedelta
+    yesterday = beijing_now().date() - timedelta(days=1)
+    if not is_trading_day(yesterday):
         return
     s = time.monotonic()
     try:
         mid = await publish_event("daily_save", {
-            "date": beijing_today_str("%Y-%m-%d")
+            "date": yesterday.strftime("%Y-%m-%d")
         })
         if mid:
             _ok("daily_save", (time.monotonic() - s) * 1000)
@@ -324,11 +324,13 @@ async def job_check_partitions() -> None:
     try:
         from processors.saver import ensure_partition
         now = datetime.now()
-        if now.month == 12:
-            nm = now.replace(year=now.year + 1, month=1, day=1)
-        else:
-            nm = now.replace(month=now.month + 1, day=1)
-        await ensure_partition(_sf(), nm)
+        # 预建下月 + 本月分区（幂等，已存在则跳过）
+        for offset in (1, 0):
+            if now.month == 12:
+                nm = now.replace(year=now.year + offset, month=1, day=1)
+            else:
+                nm = now.replace(month=now.month + offset, day=1)
+            await ensure_partition(_sf(), nm)
         _ok("check_partitions", (time.monotonic() - s) * 1000)
     except Exception as e:
         _fail("check_partitions", e)
@@ -395,18 +397,12 @@ async def _qdii() -> list[str]:
 
 
 async def job_est_nav() -> None:
-    """估算净值 — 交易日 9:25-20:00 运行，20:00后清理缓存切换正式净值"""
+    """估算净值 — 交易日 9:25-20:00 每5分钟计算，缓存 TTL=72h 自然过期"""
     now = beijing_now()
     hour_min = now.hour * 100 + now.minute
 
-    # 20:00后清理缓存，切换正式净值
-    if hour_min >= 2000:
-        from cache import cache_delete
-        await cache_delete("est_nav:v2")
-        return
-
-    # 9:25-20:00运行估算
-    if not is_trading_day() or hour_min < 925:
+    # 非交易时段跳过计算，保留已有缓存
+    if not is_trading_day() or hour_min < 925 or hour_min >= 2000:
         return
 
     s = time.monotonic()
