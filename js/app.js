@@ -23,6 +23,16 @@ function formatAmount(val) {
     return val.toFixed(0) + '元';
 }
 
+/**
+ * 估算净值时间标签（本地时间 HH:MM）
+ */
+function _estNavTimeLabel() {
+    var now = new Date();
+    var hh = now.getHours().toString().padStart(2, '0');
+    var mm = now.getMinutes().toString().padStart(2, '0');
+    return hh + ':' + mm;
+}
+
 class LofFundMonitor {
     constructor() {
         this.funds = [];
@@ -46,11 +56,13 @@ class LofFundMonitor {
             this.commissionMin = parseFloat(localStorage.getItem('lof_commissionMin')) || 5;
             this.maxCapital = parseFloat(localStorage.getItem('lof_maxCapital')) || 10000;
             this.darkMode = localStorage.getItem('lof_darkMode') || 'light';
+            this.premiumBase = localStorage.getItem('lof_premium_base') || 'confirmed';
         } catch (e) {
             this.threshold = 0; this.avgThreshold = 0; this.minAmount = 100;
             this.showSuspended = false; this.showUnpurchasable = false;
             this.commissionRate = 1.5; this.commissionMin = 5; this.maxCapital = 10000;
             this.darkMode = 'light';
+            this.premiumBase = 'confirmed';
         }
         this.pageMode = (typeof window.LOF_PAGE_MODE !== 'undefined') ? window.LOF_PAGE_MODE : 'normal';
         if (this.pageMode === 'favorites') {
@@ -208,7 +220,7 @@ class LofFundMonitor {
 
     // ===== 预计收益计算 =====
     calcEstimatedProfit(fund, overrideCapital = null) {
-        const premium = fund.premium_rate;
+        const premium = this.premiumBase === 'estimated' ? fund.est_premium_rate : fund.premium_rate;
         if (premium === null || premium === undefined) return null;
 
         const nav = fund.nav;
@@ -370,7 +382,8 @@ class LofFundMonitor {
         }
         if (this.threshold > 0) {
             filtered = filtered.filter(fund => {
-                const absRate = Math.abs(fund.premium_rate ?? 0);
+                var pr = this.premiumBase === 'estimated' ? fund.est_premium_rate : fund.premium_rate;
+                const absRate = Math.abs(pr ?? 0);
                 return absRate >= this.threshold;
             });
         }
@@ -402,8 +415,9 @@ class LofFundMonitor {
                 valA = estA ? estA.amount : -9999;
                 valB = estB ? estB.amount : -9999;
             } else {
-                valA = a[this.sortField] ?? 0;
-                valB = b[this.sortField] ?? 0;
+                var sf = this.sortField === 'premium_rate' && this.premiumBase === 'estimated' ? 'est_premium_rate' : this.sortField;
+                valA = a[sf] ?? 0;
+                valB = b[sf] ?? 0;
             }
             return this.sortOrder === 'asc' ? valA - valB : valB - valA;
         });
@@ -462,8 +476,12 @@ class LofFundMonitor {
                 return '<td class="col-price">' + p + '</td>';
             case 'nav':
                 var n = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
-                var badge = fund.nav ? '<span class="nav-badge">' + (fund.is_formal_nav ? '正式' : '估算') + '</span>' : '';
-                return '<td class="col-nav">' + n + badge + '</td>';
+                var nd = fund.nav_date || '';
+                return '<td class="col-nav">' + n + (nd ? '<div class="cell-sub">' + nd + '</div>' : '') + '</td>';
+            case 'est_nav':
+                var en = (fund.est_nav != null) ? fund.est_nav.toFixed(4) : '--';
+                var et = fund.est_nav != null ? _estNavTimeLabel() : '';
+                return '<td class="col-est-nav">' + en + (et ? '<div class="cell-sub">' + et + '</div>' : '') + '</td>';
             case 'change_pct':
                 var cp = fund.change_pct;
                 var cls = cp >= 0 ? 'up' : 'down';
@@ -472,10 +490,16 @@ class LofFundMonitor {
                 return '<td class="col-change ' + cls + '">' + txt + '</td>';
             case 'premium_rate':
                 var pr = fund.premium_rate;
-                var prCls = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
-                var prS = pr > 0 ? '+' : '';
+                var epr = fund.est_premium_rate;
+                var isEst = this.premiumBase === 'estimated';
+                var active = isEst ? epr : pr;
+                var cls = active > 0 ? 'premium-positive' : active < 0 ? 'premium-negative' : 'premium-zero';
+                var prS = pr > 0 ? '+' : '', eprS = (epr != null && epr > 0) ? '+' : '';
                 var prTxt = (pr != null) ? prS + pr.toFixed(2) + '%' : '--';
-                return '<td class="col-premium ' + prCls + '">' + prTxt + '</td>';
+                var eprTxt = (epr != null) ? eprS + epr.toFixed(2) + '%' : '--';
+                var leftCls = isEst ? 'prem-sub' : 'prem-main';
+                var rightCls = isEst ? 'prem-main' : 'prem-sub';
+                return '<td class="col-premium ' + cls + '"><span class="' + leftCls + '">' + prTxt + '</span><span class="prem-sep">/</span><span class="' + rightCls + '">' + eprTxt + '</span></td>';
             case 'avg_premium_3d':
                 var avg = fund.avg_premium_3d;
                 var avgCls = avg > 0 ? 'premium-positive' : avg < 0 ? 'premium-negative' : 'premium-zero';
@@ -571,16 +595,23 @@ class LofFundMonitor {
 
     // 回退：columns.js 未加载时保留原始硬编码 12 列渲染
     _createFundRowFallback(fund) {
-        var pr = fund.premium_rate;
-        var premiumClass = pr > 0 ? 'premium-positive' : pr < 0 ? 'premium-negative' : 'premium-zero';
-        var premiumText = (pr != null) ? (pr > 0 ? '+' : '') + pr.toFixed(2) + '%' : '--';
+        var isEst = this.premiumBase === 'estimated';
+        var pr = fund.premium_rate, epr = fund.est_premium_rate;
+        var active = isEst ? epr : pr;
+        var premiumClass = active > 0 ? 'premium-positive' : active < 0 ? 'premium-negative' : 'premium-zero';
+        var prTxt = pr != null ? (pr > 0 ? '+' : '') + pr.toFixed(2) + '%' : '--';
+        var eprTxt = epr != null ? (epr > 0 ? '+' : '') + epr.toFixed(2) + '%' : '--';
+        var leftCls = isEst ? 'prem-sub' : 'prem-main';
+        var rightCls = isEst ? 'prem-main' : 'prem-sub';
+        var premiumText = '<span class="' + leftCls + '">' + prTxt + '</span><span class="prem-sep">/</span><span class="' + rightCls + '">' + eprTxt + '</span>';
         var avg3d = fund.avg_premium_3d;
         var avgClass = avg3d > 0 ? 'premium-positive' : avg3d < 0 ? 'premium-negative' : 'premium-zero';
         var avgText = (avg3d != null) ? (avg3d > 0 ? '+' : '') + avg3d.toFixed(2) + '%' : '--';
         var changeClass = fund.change_pct >= 0 ? 'up' : 'down';
         var changeText = (fund.change_pct != null) ? (fund.change_pct >= 0 ? '+' : '') + fund.change_pct.toFixed(2) + '%' : '--';
-        var navType = fund.is_formal_nav ? '正式' : '估算';
         var navText = (fund.nav != null) ? fund.nav.toFixed(3) : '--';
+        var navDate = fund.nav_date || '';
+        var estNavText = (fund.est_nav != null) ? fund.est_nav.toFixed(4) : '--';
         var priceText = (fund.realtime_price != null) ? fund.realtime_price.toFixed(3) : (fund.price != null) ? fund.price.toFixed(3) : '--';
         var amountText = formatAmount(fund.amount);
         var est = this.calcEstimatedProfit(fund);
@@ -598,7 +629,8 @@ class LofFundMonitor {
             '<td class="col-code frozen">' + fund.code + '</td>' +
             '<td class="col-name frozen" title="' + fund.name + '">' + this.truncateName(fund.short_name || fund.name) + '</td>' +
             '<td class="col-price">' + priceText + '</td>' +
-            '<td class="col-nav">' + navText + (fund.nav ? '<span class="nav-badge">' + navType + '</span>' : '') + '</td>' +
+            '<td class="col-nav">' + navText + (navDate ? '<div class="cell-sub">' + navDate + '</div>' : '') + '</td>' +
+            '<td class="col-est-nav">' + estNavText + '</td>' +
             '<td class="col-change ' + changeClass + '">' + changeText + '</td>' +
             '<td class="col-premium ' + premiumClass + '">' + premiumText + '</td>' +
             '<td class="col-avg-premium ' + avgClass + '">' + avgText + '</td>' +
@@ -615,9 +647,15 @@ class LofFundMonitor {
 
     createMobileCard(fund) {
         const pr = fund.premium_rate;
-        const premiumClass = pr > 0 ? 'mc-pos' : pr < 0 ? 'mc-neg' : 'mc-zero';
-        const premiumSign = pr > 0 ? '+' : '';
-        const premiumText = pr !== null && pr !== undefined ? premiumSign + pr.toFixed(2) + '%' : '--';
+        const epr = fund.est_premium_rate;
+        const isEst = this.premiumBase === 'estimated';
+        const active = isEst ? epr : pr;
+        const premiumClass = active > 0 ? 'mc-pos' : active < 0 ? 'mc-neg' : 'mc-zero';
+        const prSign = pr > 0 ? '+' : '', eprSign = (epr != null && epr > 0) ? '+' : '';
+        const premiumText = pr !== null && pr !== undefined ? prSign + pr.toFixed(2) + '%' : '--';
+        const eprText = epr !== null && epr !== undefined ? eprSign + epr.toFixed(2) + '%' : '--';
+        const leftCls = isEst ? 'prem-sub' : 'prem-main';
+        const rightCls = isEst ? 'prem-main' : 'prem-sub';
         const statusText = fund.premium_status || '未知';
         // 千元可赚
         const est = this.calcEstimatedProfit(fund);
@@ -636,7 +674,7 @@ class LofFundMonitor {
                 <button class="mc-fav-btn${isFav ? ' mc-fav--active' : ''}" data-code="${fund.code}">${isFav ? '★' : '☆'}</button>
             </div>
             <div class="mc-right">
-                <span class="mc-premium ${premiumClass}">${premiumText}</span>
+                <span class="mc-premium ${premiumClass}"><span class="${leftCls}">${premiumText}</span><span class="prem-sep">/</span><span class="${rightCls}">${eprText}</span></span>
             </div>
             <div class="mc-profit-row">
                 <span class="mc-profit-label">千元可赚</span>
@@ -891,6 +929,8 @@ class LofFundMonitor {
         if (commissionRateInput) commissionRateInput.value = this.commissionRate;
         if (commissionMinInput) commissionMinInput.value = this.commissionMin;
         if (maxCapitalInput) maxCapitalInput.value = this.maxCapital;
+        var premBaseSel = document.getElementById('premiumBaseSelect');
+        if (premBaseSel) premBaseSel.value = this.premiumBase || 'confirmed';
         if (modal) modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
     }
@@ -927,6 +967,9 @@ class LofFundMonitor {
         localStorage.setItem('lof_commissionRate', this.commissionRate);
         localStorage.setItem('lof_commissionMin', this.commissionMin);
         localStorage.setItem('lof_maxCapital', this.maxCapital);
+        var premBaseSel = document.getElementById('premiumBaseSelect');
+        this.premiumBase = premBaseSel?.value || 'confirmed';
+        localStorage.setItem('lof_premium_base', this.premiumBase);
         this.currentPage = 1;
         this.applyFilters();
         this.renderTable();
@@ -958,6 +1001,8 @@ class LofFundMonitor {
         if (commissionRateInput) commissionRateInput.value = 1.5;
         if (commissionMinInput) commissionMinInput.value = 5;
         if (maxCapitalInput) maxCapitalInput.value = 1000;
+        var premBaseSel = document.getElementById('premiumBaseSelect');
+        if (premBaseSel) premBaseSel.value = 'confirmed';
     }
 
     handleSort(field) {
@@ -977,7 +1022,7 @@ class LofFundMonitor {
     }
 
     setSortMode(mode) {
-        this.sortField = 'premium_rate';
+        this.sortField = this.premiumBase === 'estimated' ? 'est_premium_rate' : 'premium_rate';
         this.sortOrder = mode === 'discount' ? 'asc' : 'desc';
         var premiumBtn = document.getElementById('premiumModeBtn');
         var discountBtn = document.getElementById('discountModeBtn');
@@ -2082,9 +2127,11 @@ class LofFundMonitor {
             if (el) el.classList.add('fd-code-name');
         };
 
-        const pr = fund.premium_rate;
-        const prCls = pr > 0 ? 'fd-pos' : pr < 0 ? 'fd-neg' : '';
-        const prSign = pr > 0 ? '+' : '';
+        var isEstPrem = this.premiumBase === 'estimated';
+        var _pr = fund.premium_rate;
+        var _epr = fund.est_premium_rate;
+        var activePr = isEstPrem ? _epr : _pr;
+        const prCls = activePr > 0 ? 'fd-pos' : activePr < 0 ? 'fd-neg' : '';
 
         const avg3d = fund.avg_premium_3d;
         const avgCls = avg3d > 0 ? 'fd-pos' : avg3d < 0 ? 'fd-neg' : '';
@@ -2094,8 +2141,6 @@ class LofFundMonitor {
         const cpCls = cp >= 0 ? 'fd-change-up' : 'fd-change-down';
         const cpSign = cp >= 0 ? '+' : '';
 
-        const navType = fund.is_formal_nav ? '正式' : '估算';
-
         let amountText = formatAmount(fund.amount);
 
         const est = this.calcEstimatedProfit(fund);
@@ -2103,9 +2148,20 @@ class LofFundMonitor {
         setVal('fdCode', fund.code); isCopy('fdCode');
         setVal('fdName', fund.name); isCopy('fdName');
         setVal('fdPrice', fund.realtime_price != null ? fund.realtime_price.toFixed(3) : (fund.price != null ? fund.price.toFixed(3) : null));
-        setVal('fdNav', fund.nav != null ? fund.nav.toFixed(3) + ' (' + navType + ')' : null);
+        setVal('fdNav', fund.nav != null ? fund.nav.toFixed(3) : null);
+        // fdNavDate 是 fd-kpi-sub 元素，不能走 setVal（会覆盖 class）
+        var navDateEl = document.getElementById('fdNavDate');
+        if (navDateEl) navDateEl.textContent = fund.nav_date || '';
+        setVal('fdEstNav', fund.est_nav != null ? fund.est_nav.toFixed(4) : null);
+        var estTimeEl = document.getElementById('fdEstNavTime');
+        if (estTimeEl) estTimeEl.textContent = fund.est_nav != null ? _estNavTimeLabel() : '';
         setVal('fdChangePct', cp != null ? cpSign + cp.toFixed(2) + '%' : null, cpCls);
-        setVal('fdPremiumRate', pr != null ? prSign + pr.toFixed(2) + '%' : null, prCls);
+        var prSign = _pr > 0 ? '+' : '', eprSign = (_epr != null && _epr > 0) ? '+' : '';
+        var prText = _pr != null ? prSign + _pr.toFixed(2) + '%' : '--';
+        var eprText2 = _epr != null ? eprSign + _epr.toFixed(2) + '%' : '--';
+        var cardHtml = '<span class="' + (isEstPrem ? 'prem-sub' : 'prem-main') + '">' + prText + '</span><span class="prem-sep"> / </span><span class="' + (isEstPrem ? 'prem-main' : 'prem-sub') + '">' + eprText2 + '</span>';
+        var fdprEl = document.getElementById('fdPremiumRate');
+        if (fdprEl) { fdprEl.innerHTML = cardHtml; fdprEl.className = 'fd-kpi-value'; if (prCls) fdprEl.classList.add(prCls); }
         setVal('fdAvgPremium', avg3d != null ? avgSign + avg3d.toFixed(2) + '%' : null, avgCls);
         setVal('fdAmount', amountText);
         setVal('fdEstProfitRate', est ? (est.rate > 0 ? '+' : '') + est.rate.toFixed(2) + '%' : '--',

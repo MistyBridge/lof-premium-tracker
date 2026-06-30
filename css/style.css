@@ -176,6 +176,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .input-with-unit { display: flex; align-items: center; gap: 8px; }
 .input-with-unit input { flex: 1; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; background: var(--bg); color: var(--text); transition: border-color 0.3s, background 0.3s, color 0.3s; }
 .input-with-unit input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
+.form-group select { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 1rem; background: var(--bg); color: var(--text); cursor: pointer; transition: border-color 0.3s, background 0.3s, color 0.3s; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(74,144,217,0.1); }
 .input-with-unit .unit { color: var(--text2); font-size: 0.9rem; }
 .form-hint { font-size: 0.8rem; color: var(--text2); margin-top: 6px; }
 .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 15px 20px; border-top: 1px solid var(--border); flex-shrink: 0; }
@@ -356,6 +358,10 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .change.up { color: var(--pos); }
 .change.down { color: var(--neg); }
 .nav-badge { display: inline-block; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: 4px; background: #e8f4f8; color: var(--primary); }
+.cell-sub { font-size: 0.65rem; color: var(--text2); line-height: 1.3; }
+.prem-main { font-weight: 700; }
+.prem-sub { opacity: 0.55; }
+.prem-sep { opacity: 0.35; margin: 0 1px; }
 .status-badge { display: inline-block; font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; }
 .status-badge.溢价 { background: #fdeaea; color: var(--pos); }
 .status-badge.折价 { background: #e8f5e9; color: var(--neg); }
@@ -585,6 +591,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .dark-mode .col-page-arrow.active:hover { background: rgba(74,144,217,0.15); }
 .dark-mode .search-box input { background: var(--bg); color: var(--text); border-color: var(--border); }
 .dark-mode .input-with-unit input { background: var(--bg); color: var(--text); border-color: var(--border); }
+.dark-mode .form-group select { background: var(--bg); color: var(--text); border-color: var(--border); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23aaa' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
 .dark-mode .modal-content { background: var(--card); color: var(--text); }
 .dark-mode .modal-header { border-bottom-color: var(--border); }
 .dark-mode .modal-footer { border-top-color: var(--border); }
@@ -820,6 +827,9 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 }
 .fd-kpi-label { font-size: 0.75rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
 .fd-kpi-value { font-size: 1rem; font-weight: 600; color: var(--text); }
+.fd-kpi-value-row { display: flex; align-items: baseline; gap: 6px; }
+.fd-kpi-sub { font-size: 0.7rem; color: var(--text2); margin-left: auto; }
+.btn-fd-holdings { width: 100%; margin-top: 6px; }
 .fd-kpi-value.fd-pos { color: var(--pos); }
 .fd-kpi-value.fd-neg { color: var(--neg); }
 .fd-kpi-value.fd-change-up { color: var(--pos); }
