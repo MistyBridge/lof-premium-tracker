@@ -1,5 +1,22 @@
 # 金快查 更新日志
 
+## 2026-07-01
+
+| 原方案 | 更新方案 | 影响范围 |
+|--------|----------|----------|
+| 净值字段单一，盘中使用估算净值覆盖正式净值（`is_formal_nav` 切换），盘后恢复正式净值 | 正式净值（`nav`）与估算净值（`est_nav`）彻底分离，前者始终为确认值，后者独立字段从 Redis `est_nav:v2` 注入，两列并列显示 | 前端表格、详情页、API 响应 |
+| 溢价率仅基于正式净值计算 | 新增 `est_premium_rate` 字段 = (现价 - 估算净值) / 估算净值，与正式溢价率同列显示（`溢价/估算` 格式），双值用 `/` 分隔 | `fund_service.py`, `js/app.js` |
+| 溢价率排序/筛选固定使用正式净值 | 设置页新增 `premiumBaseSelect`（正式净值/估算净值），控制排序和筛选基准，偏好存入 `localStorage.lof_premium_base` | `js/app.js`, `index.html` |
+| 溢价率列两个数值均等样式 | 动态加粗：`premiumBase === 'confirmed'` 时左侧正式溢价率加粗（`prem-main`），右侧估算溢价率半透明（`prem-sub`）；切换为 `estimated` 时反之 | `js/app.js`, `css/style.css` |
+| 基金详情页净值单卡片显示 | 拆分为两个独立 KPI 卡片：净值卡片（纯数值+日期，无按钮）、估算净值卡片（数值+时间小字右对齐+"查看"按钮铺满底部） | `index.html`, `js/kpi-cards.js`, `css/style.css` |
+| 净值时间显示完整标签文字（如"净值日期：06-29"） | 改为仅显示日期小字（无标签前缀），`cell-sub` CSS 类 0.65rem 灰色小字 | `js/app.js`, `css/style.css` |
+| `fetch_nav` 每日 20:00 运行，拉取到前一日净值却标注为当日 | 改为次日 8:00 运行，确保净值已正式发布；移除 `is_trading_day` 限制，周末也能补拉周五净值 | `scheduler.py` |
+| `fetch_nav_qdii` 每日 23:00 运行 | 同步改为次日 8:00 | `scheduler.py` |
+| `daily_save` 每日 21:00 运行，保存当日数据 | 改为 8:30，保存昨日（`yesterday = beijing_now().date() - timedelta(days=1)`）数据，确保入库时净值已就绪 | `scheduler.py` |
+| `job_fetch_nav()` UPDATE 目标行使用 `SELECT MAX(trade_date)` 子查询 | 改为 `AND trade_date = :nav_date` 精确匹配净值日期，避免更新错误行 | `scheduler.py`, `pipeline.py` |
+| 估算净值缓存 TTL=86400（24h），`job_est_nav` 20:00 清空缓存 | TTL 延长至 259200（72h），覆盖周末及长假；移除手动清空逻辑，依赖自然过期 | `est_nav_service.py`, `scheduler.py` |
+| 净值表头为「净值」 | 新增「估算净值」列（`est_nav`），width=136，sortable，defaultVisible | `js/columns.js`, `COLUMN_REGISTRY` |
+
 ## 2026-06-01
 
 ### v2 后端重写
