@@ -2,6 +2,7 @@
 Redis Streams 消息队列
 生产者（fetcher/scheduler）发布事件，消费者（pipeline）处理。
 """
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -66,6 +67,39 @@ async def publish_event(event_type: str, payload: dict) -> str:
         return ""
 
 
+async def consumer_group_exists() -> bool:
+    """检查消费者组是否存在"""
+    try:
+        groups = await _get_pool().xinfo_groups(STREAM_KEY)
+        return any(g["name"] == STREAM_GROUP for g in groups)
+    except Exception:
+        return False
+
+
+async def ensure_consumer_group() -> bool:
+    """
+    确保消费者组存在，不存在则创建。
+    返回 True 表示组已就绪，False 表示创建失败。
+    """
+    for attempt in range(3):
+        try:
+            pool = _get_pool()
+            if pool is None:
+                logger.warning("Redis 连接池未就绪，无法创建消费者组")
+                return False
+            await pool.xgroup_create(STREAM_KEY, STREAM_GROUP, id="$", mkstream=True)
+            logger.info("Stream 消费者组已创建: %s/%s (id=$)", STREAM_KEY, STREAM_GROUP)
+            return True
+        except Exception as e:
+            if "BUSYGROUP" in str(e):
+                logger.debug("Stream 消费者组已存在: %s/%s", STREAM_KEY, STREAM_GROUP)
+                return True
+            logger.warning("消费者组创建失败 (attempt %d/3): %s", attempt + 1, e)
+            if attempt < 2:
+                await asyncio.sleep(1)
+    return False
+
+
 async def consume_events(
     count: int = STREAM_READ_COUNT,
     block_ms: int = STREAM_BLOCK_MS,
@@ -73,6 +107,7 @@ async def consume_events(
     """
     消费者：读取事件列表。
     无事件时阻塞 block_ms 毫秒后返回空列表。
+    消费者组丢失时自动重建并报错。
     """
     try:
         results = await _get_pool().xreadgroup(
@@ -92,7 +127,17 @@ async def consume_events(
                     "ts": fields.get("ts"),
                 })
         return events
-    except Exception:
+    except Exception as e:
+        err_str = str(e)
+        if "NOGROUP" in err_str:
+            logger.error(
+                "[MQ] 消费者组丢失: %s/%s，尝试重建...",
+                STREAM_KEY, STREAM_GROUP,
+            )
+            if await ensure_consumer_group():
+                logger.info("[MQ] 消费者组已重建，后续读取将正常")
+            else:
+                logger.critical("[MQ] 消费者组重建失败！实时数据将停止更新")
         return []
 
 

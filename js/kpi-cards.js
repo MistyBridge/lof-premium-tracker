@@ -6,6 +6,7 @@ var KPI_CARD_REGISTRY = [
     { id: 'fdName',           label: '名称',         defaultVisible: true,  critical: true  },
     { id: 'fdPrice',          label: '现价',         defaultVisible: true,  critical: false },
     { id: 'fdNav',            label: '净值',         defaultVisible: true,  critical: false },
+    { id: 'fdEstNav',         label: '估算净值',     defaultVisible: true,  critical: false },
     { id: 'fdChangePct',      label: '涨跌幅',       defaultVisible: true,  critical: false },
     { id: 'fdPremiumRate',    label: '溢价率',       defaultVisible: true,  critical: false },
     { id: 'fdAvgPremium',     label: '三日均溢',     defaultVisible: true,  critical: false },

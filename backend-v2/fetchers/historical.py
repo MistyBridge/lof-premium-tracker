@@ -1,5 +1,11 @@
 """
-日线K线采集 — push2his 主源 + AkShare 备源
+日线K线采集 — 腾讯 K线主源 + AkShare 兜底
+
+2026-06-30:
+  - push2his 已封禁 (rc=102)，切换为腾讯 K线主源
+  - 腾讯/AkShare 全并发模式，Semaphore 控流
+  - 日终只取 10 天，大幅减少请求量
+  - per-fund 超时保护 + 分批进度日志
 """
 import asyncio
 import logging
@@ -7,89 +13,43 @@ import time
 from typing import Any
 
 import httpx
-from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from constants import LSJZ_CONCURRENCY, FETCH_INTERVAL_MIN
+from constants import LSJZ_CONCURRENCY
 from mq import publish_event
 from metrics import metrics
 from . import clean_code, safe_float
 
 logger = logging.getLogger("app")
 
-# ── push2his 配置 ─────────────────────────────────────────────
-PUSH2HIS_URL = "https://push2his.eastmoney.com/api/qt/stock/kline/get"
-PUSH2HIS_FIELDS = "f51,f52,f53,f54,f55,f56,f57,f59,f61"
+# ── 腾讯 K线 配置（主源）─────────────────────────────────────
+TENCENT_KLINE_URL = "https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
 
-# push2 备用端点
-PUSH2_URL_ALT = "https://push2.eastmoney.com/api/qt/stock/kline/get"
-
-
-@retry(
-    stop=stop_after_attempt(3),
-    wait=wait_exponential(multiplier=1, min=1, max=8),
-    retry=retry_if_exception_type((httpx.TimeoutException, httpx.ConnectError)),
-    reraise=True,
-)
-async def _fetch_kline_push2his(client: httpx.AsyncClient, secid: str) -> dict | None:
-    """push2his K线请求 (带重试)"""
-    params = {
-        "secid": secid,
-        "fields2": PUSH2HIS_FIELDS,
-        "klt": 101,       # 日线
-        "fqt": 1,         # 前复权
-        "end": "20500101", # 全部历史
-        "lmt": 365,       # 最多365天
-    }
-
-    _KLINE_HEADERS = {"Referer": "https://quote.eastmoney.com/"}
-
-    # 先尝试 push2his
-    try:
-        resp = await client.get(PUSH2HIS_URL, params=params, headers=_KLINE_HEADERS, timeout=15)
-        resp.raise_for_status()
-        result = resp.json()
-        if result.get("rc") == 0 and result.get("data", {}).get("klines"):
-            return result
-    except Exception as e:
-        logger.debug("[HISTORICAL] push2his 失败: %s", e)
-
-    # 降级到 push2
-    try:
-        resp = await client.get(PUSH2_URL_ALT, params=params, headers=_KLINE_HEADERS, timeout=15)
-        resp.raise_for_status()
-        result = resp.json()
-        if result.get("rc") == 0 and result.get("data", {}).get("klines"):
-            return result
-    except Exception as e:
-        logger.debug("[HISTORICAL] push2 备用端点也失败: %s", e)
-
-    return None
+# ── 日终任务参数 ──────────────────────────────────────────────
+DAILY_KLINE_DAYS = 10        # 日终只取最近 10 天
+KLINE_TIMEOUT_PER_FUND = 20  # 单只基金超时（秒）
+KLINE_PROGRESS_EVERY = 200   # 每 N 只输出进度
+KLINE_MAX_RUNTIME = 600      # 最大运行时间（秒）
+FALLBACK_CONCURRENCY = 3     # AkShare 并发数（慢源，需控制）
 
 
-def _make_secid(code: str) -> str:
-    """构建 secid: 深市 0.{code}, 沪市 1.{code}"""
-    c = clean_code(code)
-    if c.startswith(("15", "16", "17", "18")):
-        return f"0.{c}"  # 深市
-    return f"1.{c}"       # 沪市
-
-
-async def _fetch_kline_tencent(client: httpx.AsyncClient, code: str) -> list[dict] | None:
-    """腾讯K线备源（push2his 被封时使用）"""
+async def _fetch_kline_tencent(
+    client: httpx.AsyncClient, code: str,
+) -> list[dict] | None:
+    """腾讯 K线 — 主源"""
     try:
         c = clean_code(code)
         prefix = "sz" if c.startswith(("15", "16", "17", "18")) else "sh"
         symbol = f"{prefix}{c}"
-        url = f"https://web.ifzq.gtimg.cn/appstock/app/fqkline/get"
         params = {"param": f"{symbol},day,,,365,qfq"}
-        resp = await client.get(url, params=params, timeout=15)
+        resp = await client.get(TENCENT_KLINE_URL, params=params, timeout=15)
         resp.raise_for_status()
         data = resp.json()
 
-        # 腾讯返回格式: {"code":0,"data":{"sz161725":{"day":[["2025-01-02","0.59","0.58","0.60","0.57","100000"], ...]}}}
+        if data.get("code") != 0:
+            return None
+
         stock_data = data.get("data", {}).get(symbol, {})
         klines_raw = stock_data.get("day") or stock_data.get("qfqday") or []
-
         if not klines_raw:
             return None
 
@@ -102,9 +62,8 @@ async def _fetch_kline_tencent(client: httpx.AsyncClient, code: str) -> list[dic
             if not close or close <= 0:
                 continue
             volume = safe_float(row[5])
-            # 估算成交额: close * volume（腾讯返回的volume是股数）
+            # 腾讯 volume 是股数 → 估算成交额
             amount = round(close * volume, 2) if close and volume else None
-            # 计算涨跌幅
             change_pct = None
             if prev_close and prev_close > 0:
                 change_pct = round((close - prev_close) / prev_close * 100, 4)
@@ -129,7 +88,7 @@ async def _fetch_kline_tencent(client: httpx.AsyncClient, code: str) -> list[dic
 
 
 async def _fetch_kline_akshare(code: str) -> list[dict] | None:
-    """AkShare 备源 (同步库, 需 to_thread)"""
+    """AkShare 兜底（同步库，to_thread 执行）"""
     try:
         import akshare as ak
         df = await asyncio.to_thread(
@@ -161,121 +120,118 @@ async def _fetch_kline_akshare(code: str) -> list[dict] | None:
         return None
 
 
-async def fetch_historical(client: httpx.AsyncClient, codes: list[str]) -> list[dict]:
+async def _with_timeout(coro, timeout: float):
+    """包装协程，超时/异常返回 None"""
+    try:
+        return await asyncio.wait_for(coro, timeout=timeout)
+    except (asyncio.TimeoutError, Exception):
+        return None
+
+
+async def fetch_historical(
+    client: httpx.AsyncClient,
+    codes: list[str],
+    days: int = 365,
+) -> list[dict]:
     """
     批量获取日线K线
 
-    主源: push2his / 备源: AkShare
+    主源: 腾讯 K线 (并发) → 降级: AkShare (并发)
 
     Args:
         client: httpx.AsyncClient
         codes: 基金代码列表
-
-    Returns:
-        K线数据列表 [{code, klines: [...]}, ...]
+        days: 取最近 N 天（日终用 10，seed 用 365）
     """
     if not codes:
         return []
 
     start = time.monotonic()
-    sem = asyncio.Semaphore(LSJZ_CONCURRENCY)
+    total = len(codes)
+    logger.info("[HISTORICAL] 开始: %d 只基金, days=%d, 主源=腾讯K线", total, days)
+
     results: list[dict] = []
-    tencent_codes: list[str] = []
     akshare_codes: list[str] = []
+    tencent_ok = 0
+    tencent_fail = 0
 
-    async def _task(code: str) -> None:
+    # ── 第 1 级：腾讯 K线 并发 ──
+    sem = asyncio.Semaphore(LSJZ_CONCURRENCY)
+
+    async def _task_tencent(code: str) -> None:
+        nonlocal tencent_ok, tencent_fail
         async with sem:
-            secid = _make_secid(code)
-            try:
-                data = await _fetch_kline_push2his(client, secid)
-                if data:
-                    klines_raw = data.get("data", {}).get("klines", [])
-                    klines = _parse_push2his_klines(klines_raw)
-                    if klines:
-                        results.append({
-                            "code": clean_code(code),
-                            "klines": klines,
-                            "fetch_source": "push2his",
-                        })
-                        return
-            except Exception as e:
-                logger.debug("[HISTORICAL] push2his %s 失败: %s", code, e)
-
-            # 降级到腾讯K线
-            tencent_codes.append(code)
-
-    # 并发采集 push2his
-    await asyncio.gather(*[_task(c) for c in codes])
-
-    # 腾讯K线降级
-    if tencent_codes:
-        logger.info("[HISTORICAL] %d 只基金降级到腾讯K线", len(tencent_codes))
-        for code in tencent_codes:
-            klines = await _fetch_kline_tencent(client, code)
+            klines = await _with_timeout(
+                _fetch_kline_tencent(client, code),
+                KLINE_TIMEOUT_PER_FUND,
+            )
             if klines:
+                klines = klines[-days:] if len(klines) > days else klines
                 results.append({
                     "code": clean_code(code),
                     "klines": klines,
                     "fetch_source": "tencent_kline",
                 })
+                tencent_ok += 1
             else:
+                tencent_fail += 1
                 akshare_codes.append(code)
-            await asyncio.sleep(FETCH_INTERVAL_MIN)
 
-    # AkShare 降级（最终兜底）
-    if akshare_codes:
-        logger.info("[HISTORICAL] %d 只基金降级到 AkShare", len(akshare_codes))
-        for code in akshare_codes:
-            klines = await _fetch_kline_akshare(code)
-            if klines:
-                results.append({
-                    "code": clean_code(code),
-                    "klines": klines,
-                    "fetch_source": "akshare",
-                })
-            await asyncio.sleep(FETCH_INTERVAL_MIN)
+    # 分批执行 + 进度日志
+    tasks = [_task_tencent(c) for c in codes]
+    for i in range(0, len(tasks), KLINE_PROGRESS_EVERY):
+        chunk = tasks[i:i + KLINE_PROGRESS_EVERY]
+        await asyncio.gather(*chunk)
+        elapsed = time.monotonic() - start
+        logger.info(
+            "[HISTORICAL] 腾讯K线 进度: %d/%d (ok=%d fail=%d) %.0fs",
+            min(i + KLINE_PROGRESS_EVERY, total), total,
+            tencent_ok, tencent_fail, elapsed,
+        )
+        if elapsed > KLINE_MAX_RUNTIME:
+            logger.warning(
+                "[HISTORICAL] 超时 %.0fs, 已收集 %d 只, 停止采集",
+                elapsed, len(results),
+            )
+            break
+
+    # ── 第 2 级：AkShare 并发降级 ──
+    if akshare_codes and time.monotonic() - start < KLINE_MAX_RUNTIME:
+        logger.info("[HISTORICAL] AkShare 降级: %d 只基金", len(akshare_codes))
+        ak_sem = asyncio.Semaphore(FALLBACK_CONCURRENCY)
+        ak_ok = 0
+
+        async def _task_ak(code: str) -> None:
+            nonlocal ak_ok
+            async with ak_sem:
+                klines = await _with_timeout(
+                    _fetch_kline_akshare(code),
+                    KLINE_TIMEOUT_PER_FUND * 3,  # AkShare 更慢
+                )
+                if klines:
+                    klines = klines[-days:] if len(klines) > days else klines
+                    results.append({
+                        "code": clean_code(code),
+                        "klines": klines,
+                        "fetch_source": "akshare",
+                    })
+                    ak_ok += 1
+
+        await asyncio.gather(*[_task_ak(c) for c in akshare_codes])
+        logger.info("[HISTORICAL] AkShare 完成: ok=%d", ak_ok)
 
     elapsed = time.monotonic() - start
     ok = len(results) > 0
     metrics.record_fetch("historical", ok, elapsed * 1000)
 
-    await publish_event("kline", {
-        "data": results,
-        "count": len(results),
-    })
+    # 转换为 process_kline 期望的格式: {code: [klines]}
+    kdata = {item["code"]: item["klines"] for item in results if item.get("klines")}
+    if kdata:
+        await publish_event("kline", {"type": "fund", "data": kdata})
 
-    logger.info("[HISTORICAL] 完成: %d/%d 成功, %.1fs", len(results), len(codes), elapsed)
+    logger.info(
+        "[HISTORICAL] 完成: %d/%d (tencent=%d ak=%d), %.1fs",
+        len(results), total, tencent_ok,
+        len(results) - tencent_ok, elapsed,
+    )
     return results
-
-
-def _parse_push2his_klines(klines_raw: list[str]) -> list[dict]:
-    """解析 push2his K线数据"""
-    items = []
-    for line in klines_raw:
-        parts = line.split(",")
-        if len(parts) < 9:
-            continue
-
-        close = safe_float(parts[2])
-        volume = safe_float(parts[5])
-
-        # 跳过停牌日 (close <= 0 或 volume < 0)
-        if close is None or close <= 0:
-            continue
-        if volume is not None and volume < 0:
-            continue
-
-        items.append({
-            "trade_date": parts[0],
-            "open": safe_float(parts[1]),
-            "close": close,
-            "high": safe_float(parts[3]),
-            "low": safe_float(parts[4]),
-            "volume": volume,
-            "amount": safe_float(parts[6]),
-            "change_pct": safe_float(parts[7]),
-            "turnover_rate": safe_float(parts[8]),
-            "fetch_source": "push2his",
-        })
-
-    return items
