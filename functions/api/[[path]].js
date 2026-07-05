@@ -49,6 +49,11 @@ export async function onRequest(context) {
     if (auth) {
       init.headers["Authorization"] = auth;
     }
+    // 转发 X-Admin-Token header（运维端点）
+    const adminToken = context.request.headers.get("X-Admin-Token");
+    if (adminToken) {
+      init.headers["X-Admin-Token"] = adminToken;
+    }
 
     const response = await fetch(target, init);
     const ct = response.headers.get("Content-Type") || "application/json";
