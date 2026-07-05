@@ -189,6 +189,7 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
 
     # 同步更新 fund_daily 表的 NAV 数据
     from datetime import date as _date
+    from sqlalchemy import text
     updated = 0
     async with session_factory() as session:
         for item in validated:
@@ -204,10 +205,11 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
                     continue
             try:
                 result = await session.execute(text(
-                    "UPDATE fund_daily "
-                    "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
-                    "WHERE code = :code "
-                    "AND trade_date = :nav_date"
+                    "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
+                    "VALUES (:code, :nav_date, :nav, :nav_date, 'confirmed', 'lsjz') "
+                    "ON CONFLICT (code, trade_date) DO UPDATE SET "
+                    "nav = EXCLUDED.nav, nav_date = EXCLUDED.nav_date, "
+                    "nav_type = 'confirmed', nav_source = 'lsjz'"
                 ), {"code": code, "nav": float(nav), "nav_date": nav_date})
                 if result.rowcount > 0:
                     updated += 1
@@ -348,12 +350,13 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
         nav = nav_data.get(code, {})
         fallback = fallback_map.get(code, {})
 
-        if not closing:
+        # 无收盘数据时不跳过，至少用 NAV + fallback 数据入库
+        if not closing and not nav and not fallback:
             continue
 
         # 停牌状态（来自实时快照的判断结果）
         susp = suspension_data.get(code, {})
-        susp_status = susp.get("status", closing.get("suspension_status", "unknown"))
+        susp_status = susp.get("status", closing.get("suspension_status", "unknown")) if closing else "unknown"
 
         # 净值：优先用当天获取的，没有则用最近历史
         nav_val = nav.get("nav") or fallback.get("nav")
@@ -385,7 +388,7 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
             "nav_date": nav_date_val,
             "nav_type": "confirmed",
             "nav_source": nav_source,
-            "fetch_source": closing.get("fetch_source", "tencent"),
+            "fetch_source": closing.get("fetch_source", "tencent") if closing else "fallback",
             "suspension_status": susp_status,
             "purchase_limit": limit_map.get(code),
             "fetch_batch_id": batch_id,
