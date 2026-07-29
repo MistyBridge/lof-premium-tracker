@@ -263,14 +263,24 @@ def _parse_holdings(text):
         name = _strip_html(rows[i + 2]).strip()
         pct = safe_float(_strip_html(rows[i + 6]).replace('%', ''))
         shares = safe_float(_strip_html(rows[i + 7]).replace(',', ''))
-        if code and name:
-            holdings.append({
-                "rank": rank or (len(holdings) + 1),
-                "code": code,
-                "name": name,
-                "pct": pct,
-                "shares": shares,
-            })
+
+        # 校验: 代码必须是 6 位数字（过滤历史季度对比表、股吧链接等垃圾行）
+        if not code or not re.match(r'^\d{6}$', code):
+            break
+        if not name:
+            break
+
+        holdings.append({
+            "rank": rank or (len(holdings) + 1),
+            "code": code,
+            "name": name,
+            "pct": pct,
+            "shares": shares,
+        })
+
+        # topline=10: 只取前 10 条（页面可能包含历史季度对比表，列数不同）
+        if len(holdings) >= 10:
+            break
     return {"holdings": holdings, "quarter": quarter}
 
 
@@ -352,6 +362,79 @@ def _pct(text):
 def _num(text):
     m = re.search(r'([\d,.]+)', text)
     return safe_float(m.group(1).replace(',','')) if m else None
+
+async def fetch_holdings_batch(client: httpx.AsyncClient, codes: list[str]) -> list[dict]:
+    """
+    仅采集持仓数据（无进度追踪，全量刷新）。用于季度持仓定期更新。
+    发布 "holdings" 事件到 Stream，由 process_holdings 处理。
+    """
+    if not codes:
+        return []
+    start = time.monotonic()
+    codes = [clean_code(c) for c in codes]
+    logger.info("[HOLDINGS] 开始全量刷新: %d 只基金", len(codes))
+    results = []
+    empty_count = 0
+    MAX_EMPTY = 20  # 连续空持仓容忍上限（债基/QDII 无持仓较多）
+    HOLDINGS_DELAY = 0.5  # 持仓页面轻量，0.5s 间隔足够
+
+    for idx, code in enumerate(codes):
+        retry_count = 0
+        max_retries = 2
+        success = False
+        while retry_count <= max_retries and not success:
+            try:
+                holdings_data = await _fetch_holdings(client, code)
+                if isinstance(holdings_data, dict):
+                    record = {
+                        "code": code,
+                        "holdings": holdings_data.get("holdings", []),
+                        "holding_quarter": holdings_data.get("quarter"),
+                        "fetch_source": "fundf10",
+                    }
+                    results.append(record)
+                    if record["holdings"]:
+                        empty_count = 0
+                    else:
+                        empty_count += 1
+                        if empty_count >= MAX_EMPTY:
+                            logger.warning("[HOLDINGS] 连续%d只持仓为空，继续采集", empty_count)
+                    success = True
+                else:
+                    if retry_count < max_retries:
+                        retry_count += 1
+                        await asyncio.sleep(3)
+                    else:
+                        logger.warning("[HOLDINGS] %s 重试%d次后仍失败", code, max_retries)
+                        success = True
+            except Exception as e:
+                if retry_count < max_retries:
+                    retry_count += 1
+                    logger.warning("[HOLDINGS] %s 异常(重试%d): %s", code, retry_count, e)
+                    await asyncio.sleep(3)
+                else:
+                    logger.warning("[HOLDINGS] %s 最终失败: %s", code, e)
+                    success = True
+        if idx < len(codes) - 1:
+            await asyncio.sleep(HOLDINGS_DELAY)
+
+    elapsed = time.monotonic() - start
+    with_holdings = sum(1 for r in results if r.get("holdings"))
+    logger.info("[HOLDINGS] 完成: %d/%d 成功, %d 持有仓, %.1fs",
+                len(results), len(codes), with_holdings, elapsed)
+
+    # 分批发布到 Stream（每批最多500条，避免单条消息过大）
+    batch_size = 500
+    for i in range(0, len(results), batch_size):
+        batch = results[i:i + batch_size]
+        await publish_event("holdings", {
+            "data": batch,
+            "fetch_source": "fundf10",
+            "count": len(batch),
+        })
+
+    return results
+
 
 def _get_batch_codes(all_codes, last_code, failed_codes):
     to_fetch = failed_codes[:FUNDINFO_BATCH_SIZE]

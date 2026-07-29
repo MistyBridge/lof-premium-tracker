@@ -62,6 +62,8 @@ def create_scheduler():
                       name="保存估算净值", replace_existing=True, misfire_grace_time=300)
     # 日历重载 — 每10分钟检查一次（如果日历加载失败则重试）
     scheduler.add_job(job_reload_calendar, IntervalTrigger(minutes=10), id="reload_calendar")
+    # 持仓刷新 — 每周六 8:00 全量刷新十大持仓（季度数据每周检一次足够）
+    scheduler.add_job(job_fetch_holdings, CronTrigger(day_of_week="sat", hour=8, minute=0), id="fetch_holdings")
     return scheduler
 
 async def check_and_catchup() -> None:
@@ -158,6 +160,22 @@ async def job_fetch_info() -> None:
         _fail("fetch_info", e)
 
 
+async def job_fetch_holdings() -> None:
+    """每周六全量刷新十大持仓（季度数据，无进度追踪）"""
+    s = time.monotonic()
+    try:
+        from fetchers.info import fetch_holdings_batch
+        codes = await _codes()
+        if not codes:
+            logger.warning("[SCHEDULER] fetch_holdings 跳过: 无代码")
+            _fail("fetch_holdings", ValueError("_codes() 返回空"))
+            return
+        r = await fetch_holdings_batch(_http_client, codes)
+        _ok("fetch_holdings", (time.monotonic() - s) * 1000, len(r))
+    except Exception as e:
+        _fail("fetch_holdings", e)
+
+
 async def job_fetch_realtime() -> None:
     if not is_trading_day():
         return
@@ -189,6 +207,37 @@ async def job_fetch_realtime() -> None:
         await refresh_materialized_view(async_session_factory)
     except Exception as e:
         logger.warning("[SCHEDULER] 物化视图刷新失败: %s", e)
+
+    # 同步最新 NAV 到最新 close-bearing 行（当日新增close行缺少NAV）
+    try:
+        from sqlalchemy import text as sql_text
+        from database import async_session_factory
+        async with async_session_factory() as session:
+            result = await session.execute(sql_text("""
+                UPDATE fund_daily fd SET
+                    nav = sub.nav,
+                    nav_date = sub.nav_date,
+                    nav_type = sub.nav_type,
+                    nav_source = sub.nav_source
+                FROM (
+                    SELECT DISTINCT ON (code)
+                        code, nav, nav_date, nav_type, nav_source
+                    FROM fund_daily
+                    WHERE nav IS NOT NULL
+                    ORDER BY code, nav_date DESC
+                ) sub
+                WHERE fd.code = sub.code
+                  AND fd.trade_date = (
+                      SELECT MAX(trade_date) FROM fund_daily
+                      WHERE code = fd.code AND close IS NOT NULL
+                  )
+                  AND fd.nav IS NULL
+            """))
+            if result.rowcount:
+                logger.info("[SCHEDULER] NAV同步: %d 行已更新", result.rowcount)
+            await session.commit()
+    except Exception as e:
+        logger.warning("[SCHEDULER] NAV同步失败: %s", e)
 
 
 async def job_fetch_nav() -> None:
@@ -232,15 +281,44 @@ async def job_fetch_nav() -> None:
                                 continue
                         try:
                             result = await session.execute(sql_text(
-                                "UPDATE fund_daily "
-                                "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
-                                "WHERE code = :code "
-                                "AND trade_date = :nav_date"
+                                "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
+                                "VALUES (:code, :nav_date, :nav, :nav_date, 'confirmed', 'lsjz') "
+                                "ON CONFLICT (code, trade_date) DO UPDATE SET "
+                                "nav = EXCLUDED.nav, nav_date = EXCLUDED.nav_date, "
+                                "nav_type = 'confirmed', nav_source = 'lsjz'"
                             ), {"code": code, "nav": float(nav), "nav_date": nav_date})
                             if result.rowcount > 0:
                                 updated += 1
                         except Exception:
                             pass
+
+                    # 2.1 同步最新 NAV 到最新交易日行（物化视图取最新交易日数据）
+                    try:
+                        sync_result = await session.execute(sql_text("""
+                            UPDATE fund_daily fd SET
+                                nav = sub.nav,
+                                nav_date = sub.nav_date,
+                                nav_type = sub.nav_type,
+                                nav_source = sub.nav_source
+                            FROM (
+                                SELECT DISTINCT ON (code)
+                                    code, nav, nav_date, nav_type, nav_source
+                                FROM fund_daily
+                                WHERE nav IS NOT NULL
+                                ORDER BY code, nav_date DESC
+                            ) sub
+                            WHERE fd.code = sub.code
+                              AND fd.trade_date = (
+                                  SELECT MAX(trade_date) FROM fund_daily
+                                  WHERE code = fd.code AND close IS NOT NULL
+                              )
+                              AND fd.nav IS NULL
+                        """))
+                        if sync_result.rowcount > 0:
+                            logger.info("[SCHEDULER] fetch_nav NAV同步: %d 行", sync_result.rowcount)
+                    except Exception as e:
+                        logger.warning("[SCHEDULER] fetch_nav NAV同步失败: %s", e)
+
                     await session.commit()
 
                     # 3. 刷新物化视图

@@ -113,6 +113,7 @@ async def dispatch(event: dict, session_factory) -> None:
         "kline": process_kline,
         "info": process_info,
         "daily_save": process_daily_save,
+        "holdings": process_holdings,
     }
 
     handler = handlers.get(event_type)
@@ -189,6 +190,7 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
 
     # 同步更新 fund_daily 表的 NAV 数据
     from datetime import date as _date
+    from sqlalchemy import text
     updated = 0
     async with session_factory() as session:
         for item in validated:
@@ -204,10 +206,11 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
                     continue
             try:
                 result = await session.execute(text(
-                    "UPDATE fund_daily "
-                    "SET nav = :nav, nav_date = :nav_date, nav_type = 'confirmed', nav_source = 'lsjz' "
-                    "WHERE code = :code "
-                    "AND trade_date = :nav_date"
+                    "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
+                    "VALUES (:code, :nav_date, :nav, :nav_date, 'confirmed', 'lsjz') "
+                    "ON CONFLICT (code, trade_date) DO UPDATE SET "
+                    "nav = EXCLUDED.nav, nav_date = EXCLUDED.nav_date, "
+                    "nav_type = 'confirmed', nav_source = 'lsjz'"
                 ), {"code": code, "nav": float(nav), "nav_date": nav_date})
                 if result.rowcount > 0:
                     updated += 1
@@ -236,6 +239,9 @@ async def process_kline(data: dict, batch_id: str, session_factory) -> None:
     total_saved = 0
 
     for code, records in kdata.items():
+        # 补上 fetch_historical 返回的 kline 记录中缺失的 code 字段
+        for r in records:
+            r["code"] = code
         normalized = [normalize_kline(r, source="push2his") for r in records]
         validated = [r for r in (validate_kline(r) for r in normalized) if r is not None]
         if validated:
@@ -348,12 +354,13 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
         nav = nav_data.get(code, {})
         fallback = fallback_map.get(code, {})
 
-        if not closing:
+        # 无收盘数据时不跳过，至少用 NAV + fallback 数据入库
+        if not closing and not nav and not fallback:
             continue
 
         # 停牌状态（来自实时快照的判断结果）
         susp = suspension_data.get(code, {})
-        susp_status = susp.get("status", closing.get("suspension_status", "unknown"))
+        susp_status = susp.get("status", closing.get("suspension_status", "unknown")) if closing else "unknown"
 
         # 净值：优先用当天获取的，没有则用最近历史
         nav_val = nav.get("nav") or fallback.get("nav")
@@ -385,7 +392,7 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
             "nav_date": nav_date_val,
             "nav_type": "confirmed",
             "nav_source": nav_source,
-            "fetch_source": closing.get("fetch_source", "tencent"),
+            "fetch_source": closing.get("fetch_source", "tencent") if closing else "fallback",
             "suspension_status": susp_status,
             "purchase_limit": limit_map.get(code),
             "fetch_batch_id": batch_id,
@@ -485,6 +492,33 @@ async def _handle_poison_message(event: dict, error: Exception) -> None:
         logger.error("毒消息丢弃: id=%s type=%s 失败 %d 次", event_id, event["type"], MAX_RETRY)
         await ack_event(event_id)
         del _poison_counter[event_id]
+
+
+async def process_holdings(data: dict, batch_id: str, session_factory) -> None:
+    """持仓数据: 仅更新 fund_holdings 表 + 关联资产清单（不触碰 info/fee）"""
+    records = data.get("data", [])
+    if not records:
+        return
+
+    holdings_records = []
+    for r in records:
+        code = clean_code(r.get("code"))
+        if not code:
+            continue
+        holdings = r.get("holdings")
+        if not holdings:
+            continue
+        holdings_records.append({
+            "code": code,
+            "quarter": r.get("holding_quarter"),
+            "holdings": holdings,
+        })
+
+    if holdings_records:
+        result = await save_holdings_batch(session_factory, holdings_records)
+        logger.info("持仓处理完成: %d 条, 成功=%d", len(holdings_records), result.get("success", 0))
+    else:
+        logger.info("持仓处理: 无有效数据")
 
 
 # ── 直接入口（不经过 Stream，用于测试和手动触发） ───────────
