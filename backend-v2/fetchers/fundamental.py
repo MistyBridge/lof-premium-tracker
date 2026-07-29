@@ -81,29 +81,14 @@ async def fetch_fundamental(client: httpx.AsyncClient, codes: list[str]) -> list
     start = time.monotonic()
     sem = asyncio.Semaphore(LSJZ_CONCURRENCY)
     results: list[dict] = []
-    failed: list[str] = []
 
-    async def _task(code: str) -> None:
-        async with sem:
-            try:
-                await asyncio.sleep(LSJZ_INTERVAL)
-                data = await _fetch_single_nav(client, code)
-                if data:
-                    results.append(data)
-                else:
-                    failed.append(code)
-            except Exception as e:
-                logger.debug("[FUNDAMENTAL] %s 失败: %s", code, e)
-                failed.append(code)
+    # 分批处理，避免一次性创建过多 task 导致事件循环卡死
+    BATCH = 200
+    for i in range(0, len(codes), BATCH):
+        batch = codes[i:i + BATCH]
+        failed: list[str] = []
 
-    # 第一轮并发
-    await asyncio.gather(*[_task(c) for c in codes])
-
-    # 重试失败的
-    if failed:
-        logger.info("[FUNDAMENTAL] 重试 %d 只失败基金", len(failed))
-        retry_failed: list[str] = []
-        async def _retry_task(code: str) -> None:
+        async def _task(code: str) -> None:
             async with sem:
                 try:
                     await asyncio.sleep(LSJZ_INTERVAL)
@@ -111,11 +96,34 @@ async def fetch_fundamental(client: httpx.AsyncClient, codes: list[str]) -> list
                     if data:
                         results.append(data)
                     else:
-                        retry_failed.append(code)
-                except Exception:
-                    retry_failed.append(code)
+                        failed.append(code)
+                except Exception as e:
+                    logger.debug("[FUNDAMENTAL] %s 失败: %s", code, e)
+                    failed.append(code)
 
-        await asyncio.gather(*[_retry_task(c) for c in failed])
+        await asyncio.gather(*[_task(c) for c in batch])
+
+        # 重试当前批次失败的
+        if failed:
+            retry_failed: list[str] = []
+            async def _retry_task(code: str) -> None:
+                async with sem:
+                    try:
+                        await asyncio.sleep(LSJZ_INTERVAL)
+                        data = await _fetch_single_nav(client, code)
+                        if data:
+                            results.append(data)
+                        else:
+                            retry_failed.append(code)
+                    except Exception:
+                        retry_failed.append(code)
+
+            await asyncio.gather(*[_retry_task(c) for c in failed])
+
+        elapsed_batch = time.monotonic() - start
+        logger.debug("[FUNDAMENTAL] 批次 %d/%d: %d 成功, %.1fs",
+                    i // BATCH + 1, (len(codes) + BATCH - 1) // BATCH,
+                    len(results), elapsed_batch)
 
     elapsed = time.monotonic() - start
     ok = len(results) > 0

@@ -1,5 +1,7 @@
 {
   "dependencies": {
-    "docx": "^9.6.1"
+    "@playwright/mcp": "^0.0.76",
+    "docx": "^9.6.1",
+    "playwright": "^1.60.0"
   }
 }

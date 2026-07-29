@@ -727,12 +727,21 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
         if row.get("can_purchase") is None:
             ps = row.get("purchase_status")
             row["can_purchase"] = STATUS_TO_CAN.get(ps)
-        # 成交额补算：amount=0 但 volume>0 时，用 volume*100*close 估算
+        # 成交额补算：amount=0 或明显异常(amount==volume)时，用 volume*100*close 估算
         amt = row.get("amount")
         vol = row.get("volume")
         cl = row.get("close")
-        if (amt is None or amt == 0) and vol and vol > 0 and cl and cl > 0:
-            row["amount"] = round(vol * 100 * cl, 2)
+        rt_amt = row.get("realtime_amount") or 0
+        # 计算理论成交额（volume 是手数，1手=100股）
+        calc_amt = round(vol * 100 * cl, 2) if vol and vol > 0 and cl and cl > 0 else None
+        # 修正 amount：为0时用计算值，等于volume时(混淆了成交量)也用计算值
+        if (amt is None or amt == 0) and calc_amt:
+            row["amount"] = calc_amt
+        elif amt and vol and abs(amt - vol) < 0.02 and calc_amt:
+            # amount 和 volume 几乎相等 → 按成交量误存了,用计算值修正
+            row["amount"] = calc_amt
+        # 前端筛选使用的值：取 snapshot_amount / realtime_amount / calc_amt 中最大值
+        row["filter_amount"] = max(amt or 0, rt_amt, calc_amt or 0)
 
 
 async def _batch_avg_premium_3d(
