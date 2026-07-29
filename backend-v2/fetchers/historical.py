@@ -62,8 +62,8 @@ async def _fetch_kline_tencent(
             if not close or close <= 0:
                 continue
             volume = safe_float(row[5])
-            # 腾讯 volume 是股数 → 估算成交额
-            amount = round(close * volume, 2) if close and volume else None
+            # 腾讯 volume 是手数（1手=100股）→ 估算成交额
+            amount = round(close * volume * 100, 2) if close and volume else None
             change_pct = None
             if prev_close and prev_close > 0:
                 change_pct = round((close - prev_close) / prev_close * 100, 4)
@@ -227,7 +227,14 @@ async def fetch_historical(
     # 转换为 process_kline 期望的格式: {code: [klines]}
     kdata = {item["code"]: item["klines"] for item in results if item.get("klines")}
     if kdata:
-        await publish_event("kline", {"type": "fund", "data": kdata})
+        # 分批发布，每批最多 200 个代码，避免单条 Stream 消息过大导致 consumer JSON 解析崩溃
+        BATCH_SIZE = 200
+        codes_list = list(kdata.keys())
+        for i in range(0, len(codes_list), BATCH_SIZE):
+            batch_codes = codes_list[i:i + BATCH_SIZE]
+            batch_kdata = {c: kdata[c] for c in batch_codes}
+            await publish_event("kline", {"type": "fund", "data": batch_kdata})
+        logger.info("[HISTORICAL] 已分批发布 kline 事件: %d 批", (len(codes_list) + BATCH_SIZE - 1) // BATCH_SIZE)
 
     logger.info(
         "[HISTORICAL] 完成: %d/%d (tencent=%d ak=%d), %.1fs",
