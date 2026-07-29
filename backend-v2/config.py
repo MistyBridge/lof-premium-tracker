@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     # === 鉴权 ===
     SUPABASE_JWT_SECRET: str  # 必填
     ADMIN_EMAILS: str = ""
+    ADMIN_API_KEY: str = ""  # 运维端点共享密钥（X-Admin-Token）
 
     # === 阿里云 DirectMail ===
     ALIYUN_ACCESS_KEY_ID: Optional[str] = None

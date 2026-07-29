@@ -148,13 +148,18 @@ def _parse_tencent_text(text: str) -> list[dict]:
             if len(fields) < 10:
                 continue
 
+            price_val = safe_float(fields[3])
+            volume_val = safe_float(fields[6])
+            # 腾讯 qt 成交量(手) × 100 股/手 × 价格 = 成交额(元)
+            realtime_amount = round(price_val * volume_val * 100, 2) if price_val and volume_val else None
+
             items.append({
                 "code": code,
                 "name": fields[1],                 # 名称
-                "price": safe_float(fields[3]),     # 最新价
+                "price": price_val,                 # 最新价
                 "change_pct": safe_float(fields[32]),  # 涨跌幅
-                "volume": safe_float(fields[6]),    # 成交量
-                "amount": safe_float(fields[37]) * 10000,   # 成交额（万元→元）
+                "volume": volume_val,               # 成交量
+                "amount": realtime_amount,           # 成交额（price × volume）
                 "prev_close": safe_float(fields[4]),  # 昨收
                 "market": market,                    # 市场 SH/SZ
                 "fetch_source": "tencent",

@@ -40,10 +40,15 @@ async def batch_upsert(
             async with session_factory() as session:
                 async with session.begin():
                     stmt = pg_insert(model).values(batch)
+                    # 只更新 records 中实际提供的字段，防止无意中将 NULL 覆盖到已有数据
+                    # e.g., save_kline_batch 只提供 OHLCV 字段，不应把 nav/nav_date 覆盖为 NULL
+                    provided_cols: set[str] = set()
+                    for record in batch:
+                        provided_cols.update(record.keys())
                     update_cols = {
                         c.name: stmt.excluded[c.name]
                         for c in model.__table__.columns
-                        if c.name not in conflict_columns
+                        if c.name not in conflict_columns and c.name in provided_cols
                     }
                     stmt = stmt.on_conflict_do_update(
                         index_elements=conflict_columns,

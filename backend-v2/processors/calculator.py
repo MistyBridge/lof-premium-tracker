@@ -178,4 +178,5 @@ async def calc_daily_fields(
         "total_share": to_float(fund.get("total_share")),
         "data_source": fund.get("fetch_source", "push2"),
         "fetch_batch_id": fund.get("fetch_batch_id"),
+        "suspension_status": fund.get("suspension_status", "unknown"),
     }

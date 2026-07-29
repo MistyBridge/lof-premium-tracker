@@ -507,7 +507,8 @@ class LofFundMonitor {
                 var avgTxt = (avg != null) ? avgS + avg.toFixed(2) + '%' : '--';
                 return '<td class="col-avg-premium ' + avgCls + '">' + avgTxt + '</td>';
             case 'amount':
-                var displayAmount = fund.realtime_amount ?? fund.amount ?? 0;
+                // 优先使用 fund_daily.amount（日线K线计算），realtime_amount 可能存在单位偏差
+                var displayAmount = fund.amount ?? fund.realtime_amount ?? 0;
                 return '<td class="col-amount">' + formatAmount(displayAmount) + '</td>';
             case 'est_profit_rate':
                 var est = this.calcEstimatedProfit(fund);
