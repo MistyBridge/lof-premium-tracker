@@ -63,10 +63,11 @@ async def cache_get(key: str) -> Optional[Any]:
         return None
 
 
-async def cache_set(key: str, data: Any, ttl: int) -> None:
-    """写缓存，Redis 不可用静默跳过"""
+async def cache_set(key: str, data: Any, ttl: int, default=None) -> None:
+    """写缓存，Redis 不可用静默跳过。default 可指定自定义序列化器（如 datetime→isoformat）。"""
     try:
-        await _pool.set(key, json.dumps(data, ensure_ascii=False, default=str), ex=ttl)
+        payload = json.dumps(data, ensure_ascii=False, default=default) if default else json.dumps(data, ensure_ascii=False, default=str)
+        await _pool.set(key, payload, ex=ttl)
     except Exception:
         pass
 
