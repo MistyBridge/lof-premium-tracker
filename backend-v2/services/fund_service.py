@@ -2,6 +2,7 @@
 基金查询服务 — 列表/详情/批量/图表/持仓 + 实时合并 + 缓存击穿保护
 """
 import asyncio
+import hashlib
 import logging
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -23,8 +24,86 @@ SORT_WHITELIST = frozenset([
     "nav", "volume", "float_share", "aum", "code", "name",
 ])
 
+# 显式列清单：fund_snapshot 中后端实际读取 / 透传给前端的列。
+# 基线来自 migration.py 的物化视图定义；category / suspension_status / purchase_status /
+# float_share / is_suspended / aum 来自运行库 schema 漂移（代码确有引用，详见 _build_fund_conditions /
+# _add_is_suspended / _normalize_frontend_fields / SORT_WHITELIST）。
+# 运行时与实际列求交集（见 _snapshot_columns）：只查需要的列、绝不引用不存在的列，并自动排除
+# 漂移新增的重列，锁定热路径影响面（防“加列即退化”）。
+FUND_SNAPSHOT_COLUMNS = [
+    "code", "name", "fund_type", "market", "trade_date",
+    "close", "nav", "premium_rate", "turnover_rate", "change_pct",
+    "amount", "volume",
+    "category", "suspension_status", "purchase_status",
+    "float_share", "is_suspended", "aum",
+]
+
+_SNAPSHOT_COLS_CACHE: list[str] | None = None
+
+
+async def _snapshot_columns(session) -> list[str]:
+    """返回 fund_snapshot 实际存在的显式列（进程内缓存一次）。
+
+    与 FUND_SNAPSHOT_COLUMNS 求交集：只查后端需要的列，且绝不引用不存在的列。
+    缺失期望列 -> warning（说明期望清单需更新）；存在额外列 -> info（已排除，防漂移）。
+    """
+    global _SNAPSHOT_COLS_CACHE
+    if _SNAPSHOT_COLS_CACHE is not None:
+        return _SNAPSHOT_COLS_CACHE
+    # 注意：information_schema.columns 不含物化视图列，必须用 pg_catalog
+    # （relkind: r=表, v=视图, m=物化视图）
+    rows = await session.execute(text(
+        "SELECT a.attname FROM pg_class c "
+        "JOIN pg_attribute a ON a.attrelid = c.oid "
+        "WHERE c.relname = 'fund_snapshot' "
+        "  AND c.relkind IN ('r','v','m') "
+        "  AND a.attnum > 0 AND NOT a.attisdropped "
+        "ORDER BY a.attnum"
+    ))
+    actual = {r[0] for r in rows.fetchall()}
+    selected = [c for c in FUND_SNAPSHOT_COLUMNS if c in actual]
+    missing = [c for c in FUND_SNAPSHOT_COLUMNS if c not in actual]
+    if missing:
+        logger.warning(
+            "[fund_service] fund_snapshot 缺少期望列(已跳过,不查询): %s", missing
+        )
+    extra = actual - set(FUND_SNAPSHOT_COLUMNS)
+    if extra:
+        logger.info(
+            "[fund_service] fund_snapshot 存在额外列(已排除,防漂移): %s",
+            sorted(extra),
+        )
+    _SNAPSHOT_COLS_CACHE = selected
+    return selected
+
 
 # ── 基金列表 ────────────────────────────────────────────────
+
+
+def _cache_json_default(obj):
+    """缓存序列化器，与 API 的 JSON 输出保持一致的格式（datetime/date→isoformat）"""
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError(f"Type {type(obj)} not JSON serializable")
+
+
+def _build_list_cache_key(
+    page, size, sort, order, search, fund_type,
+    premium_min, premium_max, amount_min, amount_max,
+    turnover_min, filter_mode, user_id,
+) -> str:
+    """列表缓存键：所有影响返回结果的入参都纳入，避免不同筛选互相命中同一份缓存"""
+    raw = "|".join([
+        f"p={page}", f"s={size}", f"sort={sort}", f"o={order}",
+        f"q={search or ''}", f"ft={fund_type or ''}",
+        f"pmin={premium_min}", f"pmax={premium_max}",
+        f"amin={amount_min}", f"amax={amount_max}",
+        f"tmin={turnover_min}", f"fm={filter_mode or ''}",
+        f"u={user_id or ''}",
+    ])
+    return f"snapshot:fund_list:{hashlib.md5(raw.encode()).hexdigest()}"
 
 
 async def get_fund_list(
@@ -45,17 +124,82 @@ async def get_fund_list(
 ) -> dict:
     """
     基金列表查询，合并实时数据 + 缓存击穿保护。
+    读路径接入 Redis 缓存（snapshot:fund_list:{hash}），命中即返回，
+    大幅削减对 fund_snapshot / fund_daily 的查询压力（最高频接口的最大收益点）。
     返回 {"data": [...], "meta": {...}}
     """
+    # 先查缓存：命中直接返回，连实时数据都不用拉
+    key = _build_list_cache_key(
+        page, size, sort, order, search, fund_type,
+        premium_min, premium_max, amount_min, amount_max,
+        turnover_min, filter_mode, user_id,
+    )
+    if await is_redis_available():
+        hit = await cache_get(key)
+        if hit:
+            return hit
+        # 未命中：拿分布式锁避免缓存击穿（大量并发同时回源）
+        lock_key = f"lock:{key}"
+        if await acquire_lock(lock_key, ttl=5):
+            try:
+                realtime_data, realtime_available = await _get_realtime_with_protection()
+                is_trading = is_trading_day()
+                result = await _compute_fund_list(
+                    session_factory, realtime_data, realtime_available, is_trading,
+                    page, size, sort, order, search, fund_type,
+                    premium_min, premium_max, amount_min, amount_max,
+                    turnover_min, filter_mode, user_id,
+                )
+                # 盘中实时数据每 5 分钟一变 → 短 TTL；收盘后数据稳定 → 长 TTL
+                ttl = 30 if (realtime_available and is_trading) else 300
+                await cache_set(key, result, ttl, default=_cache_json_default)
+                return result
+            finally:
+                await release_lock(lock_key)
+        # 没抢到锁：短轮询等其他请求回填缓存，最多 ~2s
+        for _ in range(40):
+            await asyncio.sleep(0.05)
+            hit = await cache_get(key)
+            if hit:
+                return hit
+
+    # 兜底：Redis 不可用 / 抢锁失败且轮询未果 → 直接回源计算（不写缓存）
+    realtime_data, realtime_available = await _get_realtime_with_protection()
+    is_trading = is_trading_day()
+    return await _compute_fund_list(
+        session_factory, realtime_data, realtime_available, is_trading,
+        page, size, sort, order, search, fund_type,
+        premium_min, premium_max, amount_min, amount_max,
+        turnover_min, filter_mode, user_id,
+    )
+
+
+async def _compute_fund_list(
+    session_factory,
+    realtime_data,
+    realtime_available: bool,
+    is_trading: bool,
+    page: int = 1,
+    size: int = PAGE_SIZE_DEFAULT,
+    sort: str = "amount",
+    order: str = "desc",
+    search: Optional[str] = None,
+    fund_type: Optional[str] = None,
+    premium_min: Optional[float] = None,
+    premium_max: Optional[float] = None,
+    amount_min: Optional[float] = None,
+    amount_max: Optional[float] = None,
+    turnover_min: Optional[float] = None,
+    filter_mode: Optional[str] = None,
+    user_id: Optional[str] = None,
+) -> dict:
+    """列表核心计算（无缓存）。"""
     page = max(1, page)
     size = min(max(1, size), PAGE_SIZE_MAX)
     sort_col = sort if sort in SORT_WHITELIST else "amount"
     sort_dir = "DESC" if order.lower() == "desc" else "ASC"
 
-    # 1. 读实时数据（带缓存击穿保护）
-    realtime_data, realtime_available = await _get_realtime_with_protection()
-
-    # 2. 构建查询
+    # 构建查询
     conditions, params = _build_fund_conditions(
         search, fund_type, premium_min, premium_max,
         amount_min, amount_max, turnover_min,
@@ -63,31 +207,27 @@ async def get_fund_list(
     )
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
 
-    # 3. 查询数据
-    # 如果有 amount_min 筛选，需要先获取所有数据，然后在 Python 层筛选
-    # 因为 amount_min 筛选依赖实时数据（取今日实时成交额和昨日成交额的更大值）
+    # amount_min 依赖实时数据，需先取全部再 Python 层筛选
     need_python_filter = amount_min is not None
 
     async with session_factory() as session:
+        cols = ", ".join(await _snapshot_columns(session))
         if need_python_filter:
-            # 获取所有数据（不带分页）
             query = (
-                f"SELECT * FROM fund_snapshot {where} "
+                f"SELECT {cols} FROM fund_snapshot {where} "
                 f"ORDER BY {sort_col} {sort_dir} NULLS LAST, code ASC"
             )
             result = await session.execute(text(query), params)
             all_rows = [dict(r._mapping) for r in result.fetchall()]
         else:
-            # 查询总数
             count_row = await session.execute(
                 text(f"SELECT COUNT(*) FROM fund_snapshot {where}"), params
             )
             total = count_row.scalar() or 0
 
-            # 查询分页数据
             offset = (page - 1) * size
             query = (
-                f"SELECT * FROM fund_snapshot {where} "
+                f"SELECT {cols} FROM fund_snapshot {where} "
                 f"ORDER BY {sort_col} {sort_dir} NULLS LAST, code ASC "
                 f"LIMIT :limit OFFSET :offset"
             )
@@ -96,36 +236,28 @@ async def get_fund_list(
             result = await session.execute(text(query), params)
             rows = [dict(r._mapping) for r in result.fetchall()]
 
-    # 4. 合并实时数据
     if need_python_filter:
-        # 先合并实时数据到所有数据
         if realtime_available and realtime_data:
             all_rows = _merge_realtime(all_rows, realtime_data)
-
-        # 5.1 成交额筛选（取今日实时成交额和昨日成交额的更大值）
         filtered_rows = await _filter_by_amount(all_rows, amount_min, session_factory)
-
-        # 更新总数
         total = len(filtered_rows)
-
-        # 分页
         offset = (page - 1) * size
         rows = filtered_rows[offset:offset + size]
     else:
-        # 合并实时数据到分页数据
         if realtime_available and realtime_data:
             rows = _merge_realtime(rows, realtime_data)
 
-    # 5.5 停牌标记（前端需要 is_suspended 布尔值）
     rows = _add_is_suspended(rows)
 
-    # 5.6 合并三日均溢 + nav_date + aum + fetched_at + 字段对齐
+    # 4 个补充查询并发执行，把串行 4×RTT 压成 1×RTT
     codes = [r["code"] for r in rows if r.get("code")]
     if codes:
-        avg_map = await _batch_avg_premium_3d(session_factory, codes)
-        nav_map = await _batch_nav_date(session_factory, codes)
-        aum_map = await _batch_aum(session_factory, codes)
-        fetched_map = await _batch_fetched_at(session_factory, codes)
+        avg_map, nav_map, aum_map, fetched_map = await asyncio.gather(
+            _batch_avg_premium_3d(session_factory, codes),
+            _batch_nav_date(session_factory, codes),
+            _batch_aum(session_factory, codes),
+            _batch_fetched_at(session_factory, codes),
+        )
         for row in rows:
             c = row.get("code")
             row["avg_premium_3d"] = avg_map.get(c)
@@ -133,13 +265,11 @@ async def get_fund_list(
             row["aum"] = aum_map.get(c)
             row["fetched_at"] = fetched_map.get(c)
 
-    # 5.7 盘中注入估算净值
+    # 盘中注入估算净值
     from services.est_nav_service import get_est_nav_cache
     est_nav_map = await get_est_nav_cache()
     _normalize_frontend_fields(rows, est_nav_map)
 
-    # 6. 构建 meta
-    is_trading = is_trading_day()
     meta = {
         "page": page,
         "size": size,
@@ -163,8 +293,9 @@ async def get_fund_detail(session_factory, code: str) -> dict:
 
     async with session_factory() as session:
         # 基础数据
+        cols = ", ".join(await _snapshot_columns(session))
         row = await session.execute(
-            text("SELECT * FROM fund_snapshot WHERE code = :code"),
+            text(f"SELECT {cols} FROM fund_snapshot WHERE code = :code"),
             {"code": code},
         )
         fund = row.first()
@@ -199,15 +330,17 @@ async def get_fund_detail(session_factory, code: str) -> dict:
     # 停牌标记
     _add_is_suspended([fund_dict])
 
-    # 三日均溢 + nav_date + aum + fetched_at + 字段对齐
+    # 三日均溢 + nav_date + aum + fetched_at + 字段对齐（4 个查询并发）
     codes = [code]
-    avg_map = await _batch_avg_premium_3d(session_factory, codes)
+    avg_map, nav_map, aum_map, fetched_map = await asyncio.gather(
+        _batch_avg_premium_3d(session_factory, codes),
+        _batch_nav_date(session_factory, codes),
+        _batch_aum(session_factory, codes),
+        _batch_fetched_at(session_factory, codes),
+    )
     fund_dict["avg_premium_3d"] = avg_map.get(code)
-    nav_map = await _batch_nav_date(session_factory, codes)
     fund_dict["nav_date"] = nav_map.get(code)
-    aum_map = await _batch_aum(session_factory, codes)
     fund_dict["aum"] = aum_map.get(code)
-    fetched_map = await _batch_fetched_at(session_factory, codes)
     fund_dict["fetched_at"] = fetched_map.get(code)
 
     from services.est_nav_service import get_est_nav_cache
@@ -230,8 +363,9 @@ async def get_fund_batch(session_factory, codes: list[str]) -> list[dict]:
     codes = [c.zfill(6) for c in codes]
 
     async with session_factory() as session:
+        cols = ", ".join(await _snapshot_columns(session))
         result = await session.execute(
-            text("SELECT * FROM fund_snapshot WHERE code = ANY(:codes)"),
+            text(f"SELECT {cols} FROM fund_snapshot WHERE code = ANY(:codes)"),
             {"codes": codes},
         )
         rows = [dict(r._mapping) for r in result.fetchall()]
@@ -242,11 +376,13 @@ async def get_fund_batch(session_factory, codes: list[str]) -> list[dict]:
 
     rows = _add_is_suspended(rows)
 
-    # 三日均溢 + nav_date + aum + fetched_at + 字段对齐
-    avg_map = await _batch_avg_premium_3d(session_factory, codes)
-    nav_map = await _batch_nav_date(session_factory, codes)
-    aum_map = await _batch_aum(session_factory, codes)
-    fetched_map = await _batch_fetched_at(session_factory, codes)
+    # 三日均溢 + nav_date + aum + fetched_at + 字段对齐（4 个查询并发）
+    avg_map, nav_map, aum_map, fetched_map = await asyncio.gather(
+        _batch_avg_premium_3d(session_factory, codes),
+        _batch_nav_date(session_factory, codes),
+        _batch_aum(session_factory, codes),
+        _batch_fetched_at(session_factory, codes),
+    )
     for row in rows:
         c = row.get("code")
         row["avg_premium_3d"] = avg_map.get(c)
@@ -601,21 +737,18 @@ async def _batch_nav_date(
         return {}
 
     async with session_factory() as session:
+        # DISTINCT ON (code) 按 code 分组、取 trade_date 最大的一条 = 最新净值日期
+        # 原实现 ORDER BY trade_date DESC 后 Python 去重，一页 50 只最多拉 50×365 行
         result = await session.execute(text("""
-            SELECT code, nav_date
+            SELECT DISTINCT ON (code) code, nav_date
             FROM fund_daily
             WHERE code = ANY(:codes)
               AND nav_date IS NOT NULL
-            ORDER BY trade_date DESC
+            ORDER BY code, trade_date DESC
         """), {"codes": codes})
         rows = result.fetchall()
 
-    seen: dict[str, str] = {}
-    for row in rows:
-        code = row[0]
-        if code not in seen:
-            seen[code] = str(row[1])
-    return seen
+    return {row[0]: str(row[1]) for row in rows}
 
 
 async def _batch_aum(
