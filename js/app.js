@@ -49,7 +49,7 @@ class LofFundMonitor {
         try {
             this.threshold = parseFloat(localStorage.getItem('lof_threshold')) || 0;
             this.avgThreshold = parseFloat(localStorage.getItem('lof_avgThreshold')) || 0;
-            this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 100;
+            this.minAmount = parseFloat(localStorage.getItem('lof_minAmount')) || 0;
             this.showSuspended = localStorage.getItem('lof_showSuspended_v2') === '1';
             this.showUnpurchasable = localStorage.getItem('lof_showUnpurchasable_v2') === '1';
             this.commissionRate = parseFloat(localStorage.getItem('lof_commissionRate')) || 1.5;
@@ -58,7 +58,7 @@ class LofFundMonitor {
             this.darkMode = localStorage.getItem('lof_darkMode') || 'light';
             this.premiumBase = localStorage.getItem('lof_premium_base') || 'confirmed';
         } catch (e) {
-            this.threshold = 0; this.avgThreshold = 0; this.minAmount = 100;
+            this.threshold = 0; this.avgThreshold = 0; this.minAmount = 0;
             this.showSuspended = false; this.showUnpurchasable = false;
             this.commissionRate = 1.5; this.commissionMin = 5; this.maxCapital = 10000;
             this.darkMode = 'light';
@@ -994,7 +994,7 @@ class LofFundMonitor {
         const maxCapitalInput = document.getElementById('maxCapitalInput');
         if (thresholdInput) thresholdInput.value = 0;
         if (avgThresholdInput) avgThresholdInput.value = 0;
-        if (minAmountInput) minAmountInput.value = 100;
+        if (minAmountInput) minAmountInput.value = 0;
         const unpurchasableCheck = document.getElementById('showUnpurchasableCheck');
         const suspendedCheck = document.getElementById('showSuspendedCheck');
         if (unpurchasableCheck) unpurchasableCheck.checked = false;
