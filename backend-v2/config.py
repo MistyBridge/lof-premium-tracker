@@ -16,13 +16,15 @@ class Settings(BaseSettings):
 
     # === 数据库 ===
     DATABASE_URL: str  # 必填，格式: postgresql+asyncpg://user:pass@host:5432/dbname
-    DB_POOL_SIZE: int = 5
-    DB_MAX_OVERFLOW: int = 5
+    # 扩容：单请求列表会并发打 4~5 个补充查询，旧值 5+5 在少量并发下即打满 → 排队 → 偶发 5s 超时
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 10
     DB_POOL_RECYCLE: int = 3600
 
     # === Redis ===
     REDIS_URL: str = "redis://127.0.0.1:6379/0"
-    REDIS_MAX_CONNECTIONS: int = 20
+    # 列表接口接入缓存后，读路径对 Redis 压力上升，提高上限留余量
+    REDIS_MAX_CONNECTIONS: int = 30
 
     # === 采集参数 ===
     REFRESH_INTERVAL_SEC: int = 300
