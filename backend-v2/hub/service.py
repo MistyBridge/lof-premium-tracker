@@ -235,7 +235,7 @@ class ServiceHub:
         from services.system_service import ops_mv_refresh
         result = await ops_mv_refresh(self._sf, user_id)
         if result.get("status") == "ok":
-            await cache_delete("snapshot:fund_list")
+            await cache_delete_pattern("snapshot:fund_list:*")
         return ok(data=result)
 
     async def ops_cache_clear(self, user_id: str, pattern: str = "*"):
