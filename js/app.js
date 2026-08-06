@@ -1893,10 +1893,15 @@ class LofFundMonitor {
         title.textContent = (fund ? fund.code + ' ' + fund.name : code) + ' — 十大持仓';
         api.getFundHoldings(code).then(function (result) {
             var data = result.data;
-            if (!data || !data.holdings || data.holdings.length === 0) {
+            if (!data || !data.holdings || data.holdings.length === 0 || data.no_holdings_reason) {
                 var reason = data && data.no_holdings_reason;
                 var msg = reason || '暂无持仓数据';
-                body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">' + msg + '</td></tr>';
+                // 权重不足时显示简洁提示（后端已计算阈值）
+                var extraInfo = '';
+                if (reason && reason.indexOf('权重之和仅') > -1) {
+                    extraInfo = '<br><small style="color:var(--text3)">该基金持仓高度分散（常见于指数基金），十大重仓股代表性不足</small>';
+                }
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">' + msg + extraInfo + '</td></tr>';
                 source.textContent = data && data.quarter ? ('报告期: ' + data.quarter) : '';
             } else if (data.holdings && data.holdings.length > 0) {
                 body.innerHTML = data.holdings.map(function (h) {
