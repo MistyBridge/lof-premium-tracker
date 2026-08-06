@@ -561,6 +561,14 @@ async def get_fund_holdings(session_factory, code: str) -> dict:
             except Exception as e:
                 logger.warning("[HOLDINGS] 涨跌幅获取失败: %s", e, exc_info=True)
 
+    # 十大权重之和 < 30% 视为数据不完整（指数基金持仓高度分散）
+    holdings = data.get("holdings", [])
+    if holdings:
+        total_weight = sum(h.get("pct", 0) or 0 for h in holdings)
+        if total_weight < 30 and not data.get("no_holdings_reason"):
+            data["no_holdings_reason"] = (
+                "十大权重之和仅 {:.1f}%，数据不完整（常见于指数基金持仓分散）".format(total_weight)
+            )
     return data
 
 
