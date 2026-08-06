@@ -324,11 +324,15 @@ class UserAlert(Base):
 # ── 17. fund_est_nav ────────────────────────────────────────
 
 class FundEstNav(Base):
-    """估算净值快照（每日收盘后保存）"""
+    """估算净值快照（每5分钟切片 + 每日收盘，允许多条/天）"""
     __tablename__ = "fund_est_nav"
+    __table_args__ = (
+        PrimaryKeyConstraint("code", "trade_date", "snapshot_time"),
+    )
 
-    code: Mapped[str] = mapped_column(VARCHAR(6), primary_key=True)
-    trade_date: Mapped[date] = mapped_column(DATE, primary_key=True)
+    code: Mapped[str] = mapped_column(VARCHAR(6), nullable=False)
+    trade_date: Mapped[date] = mapped_column(DATE, nullable=False)
+    snapshot_time: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), nullable=False)
     est_nav: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(12, 4))
     est_change_pct: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(10, 4))
     holdings_contrib: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(10, 4))

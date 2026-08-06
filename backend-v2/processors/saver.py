@@ -399,8 +399,20 @@ async def save_job_log(
 # ── 估算净值快照 ────────────────────────────────────────────
 
 
-async def save_est_nav_batch(session_factory, records: list[dict], trade_date) -> dict:
-    """批量写入估算净值快照（每日收盘）"""
+async def save_est_nav_batch(session_factory, records: list[dict], trade_date, snapshot_time=None) -> dict:
+    """批量写入估算净值快照（支持每日收盘 + 5分钟切片）
+
+    Args:
+        session_factory: 数据库 session 工厂
+        records: 净值记录列表 [{code, est_nav, ...}]
+        trade_date: 交易日
+        snapshot_time: 快照时间（默认 UTC now，5分钟切片时传入当前北京时间）
+    """
+    from datetime import datetime, timezone as dt_timezone
+    if snapshot_time is None:
+        snapshot_time = datetime.now(dt_timezone.utc)
     for r in records:
         r['trade_date'] = trade_date
-    return await batch_upsert(session_factory, FundEstNav, records, ["code", "trade_date"])
+        r['snapshot_time'] = snapshot_time
+    return await batch_upsert(session_factory, FundEstNav, records,
+                              ["code", "trade_date", "snapshot_time"])
