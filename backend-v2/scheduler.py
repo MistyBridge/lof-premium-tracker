@@ -475,7 +475,7 @@ async def _qdii() -> list[str]:
 
 
 async def job_est_nav() -> None:
-    """估算净值 — 交易日 9:25-20:00 每5分钟计算，缓存 TTL=72h 自然过期"""
+    """估算净值 — 交易日 9:25-20:00 每5分钟计算（Redis 缓存 + SQL 入库）"""
     now = beijing_now()
     hour_min = now.hour * 100 + now.minute
 
@@ -485,8 +485,14 @@ async def job_est_nav() -> None:
 
     s = time.monotonic()
     try:
-        from services.est_nav_service import run_est_nav
+        from services.est_nav_service import run_est_nav, save_est_nav_slice
         data = await run_est_nav(_http_client)
+        if data:
+            # 5分钟切片写入 SQL（异步，失败不影响主流程）
+            try:
+                await save_est_nav_slice(data)
+            except Exception as e:
+                logger.warning("[EST_NAV] 切片入库失败: %s", e)
         _ok("est_nav", (time.monotonic() - s) * 1000, len(data))
     except Exception as e:
         _fail("est_nav", e)
