@@ -85,7 +85,7 @@ repo-lof-premium-tracker/
 ├── CHANGELOG_USER.md             # 用户更新日志
 ├── ROADMAP.md                    # 开发路线图
 ├── README.md                     # 项目说明
-├── LICENSE                       # AGPL-3.0
+├── LICENSE                       # MIT
 ├── railway.json                  # Railway部署配置
 ├── wrangler.toml                 # Cloudflare配置
 ├── _headers                      # CF Pages缓存策略

@@ -4,7 +4,7 @@
 
 ![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)
 ![Platform](https://img.shields.io/badge/platform-Web%20%7C%20API-green.svg)
-![License](https://img.shields.io/badge/license-AGPLv3-red.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688.svg)
 ![DB](https://img.shields.io/badge/db-PostgreSQL%2014-336791.svg)
@@ -217,7 +217,7 @@ lof-premium-tracker/
 ├── CHANGELOG.md                  # 技术更新日志
 ├── CHANGELOG_USER.md             # 用户更新日志
 ├── HANDOFF.md                    # 交接文档
-└── LICENSE                       # AGPL-3.0
+└── LICENSE                       # MIT
 ```
 
 ---
@@ -248,6 +248,6 @@ lof-premium-tracker/
 
 ## License
 
-**GNU AGPL v3.0** — 仅供个人学习与非商业场景免费使用。商业用途须获得作者书面授权。
+**MIT License** — 可自由使用、修改、分发，包括商业用途，仅需保留版权声明。
 
 Copyright © 2026 [MistyBridge](https://github.com/MistyBridge)
