@@ -133,7 +133,7 @@ async def save_est_nav_snapshot(client: httpx.AsyncClient) -> int:
     返回保存的记录数。
     """
     from processors.saver import save_est_nav_batch
-    from utils import beijing_today_date
+    from utils import beijing_now, beijing_today_date
 
     data = await run_est_nav(client)
     if not data:
@@ -141,7 +141,47 @@ async def save_est_nav_snapshot(client: httpx.AsyncClient) -> int:
         return 0
 
     trade_date = beijing_today_date()
+    snapshot_time = beijing_now()
+    records = _est_nav_data_to_records(data)
+
     sf = database.async_session_factory
+    result = await save_est_nav_batch(sf, records, trade_date, snapshot_time)
+    saved = result.get('success', 0)
+    logger.info("[EST_NAV_SNAPSHOT] 保存完成: %d 条, trade_date=%s", saved, trade_date)
+    return saved
+
+
+async def save_est_nav_slice(data: dict) -> int:
+    """
+    5分钟切片入库 — 将 run_est_nav 的计算结果写入 fund_est_nav 表。
+    每个切片都有独立的 snapshot_time，允许多条/天。
+
+    Args:
+        data: run_est_nav() 返回的计算结果 {fund_code: {est_nav, ...}}
+
+    Returns:
+        保存的记录数
+    """
+    from processors.saver import save_est_nav_batch
+    from utils import beijing_now, beijing_today_date
+
+    if not data:
+        return 0
+
+    trade_date = beijing_today_date()
+    snapshot_time = beijing_now()
+    records = _est_nav_data_to_records(data)
+
+    sf = database.async_session_factory
+    result = await save_est_nav_batch(sf, records, trade_date, snapshot_time)
+    saved = result.get('success', 0)
+    logger.info("[EST_NAV_SLICE] 切片入库: %d 条, snapshot=%s", saved,
+                snapshot_time.strftime('%H:%M:%S'))
+    return saved
+
+
+def _est_nav_data_to_records(data: dict) -> list[dict]:
+    """将 run_est_nav() 返回的 dict 转为 saver 所需 records 列表"""
     records = []
     for fc, info in data.items():
         records.append({
@@ -153,12 +193,7 @@ async def save_est_nav_snapshot(client: httpx.AsyncClient) -> int:
             'coverage': info.get('coverage'),
             'nav': info.get('nav'),
         })
-
-    sf = database.async_session_factory
-    result = await save_est_nav_batch(sf, records, trade_date)
-    saved = result.get('success', 0)
-    logger.info("[EST_NAV_SNAPSHOT] 保存完成: %d 条, trade_date=%s", saved, trade_date)
-    return saved
+    return records
 
 
 async def calc_single_est_nav(sf, code: str) -> dict | None:
@@ -199,15 +234,25 @@ async def calc_single_est_nav(sf, code: str) -> dict | None:
             if not holdings:
                 return None
 
-            # 3. 获取资产信息
+            # 3. 获取资产信息（含名称）
             need_quotes = {h['asset_code'] for h in holdings}
             if idx_tcode:
                 need_quotes.add(idx_tcode)
 
             r3 = await session.execute(sql_text(
-                'SELECT code, market, asset_type FROM asset_master WHERE code = ANY(:codes)'
+                'SELECT code, name, market, asset_type FROM asset_master WHERE code = ANY(:codes)'
             ), {'codes': list(need_quotes)})
-            asset_info = {row[0]: {'code': row[0], 'market': row[1], 'asset_type': row[2]} for row in r3.fetchall()}
+            asset_info = {
+                row[0]: {'code': row[0], 'name': row[1] or '', 'market': row[2], 'asset_type': row[3]}
+                for row in r3.fetchall()
+            }
+            # 注入名称到持仓
+            for h in holdings:
+                ac = h['asset_code']
+                if ac in asset_info:
+                    h['name'] = asset_info[ac]['name']
+                else:
+                    h['name'] = ''
 
             quote_assets = []
             for acode in need_quotes:
