@@ -184,27 +184,67 @@ async def _sync_asset_inventory(session_factory, holdings_records: list[dict]) -
     每条 holdings_record: {code: fund_code, quarter: ..., holdings: [...]}
     holdings 列表每项: {code, name?, pct, rank, shares?}
     """
+    from datetime import date as _date
+    from sqlalchemy import text
+
+    # 收集本批次涉及的所有基金代码（用于后续清理旧数据）
+    fund_codes = set()
     # 收集所有 (fund_code, stock_code, weight, report_date)
     mappings = []
     asset_set = {}  # code -> {name, market, asset_type}
 
-    from datetime import date as _date
-    default_date = _date(2025, 12, 31)
+    # 统计被过滤的异常数据
+    skipped_bad_weight = 0
+    skipped_no_code = 0
+
+    # 季度 → 报告日期映射
+    def _quarter_to_date(quarter: str | None) -> _date:
+        """将 '2026Q2' 转为 2026-06-30"""
+        if quarter and len(quarter) >= 6:
+            try:
+                y = int(quarter[:4])
+                q = int(quarter[5])  # 'Q2' → 2
+                month = q * 3  # Q1→3(Mar), Q2→6(Jun), Q3→9(Sep), Q4→12(Dec)
+                return _date(y, month, 1) if month < 12 else _date(y, 12, 31)
+            except (ValueError, IndexError):
+                pass
+        # fallback: 当前季度最后一天
+        import datetime as _dt
+        now = _dt.date.today()
+        m = ((now.month - 1) // 3 + 1) * 3
+        if m > 12:
+            m = 12
+        return _date(now.year, m, 1) if m < 12 else _date(now.year, 12, 31)
+
+    MAX_WEIGHT = 100.0  # 单只股票持仓权重 > 100% 视为数据异常
 
     for rec in holdings_records:
         fund_code = rec.get("code", "")
+        if not fund_code:
+            continue
+        fund_codes.add(fund_code)
+        report_date = _quarter_to_date(rec.get("quarter"))
         holdings = rec.get("holdings", [])
         if not isinstance(holdings, list):
             continue
         for h in holdings:
             scode = h.get("code", "")
             if not scode:
+                skipped_no_code += 1
                 continue
             market = _detect_market(scode)
             if not market:
                 continue
-            sname = h.get("name", scode)
             weight = h.get("pct")
+            # 校验: 权重 > 100% 是明显的数据错误
+            if weight is not None and weight > MAX_WEIGHT:
+                logger.warning(
+                    "资产清单: %s 持仓 %s 权重 %.2f%% 异常, 已跳过",
+                    fund_code, scode, weight,
+                )
+                skipped_bad_weight += 1
+                continue
+            sname = h.get("name", scode)
             if scode not in asset_set:
                 asset_set[scode] = {
                     "code": scode,
@@ -215,12 +255,26 @@ async def _sync_asset_inventory(session_factory, holdings_records: list[dict]) -
             mappings.append({
                 "fund_code": fund_code,
                 "asset_code": scode,
-                "report_date": default_date,
+                "report_date": report_date,
                 "weight": weight,
             })
 
     if not asset_set:
         return
+
+    # 先清理本批次涉及基金的旧数据（同一报告期），防止 stale mapping 残留
+    if fund_codes:
+        try:
+            async with session_factory() as session:
+                async with session.begin():
+                    # 删除本批次基金的所有旧映射（无视 report_date，彻底清除）
+                    await session.execute(
+                        text("DELETE FROM fund_asset_map WHERE fund_code = ANY(:codes)"),
+                        {"codes": list(fund_codes)},
+                    )
+            logger.debug("资产清单: 清理 %d 只基金旧映射", len(fund_codes))
+        except Exception as e:
+            logger.error("资产清单清理旧数据失败: %s", e)
 
     # Upsert asset_master
     assets = list(asset_set.values())
@@ -240,10 +294,10 @@ async def _sync_asset_inventory(session_factory, holdings_records: list[dict]) -
             ["fund_code", "asset_code", "report_date"],
         )
 
-    logger.info(
-        "资产清单同步: %d 资产, %d 映射",
-        len(assets), len(mappings),
-    )
+    summary_parts = [f"{len(assets)} 资产, {len(mappings)} 映射"]
+    if skipped_bad_weight:
+        summary_parts.append(f"{skipped_bad_weight} 异常权重(>100%%)已跳过")
+    logger.info("资产清单同步: %s", ", ".join(summary_parts))
 
 
 # ── 物化视图刷新 ────────────────────────────────────────────
