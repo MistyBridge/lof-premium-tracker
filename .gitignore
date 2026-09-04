@@ -43,6 +43,19 @@ backend-v2/snapshots/
 credentials.md
 secrets.md
 
+# 推送/部署辅助脚本（内含密钥，禁止提交）
+push_github.sh
+git_push_helper.sh
+git_askpass.sh
+bg_push.sh
+push_via_api.sh
+push_via_api.py
+scripts/cf_deploy_step1.py
+
+# 开发工具产物
+.codegraph/
+.workbuddy/
+
 # Node
 node_modules/
 
