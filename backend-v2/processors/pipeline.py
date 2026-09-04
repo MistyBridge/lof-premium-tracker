@@ -345,6 +345,14 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
             FROM ranked WHERE rn = 1
         """))
         fallback_map = {r[0]: dict(r._mapping) for r in fallback_rows.fetchall()}
+        # 读取「前一个交易日」的收盘价（用于计算真实 change_pct；无前日数据时保持 NULL）
+        prev_rows = await session.execute(sql_text("""
+            SELECT DISTINCT ON (code) code, close
+            FROM fund_daily
+            WHERE trade_date < :save_date AND close IS NOT NULL
+            ORDER BY code, trade_date DESC
+        """), {"save_date": save_date_obj})
+        prev_close_map = {r[0]: {"close": r[1]} for r in prev_rows.fetchall()}
 
     # 3. 合并数据（缺失字段从历史替补）
     merged = []
@@ -402,7 +410,8 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
     # 4. 计算派生字段
     calculated = []
     for fund in merged:
-        result = await calc_daily_fields(fund, prev_day=None, recent_3d=[])
+        prev_day = prev_close_map.get(fund.get("code"))
+        result = await calc_daily_fields(fund, prev_day=prev_day, recent_3d=[])
         calculated.append(result)
 
     # 5. 写 DB
