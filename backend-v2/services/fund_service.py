@@ -239,7 +239,7 @@ async def _compute_fund_list(
     if need_python_filter:
         if realtime_available and realtime_data:
             all_rows = _merge_realtime(all_rows, realtime_data)
-        filtered_rows = await _filter_by_amount(all_rows, amount_min, session_factory)
+        filtered_rows = await _filter_by_amount(all_rows, amount_min)
         total = len(filtered_rows)
         offset = (page - 1) * size
         rows = filtered_rows[offset:offset + size]
@@ -640,30 +640,15 @@ def _add_is_suspended(rows: list[dict]) -> list[dict]:
     return rows
 
 
-async def _filter_by_amount(rows: list[dict], amount_min: float, session_factory) -> list[dict]:
+async def _filter_by_amount(rows: list[dict], amount_min: float) -> list[dict]:
     """
-    成交额筛选：取今日实时成交额和昨日成交额的更大值
-    - 今日实时成交额：realtime_amount（来自Redis实时数据）
-    - 昨日成交额：从fund_daily获取昨日数据
+    成交额筛选：取 max(昨日总成交额, 今日实时成交额) 作为筛选值。
+    - 今日实时成交额：realtime_amount（腾讯 field[37] 精确值）
+    - 昨日总成交额：fund_snapshot.amount（最近一个已收盘交易日=昨日 的总量）
+    非交易时段无实时数据时，自动退回到昨日总量。
     """
     if not rows:
         return rows
-
-    # 获取所有基金的昨日成交额
-    codes = [r["code"] for r in rows if r.get("code")]
-    if not codes:
-        return rows
-
-    # 从 fund_daily 获取昨日成交额
-    from datetime import date, timedelta
-    yesterday = date.today() - timedelta(days=1)
-
-    async with session_factory() as session:
-        result = await session.execute(text(
-            "SELECT code, amount FROM fund_daily "
-            "WHERE code = ANY(:codes) AND trade_date = :yesterday"
-        ), {"codes": codes, "yesterday": yesterday})
-        prev_amount_map = {r[0]: r[1] for r in result.fetchall()}
 
     filtered = []
     for row in rows:
@@ -671,17 +656,11 @@ async def _filter_by_amount(rows: list[dict], amount_min: float, session_factory
         if not code:
             continue
 
-        # 今日实时成交额（如果有实时数据）
-        realtime_amount = row.get("realtime_amount") or 0
+        realtime_amount = row.get("realtime_amount") or 0   # 今日实时成交额
+        snapshot_amount = row.get("amount") or 0            # 昨日(最近收盘日)总量
 
-        # 昨日成交额（从 fund_daily 获取）
-        prev_amount = prev_amount_map.get(code) or 0
-
-        # fund_snapshot.amount（来自 fund_daily 最新记录，可能是今日或昨日）
-        snapshot_amount = row.get("amount") or 0
-
-        # 取三者的更大值
-        max_amount = max(realtime_amount, prev_amount, snapshot_amount)
+        # 筛选值 = max(昨日总成交额, 今日实时成交额)
+        max_amount = max(snapshot_amount, realtime_amount)
 
         if max_amount >= amount_min:
             filtered.append(row)
@@ -868,21 +847,23 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
         if row.get("can_purchase") is None:
             ps = row.get("purchase_status")
             row["can_purchase"] = STATUS_TO_CAN.get(ps)
-        # 成交额补算：amount=0 或明显异常(amount==volume)时，用 volume*100*close 估算
+        # 成交额：盘中优先展示当天实时累计成交额(腾讯 field[37]，精确)，缺失时补算
         amt = row.get("amount")
         vol = row.get("volume")
         cl = row.get("close")
         rt_amt = row.get("realtime_amount") or 0
         # 计算理论成交额（volume 是手数，1手=100股）
         calc_amt = round(vol * 100 * cl, 2) if vol and vol > 0 and cl and cl > 0 else None
-        # 修正 amount：为0时用计算值，等于volume时(混淆了成交量)也用计算值
-        if (amt is None or amt == 0) and calc_amt:
+        # 盘中/有实时成交额时，直接用当天实时累计成交额（替代昨日快照值）
+        if rt_amt and rt_amt > 0:
+            row["amount"] = rt_amt
+        elif (amt is None or amt == 0) and calc_amt:
             row["amount"] = calc_amt
         elif amt and vol and abs(amt - vol) < 0.02 and calc_amt:
             # amount 和 volume 几乎相等 → 按成交量误存了,用计算值修正
             row["amount"] = calc_amt
-        # 前端筛选使用的值：取 snapshot_amount / realtime_amount / calc_amt 中最大值
-        row["filter_amount"] = max(amt or 0, rt_amt, calc_amt or 0)
+        # 前端筛选使用的值：取 max(昨日总成交额(snapshot), 今日实时成交额(realtime_amount))
+        row["filter_amount"] = max(amt or 0, rt_amt)
 
 
 async def _batch_avg_premium_3d(

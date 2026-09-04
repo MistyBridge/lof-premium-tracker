@@ -104,7 +104,8 @@ async def _fetch_tencent_realtime(
         try:
             resp = await client.get(f"{TENCENT_QT_URL}{codes_str}", timeout=10)
             resp.raise_for_status()
-            items = _parse_tencent_text(resp.text)
+            # qt.gtimg.cn 返回 GBK，显式解码避免基金名乱码（与 asset_quote 一致）
+            items = _parse_tencent_text(resp.content.decode("gbk", errors="replace"))
             all_items.extend(items)
         except Exception as e:
             failed_batches += 1
@@ -144,24 +145,41 @@ def _parse_tencent_text(text: str) -> list[dict]:
             # 市场判断: sh=沪市, sz=深市
             market = "SH" if market_prefix == "sh" else "SZ"
 
-            fields = val_part.strip('"').split("~")
-            if len(fields) < 10:
+            fields = val_part.strip('";\n').split("~")
+            # 核心字段至少到涨跌幅[32],不足则跳过(历史上该类短响应也被异常吞掉,行为一致)
+            if len(fields) < 33:
                 continue
 
             price_val = safe_float(fields[3])
             volume_val = safe_float(fields[6])
-            # 腾讯 qt 成交量(手) × 100 股/手 × 价格 = 成交额(元)
-            realtime_amount = round(price_val * volume_val * 100, 2) if price_val and volume_val else None
+
+            def _field(idx):
+                """安全取高位字段，响应长度不足时返回 None"""
+                return safe_float(fields[idx]) if len(fields) > idx else None
+
+            # 真实成交额: 腾讯 field[37] = 成交额(万元) → 元;缺失时回退为 price×volume(手)×100 估算
+            _amount_wan = _field(37)
+            if _amount_wan:
+                realtime_amount = round(_amount_wan * 10000, 2)
+            else:
+                realtime_amount = round(price_val * volume_val * 100, 2) if price_val and volume_val else None
 
             items.append({
                 "code": code,
-                "name": fields[1],                 # 名称
-                "price": price_val,                 # 最新价
-                "change_pct": safe_float(fields[32]),  # 涨跌幅
-                "volume": volume_val,               # 成交量
-                "amount": realtime_amount,           # 成交额（price × volume）
+                "name": fields[1],                  # 名称
+                "price": price_val,                  # 最新价
+                "change_pct": safe_float(fields[32]),  # 涨跌幅%
+                "volume": volume_val,                # 成交量(手)
+                "amount": realtime_amount,           # 成交额(元)
                 "prev_close": safe_float(fields[4]),  # 昨收
-                "market": market,                    # 市场 SH/SZ
+                "turnover_rate": _field(38),          # 换手率%
+                "amplitude": _field(43),              # 振幅%
+                "float_market_cap": _field(44),       # 流通市值(亿)
+                "total_market_cap": _field(45),       # 总市值(亿)
+                "limit_up": _field(47),               # 涨停价
+                "limit_down": _field(48),             # 跌停价
+                "volume_ratio": _field(49),           # 量比
+                "market": market,                     # 市场 SH/SZ
                 "fetch_source": "tencent",
             })
         except Exception:
