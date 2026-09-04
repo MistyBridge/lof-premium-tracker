@@ -233,9 +233,9 @@ def _parse_fee(html):
 def _parse_holdings(text):
     """
     解析持仓页面。返回 dict: {"holdings": [...], "quarter": "2026Q1"}
-    topline=10 时表格有 9 列。
     注意: apidata 是 JavaScript 对象字面量（key 无引号），不能用 json.loads。
-    用正则直接提取 content 值和 arryear。
+    页面包含两张表: 表1=本季度股票持仓(9列), 表2=上季度对比(7列,列含义不同)。
+    只解析第一张表，防止跨表误读（如把表2的持仓市值当成占比）。
     """
     # 提取 content: "...", arryear 之间的内容
     m = re.search(r'content\s*:\s*"(.*?)",\s*arryear', text, re.DOTALL)
@@ -252,23 +252,31 @@ def _parse_holdings(text):
     if qm:
         quarter = f"{qm.group(1)}Q{qm.group(2)}"
 
-    rows = re.findall(r'<td[^>]*>(.*?)</td>', content, re.DOTALL)
-    COLS = 9  # topline=10 时每行 9 列
-    holdings = []
-    for i in range(0, len(rows), COLS):
-        if i + COLS - 1 >= len(rows):
-            break
-        rank = safe_int(_strip_html(rows[i]).strip())
-        code = _strip_html(rows[i + 1]).strip()
-        name = _strip_html(rows[i + 2]).strip()
-        pct = safe_float(_strip_html(rows[i + 6]).replace('%', ''))
-        shares = safe_float(_strip_html(rows[i + 7]).replace(',', ''))
+    # 只提取第一张 <table> 的内容（本季度持仓），忽略后面的对比表
+    first_table = re.search(r'<table[^>]*>(.*?)</table>', content, re.DOTALL)
+    if not first_table:
+        return {"holdings": [], "quarter": quarter}
+    table_html = first_table.group(1)
 
-        # 校验: 代码必须是 6 位数字（过滤历史季度对比表、股吧链接等垃圾行）
+    # 解析表格行
+    rows = re.findall(r'<tr[^>]*>(.*?)</tr>', table_html, re.DOTALL)
+    holdings = []
+    for row_html in rows:
+        tds = re.findall(r'<td[^>]*>(.*?)</td>', row_html, re.DOTALL)
+        if len(tds) < 7:
+            continue
+
+        code = _strip_html(tds[1]).strip()
+        name = _strip_html(tds[2]).strip()
         if not code or not re.match(r'^\d{6}$', code):
-            break
+            continue
         if not name:
-            break
+            continue
+
+        rank = safe_int(_strip_html(tds[0]).strip())
+        # 第7列(index 6) = 占净值比例（表1固定含义）
+        pct = safe_float(_strip_html(tds[6]).replace('%', ''))
+        shares = safe_float(_strip_html(tds[7]).replace(',', '')) if len(tds) > 7 else None
 
         holdings.append({
             "rank": rank or (len(holdings) + 1),
@@ -278,9 +286,9 @@ def _parse_holdings(text):
             "shares": shares,
         })
 
-        # topline=10: 只取前 10 条（页面可能包含历史季度对比表，列数不同）
         if len(holdings) >= 10:
             break
+
     return {"holdings": holdings, "quarter": quarter}
 
 

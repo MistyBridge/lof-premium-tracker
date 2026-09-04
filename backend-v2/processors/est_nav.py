@@ -68,20 +68,21 @@ async def load_fund_meta(session: AsyncSession) -> dict[str, dict]:
 
 async def load_holdings(session: AsyncSession) -> dict[str, list[dict]]:
     """
-    加载所有基金的持仓权重。
-    返回 {fund_code: [{asset_code, weight}, ...]}
+    加载所有基金的持仓权重 + 资产名称。
+    返回 {fund_code: [{asset_code, weight, name}, ...]}
     """
     r = await session.execute(text('''
-        SELECT fund_code, asset_code, weight
-        FROM fund_asset_map
-        WHERE weight > 0
-        ORDER BY fund_code, weight DESC
+        SELECT fam.fund_code, fam.asset_code, fam.weight, am.name
+        FROM fund_asset_map fam
+        LEFT JOIN asset_master am ON am.code = fam.asset_code
+        WHERE fam.weight > 0
+        ORDER BY fam.fund_code, fam.weight DESC
     '''))
     holdings: dict[str, list[dict]] = {}
-    for fc, ac, wt in r.fetchall():
+    for fc, ac, wt, name in r.fetchall():
         if fc not in holdings:
             holdings[fc] = []
-        holdings[fc].append({'asset_code': ac, 'weight': float(wt)})
+        holdings[fc].append({'asset_code': ac, 'weight': float(wt), 'name': (name or '')})
     return holdings
 
 
@@ -119,6 +120,7 @@ def calc_est_nav(
             holdings_contrib += contrib
         holding_details.append({
             'code': acode,
+            'name': h.get('name', ''),
             'weight': round(weight, 2),
             'change_pct': round(pct, 2) if pct is not None else None,
             'contrib': round(contrib, 4),

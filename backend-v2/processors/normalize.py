@@ -118,25 +118,32 @@ def _normalize_realtime_push2(r: dict) -> dict:
 
 def _normalize_realtime_tencent(r: dict) -> dict:
     """腾讯 QT 字段映射"""
+    volume = to_optional_int(r.get("volume"))
+    turnover_rate = to_optional_float(r.get("turnover_rate"))
+    # 与 push2 路径一致：从 volume(手) + 换手率% 反推场内份额
+    float_share = _calc_float_share_from_turnover(volume, turnover_rate)
     return {
         "code": clean_code(r.get("code")),
         "name": str(r.get("name") or "").strip(),
         "realtime_price": to_optional_float(r.get("price")),
+        # 腾讯第81字段是否为净值待实测确认，暂不引入，避免错误净值污染前端
         "realtime_nav": None,
         "realtime_amount": to_optional_float(r.get("amount")),
-        "volume": to_optional_int(r.get("volume")),
+        "volume": volume,
         "change_pct": to_optional_float(r.get("change_pct")),
-        "limit_up": None,
-        "limit_down": None,
-        "turnover_rate": None,
-        "volume_ratio": None,
+        "limit_up": to_optional_float(r.get("limit_up")),
+        "limit_down": to_optional_float(r.get("limit_down")),
+        "turnover_rate": turnover_rate,
+        "volume_ratio": to_optional_float(r.get("volume_ratio")),
+        "amplitude": to_optional_float(r.get("amplitude")),
         "outer_volume": None,
         "inner_volume": None,
         "prev_close": to_optional_float(r.get("prev_close")),
-        "total_market_cap": None,
-        "float_market_cap": None,
+        "total_market_cap": to_optional_float(r.get("total_market_cap")),
+        "float_market_cap": to_optional_float(r.get("float_market_cap")),
+        "float_share": float_share,
         "market": str(r.get("market", "SZ")).upper(),
-        "is_suspended": to_optional_int(r.get("volume")) == 0,
+        "is_suspended": volume == 0,
         "fetch_source": "tencent",
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }

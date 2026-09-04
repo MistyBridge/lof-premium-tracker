@@ -59,7 +59,8 @@ async def _fetch_single_nav(client: httpx.AsyncClient, code: str) -> dict | None
         "nav_date": nav_date,
         "purchase_status": _parse_purchase_status(latest.get("SGZT", "")),
         "redeem_status": _parse_redeem_status(latest.get("SHZT", "")),
-        "daily_return": safe_float(latest.get("RZZL")),
+        # 与 normalize_nav 读键对齐 (normalize.py: nav_change_pct)
+        "nav_change_pct": safe_float(latest.get("RZZL")),
         "fetch_source": "lsjz",
     }
 

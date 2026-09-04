@@ -1,0 +1,16 @@
+#!/bin/bash
+export PGPASSWORD=jk_deploy_2026
+echo "=== report_date distribution ==="
+psql -h 101.200.129.61 -U deploy -d jinkuaicha -c "SELECT report_date, COUNT(*) FROM fund_asset_map GROUP BY report_date ORDER BY report_date DESC LIMIT 5;"
+echo ""
+echo "=== TOP weights for 162216 ==="
+psql -h 101.200.129.61 -U deploy -d jinkuaicha -c "SELECT fund_code, asset_code, report_date, weight FROM fund_asset_map WHERE fund_code='162216' ORDER BY weight DESC LIMIT 15;"
+echo ""
+echo "=== 688525 for 162216 ==="
+psql -h 101.200.129.61 -U deploy -d jinkuaicha -c "SELECT * FROM fund_asset_map WHERE fund_code='162216' AND asset_code='688525';"
+echo ""
+echo "=== count weights > 100 ==="
+psql -h 101.200.129.61 -U deploy -d jinkuaicha -c "SELECT COUNT(*) AS bad_weight_count FROM fund_asset_map WHERE weight > 100;"
+echo ""
+echo "=== TOP bad weights ==="
+psql -h 101.200.129.61 -U deploy -d jinkuaicha -c "SELECT fund_code, asset_code, weight FROM fund_asset_map WHERE weight > 100 ORDER BY weight DESC LIMIT 15;"

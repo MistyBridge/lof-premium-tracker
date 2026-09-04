@@ -72,14 +72,32 @@ class ServiceHub:
                 pass
         if not est:
             return ok(data=None)
-        # 补充持仓名称
+        # 补充持仓名称（优先 fund_holdings 前十，兜底 asset_master）
         holdings_data = est.get('holding_details', [])
         if holdings_data:
             try:
-                h_result = await get_fund_holdings(self._sf, code)
-                h_map = {h['code']: h['name'] for h in h_result.get('holdings', [])}
-                for hd in holdings_data:
-                    hd['name'] = h_map.get(hd['code'], '')
+                from sqlalchemy import text as _sql_text
+                # 收集缺少名称的资产
+                need_names = [
+                    hd['code'] for hd in holdings_data
+                    if not hd.get('name')
+                ]
+                if need_names:
+                    # 第一层：从前十持仓获取名称
+                    h_result = await get_fund_holdings(self._sf, code)
+                    h_map = {h['code']: h['name'] for h in h_result.get('holdings', [])}
+                    # 第二层：asset_master 兜底（前十持仓可能不包含全部持仓）
+                    still_missing = [c for c in need_names if c not in h_map or not h_map.get(c)]
+                    if still_missing:
+                        async with self._sf() as session:
+                            r = await session.execute(_sql_text(
+                                'SELECT code, name FROM asset_master WHERE code = ANY(:codes)'
+                            ), {'codes': still_missing})
+                            for row in r.fetchall():
+                                h_map[row[0]] = row[1] or ''
+                    for hd in holdings_data:
+                        if not hd.get('name') and hd['code'] in h_map:
+                            hd['name'] = h_map[hd['code']]
             except Exception:
                 pass
         return ok(data=est)

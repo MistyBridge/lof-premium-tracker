@@ -83,7 +83,7 @@ async def _fetch_batch(
     Returns:
         {tencent_code: change_pct} 字典
     """
-    url = 'http://qt.gtimg.cn/q=' + ','.join(tencent_codes)
+    url = 'https://qt.gtimg.cn/q=' + ','.join(tencent_codes)
     resp = await client.get(url, timeout=REQUEST_TIMEOUT)
     resp.raise_for_status()
 
