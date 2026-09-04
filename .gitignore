@@ -52,6 +52,12 @@ push_via_api.sh
 push_via_api.py
 scripts/cf_deploy_step1.py
 
+# 其他辅助/临时脚本与产物（防止误提交）
+pr_body.txt
+tmp_query.sql
+tmp_script.sh
+venv_err.txt
+
 # 开发工具产物
 .codegraph/
 .workbuddy/
