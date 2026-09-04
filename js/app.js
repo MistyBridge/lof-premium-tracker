@@ -20,7 +20,7 @@ function formatAmount(val) {
     var abs = Math.abs(val);
     if (abs >= 1000000000) return (val / 100000000).toFixed(2) + '亿';
     if (abs >= 100000) return (val / 10000).toFixed(2) + '万';
-    return val.toFixed(0) + '元';
+    return val.toFixed(2) + '元';
 }
 
 /**
