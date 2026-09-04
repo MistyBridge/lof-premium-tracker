@@ -7,7 +7,7 @@ import json
 import logging
 from datetime import date, timedelta
 
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from models import FundDaily, FundFee, FundHoldings, FundInfo, AssetMaster, FundAssetMap, FundEstNav
@@ -46,7 +46,8 @@ async def batch_upsert(
                     for record in batch:
                         provided_cols.update(record.keys())
                     update_cols = {
-                        c.name: stmt.excluded[c.name]
+                        # 防 NULL 覆盖: 新值为 NULL 时保留 DB 已有值,而不是用 NULL 清空真实数据
+                        c.name: func.coalesce(stmt.excluded[c.name], model.__table__.c[c.name])
                         for c in model.__table__.columns
                         if c.name not in conflict_columns and c.name in provided_cols
                     }
