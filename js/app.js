@@ -155,8 +155,12 @@ class LofFundMonitor {
         this.isLoading = true;
         var self = this;
         // Phase 1: 检查缓存，仅在首次加载时渲染缓存（避免旧缓存覆盖新数据）
-        var cachedFunds = Cache.get('funds');
-        var cachedMeta = Cache.get('fundsMeta');
+        //
+        // 缓存必须按板块分开：首页预热拉的是 LOF，如果 LOF/ETF 共用 'funds'
+        // 这一个键，从首页点进 ETF 时第 1 阶段会先把 LOF 的缓存当作 ETF 列表
+        // 渲染出来（有内容、但内容不对，是最难察觉的一类错）。
+        var cachedFunds = Cache.get(self._fundsCacheKey());
+        var cachedMeta = Cache.get(self._fundsCacheKey('fundsMeta'));
         if (cachedFunds && cachedFunds.length > 0 && self.funds.length === 0) {
             self.funds = cachedFunds;
             self.applyFilters();
@@ -184,8 +188,8 @@ class LofFundMonitor {
             self.funds = result.data.filter(function(f) {
                 return f.premium_rate !== null && f.premium_rate !== undefined;
             });
-            Cache.set('funds', self.funds, 300000);
-            Cache.set('fundsMeta', {
+            Cache.set(self._fundsCacheKey(), self.funds, 300000);
+            Cache.set(self._fundsCacheKey('fundsMeta'), {
                 last_fetch: ts,
                 interval: 5,
                 total: totalFromApi,
@@ -225,6 +229,67 @@ class LofFundMonitor {
         var cfg = window.LOF_CONFIG || {};
         if (mode === 'etf') return cfg.ETF_PAGE_SIZE || 2400;
         return cfg.DEFAULT_PAGE_SIZE || 600;
+    }
+
+    // 按板块隔离的缓存键。首页预热固定写 LOF 那一套，见 index.html 的 preload。
+    _fundsCacheKey(which) {
+        return (which || 'funds') + ':' + (this.filterMode || 'lof');
+    }
+
+    // ── ETF 子类（由 fund_type 派生，已逐类核对过成员）──────────────────
+    //   指数型-海外股票 / QDII → 跨境
+    //   指数型-固收            → 债券
+    //   指数型-其他            → 商品（成员全是黄金/上海金/有色/能化/豆粕等商品期货）
+    //   指数型-股票            → 股票
+    //
+    // 为什么必须区分：跨境 ETF 的溢价率**天然偏高**（外汇额度受限、申购长期
+    // 暂停、场内外无法自由套利），跟股票 ETF 那种"流动性差导致的异常高溢价"
+    // 完全不是一回事。用户看到 27% 的溢价率时必须一眼看出这是跨境品种，
+    // 否则会把它当成套利机会。
+    _etfClass(fund) {
+        if (this.filterMode !== 'etf') return '';
+        var t = (fund && fund.fund_type) || '';
+        if (t === '指数型-海外股票' || t === 'QDII') return '跨境';
+        if (t === '指数型-固收') return '债券';
+        if (t === '指数型-其他') return '商品';
+        if (t === '指数型-股票') return '股票';
+        return '';
+    }
+
+    _etfClassBadge(fund) {
+        var cls = this._etfClass(fund);
+        // 股票型占 9 成以上，给它打标只会变成噪声
+        if (!cls || cls === '股票') return '';
+        var styles = {
+            '跨境': 'etf-tag--cross',
+            '债券': 'etf-tag--bond',
+            '商品': 'etf-tag--commodity'
+        };
+        var tips = {
+            '跨境': '跨境ETF（含 QDII）：净值披露滞后 1~2 个交易日，且额度受限时'
+                    + '申购长期暂停、场内外无法自由套利 —— 溢价率天然偏高，'
+                    + '不代表存在可执行的套利机会。',
+            '债券': '债券ETF：场内多用于现金管理，做市充分，折溢价通常很小。',
+            '商品': '商品ETF：跟踪黄金/上海金或有色、能化、豆粕等商品期货。'
+        };
+        return '<span class="etf-tag ' + styles[cls] + '" title="' + tips[cls] + '">'
+               + cls + '</span>';
+    }
+
+    // 溢价率到底用的是哪一天的净值？
+    //
+    // 跨境/QDII 的净值披露天然滞后，此时"溢价率 = (T日价格 − T-x净值)/T-x净值"，
+    // 两个交易日的行情被混算，数值会偏高。后端已把 nav_date 如实记录下来，
+    // 前端必须把它摆在溢价率旁边 —— 否则用户会以为这就是当日的真实溢价。
+    // 这里只做展示，不做任何数值修正（修正需要对齐的净值，拿不到就该留空）。
+    _navLagMark(fund) {
+        if (!fund || !fund.nav_date || !fund.trade_date) return '';
+        if (fund.nav_date >= fund.trade_date) return '';
+        var md = String(fund.nav_date).slice(5);   // YYYY-MM-DD → MM-DD
+        var tip = '该溢价率用的是 ' + fund.nav_date + ' 的净值，而行情是 '
+                  + fund.trade_date + ' 的 —— 净值为 T-x，未反映最近交易日的'
+                  + '净值变动，跨境/QDII 基金因披露时点必然如此。';
+        return '<span class="nav-lag" title="' + tip + '">滞后' + md + '</span>';
     }
 
     // ===== 三日平均溢价率（从后端API获取，字段 avg_premium_3d）=====
@@ -485,7 +550,7 @@ class LofFundMonitor {
                 return '<td class="col-code frozen" style="left:36px"><button class="row-star' + starActive + '" data-code="' + fund.code + '">' + (starActive ? '★' : '☆') + '</button><span class="code-text">' + fund.code + '</span></td>';
             case 'name':
                 var displayName = fund.short_name || fund.name;
-                return '<td class="col-name frozen" style="left:135px" title="' + fund.name + '">' + this.truncateName(displayName) + '</td>';
+                return '<td class="col-name frozen" style="left:135px" title="' + fund.name + '">' + this._etfClassBadge(fund) + this.truncateName(displayName) + '</td>';
             case 'price':
                 var p = (fund.realtime_price != null) ? fund.realtime_price.toFixed(3) : (fund.price != null) ? fund.price.toFixed(3) : '--';
                 return '<td class="col-price">' + p + '</td>';
@@ -514,7 +579,7 @@ class LofFundMonitor {
                 var eprTxt = (epr != null) ? eprS + epr.toFixed(2) + '%' : '--';
                 var leftCls = isEst ? 'prem-sub' : 'prem-main';
                 var rightCls = isEst ? 'prem-main' : 'prem-sub';
-                return '<td class="col-premium ' + cls + '"><span class="' + leftCls + '">' + prTxt + '</span><span class="prem-sep">/</span><span class="' + rightCls + '">' + eprTxt + '</span></td>';
+                return '<td class="col-premium ' + cls + '"><span class="' + leftCls + '">' + prTxt + '</span><span class="prem-sep">/</span><span class="' + rightCls + '">' + eprTxt + '</span>' + this._navLagMark(fund) + '</td>';
             case 'avg_premium_3d':
                 var avg = fund.avg_premium_3d;
                 var avgCls = avg > 0 ? 'premium-positive' : avg < 0 ? 'premium-negative' : 'premium-zero';
