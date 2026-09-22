@@ -85,9 +85,14 @@ class SyncResult:
     szse_count: int = 0
     sse_count: int = 0
     supplement_count: int = 0
+    tencent_count: int = 0
+    tencent_idle: int = 0
+    tencent_gone: int = 0
+    tencent_exists: int = 0
     db_total: int = 0
     to_add: list[tuple[str, str]] = field(default_factory=list)
     to_remove: list[tuple[str, str]] = field(default_factory=list)
+    stale: list[tuple[str, str]] = field(default_factory=list)
     conflicts: list[tuple[str, str, str]] = field(default_factory=list)
     uncovered: list[tuple[str, str]] = field(default_factory=list)
     inserted: int = 0
@@ -233,6 +238,152 @@ def fetch_sse(max_pages: int = 20) -> tuple[dict[str, dict], bool]:
     return out, complete
 
 
+# ── 腾讯行情反推扫描 ──────────────────────────────────────────────────
+# 不依赖任何"名单接口"：直接批量查询代码段，由行情反推真实存在的场内基金。
+# 这是最可靠的兜底源 —— 只要基金还在上市交易，腾讯就一定有行情记录；
+# 已删除的代码则完全不返回。实测扫描 5 万个代码仅需约 40 秒。
+TENCENT_QT_URL = "https://qt.gtimg.cn/q="
+TENCENT_SCAN_BATCH = 400          # 单次批量（URL 长度安全上限内）
+TENCENT_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+# 需扫描的场内基金代码段
+TENCENT_SCAN_RANGES = (
+    ("sh", 500000, 519999),   # 沪市：LOF 501/502/506、ETF 51x、REITs 508、老封闭 500
+    ("sz", 150000, 169999),   # 深市：ETF 15x、LOF 16x
+    ("sz", 180000, 189999),   # 深市：REITs 18x
+)
+
+# 腾讯 qt 字段索引（沪深布局一致，各 88 字段）
+_QT_NAME, _QT_PRICE, _QT_VOLUME = 1, 3, 6
+_QT_TIME, _QT_AMOUNT = 30, 37
+
+
+def _qt_float(value: str) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _qt_batch(codes: list[str], retries: int = 3) -> dict[str, list[str]]:
+    """批量查询腾讯行情，返回 {sh510050: [字段...]}。"""
+    url = TENCENT_QT_URL + ",".join(codes)
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers={
+                "User-Agent": TENCENT_UA,
+                "Referer": "https://qt.gtimg.cn/",
+            })
+            with urllib.request.urlopen(req, timeout=25) as resp:
+                text = resp.read().decode("gbk", "replace")
+            out: dict[str, list[str]] = {}
+            for line in text.split(";"):
+                line = line.strip()
+                if not line or "=" not in line:
+                    continue
+                key = line.split("=")[0].replace("v_", "")
+                out[key] = line.split('="', 1)[1].rstrip('"').split("~")
+            return out
+        except Exception:  # noqa: BLE001 - 网络层杂错统一重试
+            if attempt == retries - 1:
+                return {}
+            time.sleep(1.5 * (attempt + 1))
+    return {}
+
+
+def _classify_by_name(code: str, name: str) -> str | None:
+    """按名称 + 代码段归类。返回 None 表示不纳入管理范围。
+
+    判定顺序 LOF > REITs > ETF 是有意为之：有一批基金的名称同时含多个
+    关键词，但实际类别是 LOF —— "500ETF联接LOF"、"美国REIT精选LOF"
+    都是场内可申赎的上市开放式基金，不是 ETF / REITs。反过来真正的
+    REITs（如"华夏金茂消费REIT"）与 ETF（如"沪深300ETF"）名称里不会
+    出现 LOF，所以 LOF 放最前不会误伤。
+    """
+    upper = name.upper()
+    if "LOF" in upper:
+        return "LOF"
+    if "REIT" in upper:
+        return "REITs"
+    if "ETF" in upper:
+        return "ETF"
+    if "货币" in name or "现金" in name:
+        return "货币"
+    six = code[2:]
+    if six[:3] in ("501", "502", "506") or six[:2] == "16":
+        return "LOF"
+    if six[:3] in ("508", "180"):
+        return "REITs"
+    if six[:2] in ("51", "15", "56", "58"):
+        return "ETF"
+    return None
+
+
+def fetch_by_tencent_scan() -> tuple[dict[str, dict], dict[str, dict], set[str], bool]:
+    """扫描代码段反推场内基金名单。
+
+    返回 (在交易名单, 无交易名单, 腾讯已删除的代码集合, 扫描是否完整)。
+
+    判定"是否仍在上市交易"用的是成交额/成交量与时间戳，而不是价格 ——
+    退市的老封闭基金（如 500001 国泰金泰封闭）腾讯依然保留最后价格，
+    但其时间戳会停在 09:00:00 且成交额为 0。
+
+    三档含义:
+      active  有成交, 或时间戳晚于 09:00:00  -> 确定仍在上市交易
+      idle    时间戳停在 09:00:00 且无成交    -> 疑似退市/长期停牌, 仅报告不自动删
+      gone    扫描过但腾讯完全不返回          -> 代码已从腾讯库中删除, 强退市证据
+
+    无交易与已删除名单只用于识别退市候选，不作为新增来源。
+    第四个返回值表示所有批次是否都成功 —— 有批次失败时调用方不得据此
+    判断"退市"（否则网络抖动会被误当成退市证据）。
+    """
+    active: dict[str, dict] = {}
+    idle: dict[str, dict] = {}
+    scanned_codes: set[str] = set()
+    failed_batches = 0
+
+    for prefix, start, end in TENCENT_SCAN_RANGES:
+        nums = list(range(start, end + 1))
+        batches = (len(nums) + TENCENT_SCAN_BATCH - 1) // TENCENT_SCAN_BATCH
+        for bi in range(batches):
+            chunk = nums[bi * TENCENT_SCAN_BATCH:(bi + 1) * TENCENT_SCAN_BATCH]
+            codes = [f"{prefix}{n:06d}" for n in chunk]
+            scanned_codes.update(c[2:] for c in codes)
+            rows = _qt_batch(codes)
+            if not rows:
+                failed_batches += 1
+            for key, fields in rows.items():
+                if len(fields) <= _QT_TIME:
+                    continue
+                code = key[2:]
+                name = fields[_QT_NAME]
+                category = _classify_by_name(key, name)
+                if not category:
+                    continue
+                market = "SH" if prefix == "sh" else "SZ"
+                entry = {"name": name, "category": category, "market": market}
+                amount = _qt_float(fields[_QT_AMOUNT])
+                volume = _qt_float(fields[_QT_VOLUME])
+                stamp = fields[_QT_TIME]
+                # 有成交, 或时间戳晚于 09:00:00（集合竞价初始值）→ 仍在交易
+                if amount > 0 or volume > 0 or not stamp.endswith("090000"):
+                    active[code] = entry
+                else:
+                    idle[code] = entry
+            time.sleep(0.12)
+        logger.info("[UNIVERSE] 腾讯扫描 %s %d-%d 完成，累计在交易 %d",
+                    prefix, start, end, len(active))
+
+    gone = scanned_codes - set(active) - set(idle)
+    complete = failed_batches == 0
+    logger.info("[UNIVERSE] 腾讯扫描共 %d 个代码：在交易 %d，无交易 %d，已删除 %d，"
+                "失败批次 %d%s",
+                len(scanned_codes), len(active), len(idle), len(gone),
+                failed_batches, "" if complete else " [不完整]")
+    return active, idle, gone, complete
+
+
 def load_supplement() -> dict[str, dict]:
     """加载已核查的沪市补充名单（在线源不可用时的兜底）。
 
@@ -328,13 +479,22 @@ async def sync_universe(*, apply: bool, prune: bool = False,
 
     szse, szse_ok = fetch_szse()
     sse, sse_ok = fetch_sse()
+    try:
+        qt_active, qt_idle, qt_gone, qt_complete = fetch_by_tencent_scan()
+    except Exception as exc:  # noqa: BLE001 - 扫描失败不阻断其它源
+        logger.warning("[UNIVERSE] 腾讯扫描失败，跳过该源: %s", exc)
+        qt_active, qt_idle, qt_gone, qt_complete = {}, {}, set(), False
+
     result.szse_count = len(szse)
     result.sse_count = len(sse)
+    result.tencent_count = len(qt_active)
+    result.tencent_idle = len(qt_idle)
+    result.tencent_gone = len(qt_gone)
     result.szse_complete = szse_ok
     result.sse_complete = sse_ok
 
-    if not szse_ok and not sse_ok:
-        raise RuntimeError("深交所与沪市两个数据源都抓取失败")
+    if not szse_ok and not sse_ok and not qt_active:
+        raise RuntimeError("深交所、沪市、腾讯扫描三个数据源全部失败")
 
     # 运行期覆盖判定 = 静态能力 ∩ 本次抓取完整性
     coverage = dict(COVERAGE)
@@ -344,6 +504,14 @@ async def sync_universe(*, apply: bool, prune: bool = False,
     if not sse_ok:
         for cat in categories:
             coverage[("SH", cat)] = False
+    # 腾讯扫描覆盖沪深全市场（按代码段穷举）。仅当扫描本身完整成功时才用它
+    # 提升覆盖判定 —— 否则网络抖动会把"没扫到"误当成"已退市"而误删。
+    if qt_complete:
+        for cat in categories:
+            coverage[("SH", cat)] = True
+            coverage[("SZ", cat)] = True
+    else:
+        logger.warning("[UNIVERSE] 腾讯扫描不完整，本轮不据此提升覆盖判定")
 
     supplement = load_supplement()
     result.supplement_count = len(supplement)
@@ -352,8 +520,15 @@ async def sync_universe(*, apply: bool, prune: bool = False,
     authoritative.update(szse)
     authoritative.update(sse)
     authoritative.update(supplement)
+    # 腾讯扫描放最后: 它是"有行情"的直接证据, 覆盖最完整, 名称也最新
+    authoritative.update(qt_active)
     result.authoritative = len(authoritative)
     result.names = {code: info.get("name", "") for code, info in authoritative.items()}
+
+    # 腾讯"有记录"（在交易 ∪ 无交易）= 代码仍存在于腾讯库中, 构成存续证据。
+    # 只有 gone（扫描过但腾讯完全不返回）才是强退市证据。
+    qt_exists = set(qt_active) | set(qt_idle)
+    result.tencent_exists = len(qt_exists)
 
     db = await load_db_categories(categories)
     result.db_total = len(db)
@@ -369,6 +544,12 @@ async def sync_universe(*, apply: bool, prune: bool = False,
     for code, cats in sorted(db.items()):
         if code in authoritative:
             continue
+        # 腾讯仍有行情记录（只是当天没成交）→ 不能当退市删掉, 单独报告。
+        # 这正是 fetch_by_tencent_scan 文档里说的"idle 仅报告不自动删"。
+        if code in qt_exists:
+            for category in sorted(cats):
+                result.stale.append((code, category))
+            continue
         for category in sorted(cats):
             if coverage.get((market_of(code), category), False):
                 result.to_remove.append((code, category))
@@ -381,10 +562,10 @@ async def sync_universe(*, apply: bool, prune: bool = False,
 
     logger.info(
         "[UNIVERSE] 同步完成: 权威=%d 库内=%d 新增=%d(写入%d) "
-        "疑似退市=%d(删除%d) 冲突=%d 不可判定=%d",
+        "疑似退市=%d(删除%d) 有记录但无成交=%d 冲突=%d 不可判定=%d",
         result.authoritative, result.db_total, len(result.to_add),
         result.inserted, len(result.to_remove), result.deleted,
-        len(result.conflicts), len(result.uncovered))
+        len(result.stale), len(result.conflicts), len(result.uncovered))
     return result
 
 

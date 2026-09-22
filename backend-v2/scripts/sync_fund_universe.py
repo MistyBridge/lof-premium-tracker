@@ -52,6 +52,10 @@ async def run(apply: bool, prune: bool) -> int:
     print(f"  权威名单(我们管理的类别): {result.authoritative} 只"
           f"  [深交所 {result.szse_count} + 沪市在线 {result.sse_count}"
           f" + 补充名单 {result.supplement_count}]")
+    print(f"  腾讯扫描               : 在交易 {result.tencent_count}"
+          f" / 无成交 {result.tencent_idle}"
+          f" / 已删除 {result.tencent_gone}"
+          f" / 有记录合计 {result.tencent_exists}")
     if not result.szse_complete:
         print("    ! 深交所抓取不完整 —— 本轮不判定深市退市")
     if not result.sse_complete:
@@ -60,6 +64,7 @@ async def run(apply: bool, prune: bool) -> int:
     print(f"  待新增                 : {len(result.to_add)} 只")
     print(f"  类别不一致(仅报告)     : {len(result.conflicts)} 只")
     print(f"  官方已无(疑似退市)     : {len(result.to_remove)} 只")
+    print(f"  有记录但当天无成交     : {len(result.stale)} 条")
     print(f"  无法判定(源未覆盖)     : {len(result.uncovered)} 只")
 
     if result.to_add:
@@ -83,6 +88,15 @@ async def run(apply: bool, prune: bool) -> int:
         print("\n  ── 官方已无（疑似退市/终止上市）──")
         for code, category in result.to_remove:
             print(f"    {code}  [{category}]  {result.names.get(code, '')}")
+
+    if result.stale:
+        print(f"\n  ── 腾讯有记录但当天无成交（保留，共 {len(result.stale)} 条）──")
+        print("     这些代码腾讯仍返回行情，只是当天零成交/长期停牌，")
+        print("     不足以判定退市，因此不自动删除。")
+        for code, category in result.stale[:10]:
+            print(f"    {code}  [{category}]  {result.names.get(code, '')}")
+        if len(result.stale) > 10:
+            print(f"    ... 其余 {len(result.stale) - 10} 条省略")
 
     if result.uncovered:
         print(f"\n  ── 源未覆盖、无法判定（保留不删，共 {len(result.uncovered)} 条）──")
