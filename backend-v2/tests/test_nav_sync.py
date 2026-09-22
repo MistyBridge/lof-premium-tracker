@@ -212,3 +212,64 @@ class TestUpsertNavRows:
         session = _FakeSession(rowcount=5)
         assert await nav_sync.upsert_nav_rows(
             session, [{"code": "510300", "nav": 1.0, "nav_date": "2026-09-22"}]) == 5
+
+
+class TestMergeNavMap:
+    """nav:all 必须"合并且不倒退"，否则提高采集频率只会放大风险。"""
+
+    def test_keeps_existing_codes_not_in_incoming(self):
+        """一次部分失败不能把其它基金从缓存里抹掉（daily_save 依赖它）。"""
+        prev = {"510300": {"nav": 1.0, "nav_date": "2026-09-22"},
+                "159509": {"nav": 2.3833, "nav_date": "2026-09-21"}}
+        incoming = {"510300": {"nav": 1.1, "nav_date": "2026-09-22"}}
+        out = nav_sync.merge_nav_map(prev, incoming)
+        assert set(out) == {"510300", "159509"}
+        assert out["510300"]["nav"] == 1.1
+        assert out["159509"]["nav"] == 2.3833
+
+    def test_does_not_overwrite_newer_nav_with_older(self):
+        """lsjz 偶尔返回滞后的行；整体替换会把刚拿到的新净值打回旧值。"""
+        prev = {"159509": {"nav": 2.3833, "nav_date": "2026-09-21"}}
+        incoming = {"159509": {"nav": 2.3086, "nav_date": "2026-09-18"}}
+        out = nav_sync.merge_nav_map(prev, incoming)
+        assert out["159509"]["nav"] == 2.3833
+        assert out["159509"]["nav_date"] == "2026-09-21"
+
+    def test_accepts_newer_nav(self):
+        prev = {"159509": {"nav": 2.3086, "nav_date": "2026-09-18"}}
+        incoming = {"159509": {"nav": 2.3833, "nav_date": "2026-09-21"}}
+        assert nav_sync.merge_nav_map(prev, incoming)["159509"]["nav"] == 2.3833
+
+    def test_same_date_correction_is_applied(self):
+        """同日修订（净值更正）必须能覆盖。"""
+        prev = {"510300": {"nav": 4.6179, "nav_date": "2026-09-22"}}
+        incoming = {"510300": {"nav": 4.6180, "nav_date": "2026-09-22"}}
+        assert nav_sync.merge_nav_map(prev, incoming)["510300"]["nav"] == 4.6180
+
+    def test_handles_date_objects(self):
+        from datetime import date
+
+        prev = {"510300": {"nav": 1.0, "nav_date": date(2026, 9, 22)}}
+        incoming = {"510300": {"nav": 2.0, "nav_date": date(2026, 9, 18)}}
+        assert nav_sync.merge_nav_map(prev, incoming)["510300"]["nav"] == 1.0
+
+    def test_ignores_junk(self):
+        prev = {"510300": {"nav": 1.0, "nav_date": "2026-09-22"}}
+        incoming = {"": {"nav": 9.9, "nav_date": "2026-09-23"},
+                    "510300": "not-a-dict"}
+        out = nav_sync.merge_nav_map(prev, incoming)
+        assert set(out) == {"510300"}
+        assert out["510300"]["nav"] == 1.0
+
+    def test_handles_empty_inputs(self):
+        assert nav_sync.merge_nav_map({}, {}) == {}
+        assert nav_sync.merge_nav_map(None, None) == {}
+        assert nav_sync.merge_nav_map(
+            {}, {"510300": {"nav": 1.0, "nav_date": "2026-09-22"}}
+        )["510300"]["nav"] == 1.0
+
+    def test_missing_nav_date_sorts_lowest(self):
+        """没有 nav_date 的条目视为最旧，不能覆盖有日期的。"""
+        prev = {"510300": {"nav": 1.0, "nav_date": "2026-09-22"}}
+        incoming = {"510300": {"nav": 9.9}}
+        assert nav_sync.merge_nav_map(prev, incoming)["510300"]["nav"] == 1.0

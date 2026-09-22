@@ -4,7 +4,7 @@
 
 按正确顺序补跑一遍日常采集链路，用于补数据或人工核对：
 
-    1. fetch_nav / fetch_nav_qdii   拉最新净值（写 Redis nav:all + fund_daily）
+    1. fetch_nav                    拉最新净值（含 QDII，写 Redis nav:all + fund_daily）
     2. 净值到位校验                  目标交易日净值覆盖不足则拒绝 daily_save
     3. fetch_kline                  拉全部代码最近 N 天 K 线（含新入名单的基金）
     4. daily_save                   算 close/nav/premium_rate 并刷新物化视图
@@ -112,7 +112,7 @@ async def main(apply: bool, target: date, force: bool) -> int:
 
     if not apply:
         print("  计划：")
-        print("    1) fetch_nav / fetch_nav_qdii  拉最新净值")
+        print("    1) fetch_nav  拉最新净值（含 QDII）")
         print("    2) 校验目标日净值到位率（阈值 "
               f"{int(NAV_COVERAGE_MIN * 100)}%），不足则跳过 daily_save")
         print("    3) fetch_kline                 拉全部代码 K 线")
@@ -135,8 +135,9 @@ async def main(apply: bool, target: date, force: bool) -> int:
     try:
         # ── 1. 净值 ──
         emit("【1】拉取最新净值")
+        # fetch_nav 的代码集已并集了 QDII（见 scheduler._nav_codes），
+        # 原先紧跟的 job_fetch_nav_qdii() 是同一批请求的第二遍，已去掉。
         await sch.job_fetch_nav()
-        await sch.job_fetch_nav_qdii()
         same_day, total = await _nav_coverage(target)
         print(f"  fund_daily[{target}] 行数 {total}，其中 nav_date 同日 {same_day}")
 

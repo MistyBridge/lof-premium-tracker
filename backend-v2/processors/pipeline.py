@@ -187,7 +187,12 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
     validated = [r for r in (validate_nav(r) for r in normalized) if r is not None]
 
     nav_map = {r["code"]: r for r in validated if r.get("code")}
-    await cache_set("nav:all", nav_map, ttl=86400)  # 24小时，确保daily_save能读到
+    # 合并写入而不是整体替换：一次部分失败不该让 nav:all 丢掉其它基金
+    # （daily_save 依赖它算当日溢价率），也不该用更旧的净值覆盖更新的。
+    # 详见 processors/nav_sync.merge_nav_map。
+    from processors.nav_sync import merge_nav_map
+    _prev_nav = await cache_get("nav:all") or {}
+    await cache_set("nav:all", merge_nav_map(_prev_nav, nav_map), ttl=86400)
 
     # 同步更新 fund_daily 表的 NAV 数据。
     # 写入统一走 nav_sync.upsert_nav_rows：净值落到它自己的日期行，并用该行的
