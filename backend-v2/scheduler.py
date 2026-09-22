@@ -460,13 +460,17 @@ async def job_reload_calendar() -> None:
 
 async def _codes() -> list[str]:
     try:
+        from services.universe_service import COLLECT_CATEGORIES
         async with _sf()() as session:
-            result = await session.execute(text(
-                "SELECT code FROM fund_category WHERE category IN ('LOF', 'ETF') ORDER BY code"
-            ))
+            result = await session.execute(
+                text("SELECT code FROM fund_category WHERE category = ANY(:cats) "
+                     "ORDER BY code"),
+                {"cats": list(COLLECT_CATEGORIES)})
             codes = [r[0] for r in result.fetchall()]
             if not codes:
-                logger.warning("[SCHEDULER] _codes() 返回空列表，fund_category 可能无 LOF/ETF 数据")
+                logger.warning("[SCHEDULER] _codes() 返回空列表，"
+                               "fund_category 可能无 %s 数据",
+                               "/".join(COLLECT_CATEGORIES))
             return codes
     except Exception as e:
         logger.warning("[SCHEDULER] _codes() 查询失败: %s", e)
