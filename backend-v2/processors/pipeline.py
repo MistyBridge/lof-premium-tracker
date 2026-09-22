@@ -324,7 +324,17 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
     # 2. 从 DB 读取基金列表 + 申购限额 + 最近历史数据（替补用）
     from sqlalchemy import text as sql_text
     async with session_factory() as session:
-        rows = await session.execute(sql_text("SELECT code, name FROM fund_code_list"))
+        # 名单必须与 scheduler._codes() 的采集范围保持一致（fund_category 的 LOF/ETF）。
+        # 历史实现读的是 fund_code_list —— 那张表自 2026-05-30 起再无任何写入路径，
+        # 导致日终入库只覆盖 673 只老基金：新补进采集名单的基金虽然实时行情已进 Redis，
+        # 却永远算不出 close / premium_rate / change_pct。
+        rows = await session.execute(sql_text("""
+            SELECT fc.code, COALESCE(fi.name, '') AS name
+            FROM fund_category fc
+            LEFT JOIN fund_info fi ON fi.code = fc.code
+            WHERE fc.category IN ('LOF', 'ETF')
+            ORDER BY fc.code
+        """))
         code_list = [dict(r._mapping) for r in rows.fetchall()]
         # 读取申购限额
         fee_rows = await session.execute(sql_text(
