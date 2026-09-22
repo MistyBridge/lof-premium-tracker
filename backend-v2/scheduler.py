@@ -243,8 +243,6 @@ async def job_fetch_nav() -> None:
     try:
         from fetchers.fundamental import fetch_fundamental
         from cache import cache_set
-        from datetime import date as _date
-        from sqlalchemy import text as sql_text
         codes = await _codes()
         logger.info("[SCHEDULER] fetch_nav 开始: %d 只基金", len(codes))
         if not codes:
@@ -265,35 +263,18 @@ async def job_fetch_nav() -> None:
             sf = _sf()
             if sf:
                 async with sf() as session:
-                    for item in r:
-                        code = item.get("code")
-                        nav = item.get("nav")
-                        nav_date = item.get("nav_date")
-                        if not code or not nav or not nav_date:
-                            continue
-                        if isinstance(nav_date, str):
-                            try:
-                                nav_date = _date.fromisoformat(nav_date)
-                            except (ValueError, TypeError):
-                                continue
-                        try:
-                            result = await session.execute(sql_text(
-                                "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
-                                "VALUES (:code, :nav_date, :nav, :nav_date, 'confirmed', 'lsjz') "
-                                "ON CONFLICT (code, trade_date) DO UPDATE SET "
-                                "nav = EXCLUDED.nav, nav_date = EXCLUDED.nav_date, "
-                                "nav_type = 'confirmed', nav_source = 'lsjz'"
-                            ), {"code": code, "nav": float(nav), "nav_date": nav_date})
-                            if result.rowcount > 0:
-                                updated += 1
-                        except Exception:
-                            pass
+                    # 净值写入统一走 nav_sync.upsert_nav_rows：
+                    # 除了把净值落到它自己的日期行，还会用该行的收盘价把
+                    # premium_rate 一起对齐，避免同一行里 nav 与溢价率口径不一致。
+                    from processors.nav_sync import (
+                        sync_nav_to_latest_row, upsert_nav_rows,
+                    )
+                    updated = await upsert_nav_rows(session, r)
 
                     # 2.1 净值归位到最新交易日行（物化视图取最新交易日数据）
                     # 每次都重新归位并按新净值重算 premium_rate，不再"只补一次"。
                     # 详见 processors/nav_sync.py 的模块说明。
                     try:
-                        from processors.nav_sync import sync_nav_to_latest_row
                         await sync_nav_to_latest_row(session, codes)
                     except Exception as e:
                         logger.warning("[SCHEDULER] fetch_nav 净值归位失败: %s", e)
