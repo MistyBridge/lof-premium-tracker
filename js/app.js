@@ -419,6 +419,21 @@ class LofFundMonitor {
         lines.push(`<div class="profit-detail-row ${amtClass} total"><span>预计收益额</span><span>${est.amount > 0 ? '+' : ''}${est.amount.toFixed(2)}元</span></div>`);
         lines.push(`</div>`);
 
+        // ETF 的套利路径跟 LOF 完全不是一回事，必须说清楚 ——
+        // 否则上面那个"预计收益率"会被当成零售投资者能落袋的收益。
+        // LOF 是"申购份额 → 场内卖出"，ETF 是"一级市场用一篮子证券申购 → 场内卖出"，
+        // 后者有很高的最小申赎单位，跨境品种还常年暂停申购。
+        if (this.filterMode === 'etf') {
+            const klass = this._etfClass(fund);
+            const note = (klass === '跨境')
+                ? '跨境ETF 的溢价套利必须走<b>一级市场申购</b>（一篮子境外证券或现金替代），'
+                  + '最小申赎单位很高，且额度受限时长期<b>暂停申购</b> —— '
+                  + '上面的收益率在暂停申购期间无法执行，高溢价往往只是供求失衡的体现。'
+                : 'ETF 的折溢价套利必须走<b>一级市场申购/赎回</b>（组合证券 + 现金替代），'
+                  + '通常有 50 万份以上的最小申赎单位，并非零售可执行；'
+                  + '仅在二级市场买卖无法锁定折溢价。';
+            lines.push(`<div class="profit-detail-caveat">⚠️ ${note}</div>`);
+        }
         lines.push(`<div class="profit-detail-footer">所有预估收益为理论计算结果，不产生任何收益保证</div>`);
         lines.push(`</div>`);
 
