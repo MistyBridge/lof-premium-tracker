@@ -217,6 +217,18 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
                     updated += 1
             except Exception:
                 pass
+
+        # 净值归位到最新交易日行。本次到货的很可能是滞后净值（跨境/QDII），
+        # 必须把最新交易日行的净值一并修正并按新净值重算溢价率，
+        # 否则页面会继续显示用更旧净值算出来的错位溢价率。
+        # 详见 processors/nav_sync.py 的模块说明。
+        try:
+            from processors.nav_sync import sync_nav_to_latest_row
+            await sync_nav_to_latest_row(
+                session, [i["code"] for i in validated if i.get("code")])
+        except Exception as e:
+            logger.warning("[NAV] 净值归位失败: %s", e)
+
         await session.commit()
 
     # 刷新物化视图
