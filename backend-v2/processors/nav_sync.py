@@ -227,6 +227,38 @@ async def sync_nav_to_latest_row(
     return changed
 
 
+def _nav_date_key(item: dict) -> str:
+    """取 nav_date 的可比较形式。ISO 字符串按字典序排序即等价于按日期排序。"""
+    nd = (item or {}).get("nav_date")
+    if nd is None:
+        return ""
+    return nd if isinstance(nd, str) else str(nd)
+
+
+def merge_nav_map(prev: dict, incoming: dict) -> dict:
+    """把新拉到的净值并入既有缓存，返回合并结果。
+
+    两条规则，都是为了"采集频率提高之后不把好数据弄坏"：
+
+    1. **单调性**：不用 `nav_date` 更旧的条目覆盖更新的那条。
+       采集一天跑十几次，只要有一次 lsjz 返回滞后的行（跨境/QDII 常见），
+       整体替换就会把当天刚拿到的新净值打回旧值 —— 正是 #208 修的那类问题。
+
+    2. **合并不替换**：一次部分失败不会让 `nav:all` 丢掉其它基金。
+       `daily_save` 依赖这个键算溢价率，整个键被部分数据覆盖过一次，
+       当日溢价率就会大面积缺失。原实现是直接 `cache_set`，有这个风险。
+    """
+    merged = dict(prev or {})
+    for code, item in (incoming or {}).items():
+        if not code or not isinstance(item, dict):
+            continue
+        old = merged.get(code)
+        if old and _nav_date_key(old) > _nav_date_key(item):
+            continue
+        merged[code] = item
+    return merged
+
+
 async def list_misaligned(session, limit: int = 200) -> list[dict]:
     """只读体检：列出净值日期与交易日不一致的最新行。"""
     result = await session.execute(MISALIGNED_SQL, {"limit": int(limit)})

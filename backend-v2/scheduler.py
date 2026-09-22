@@ -48,9 +48,16 @@ def create_scheduler():
     scheduler.add_job(job_scan_codes, CronTrigger(day_of_week="mon", hour=8, minute=30), id="scan_codes")
     scheduler.add_job(job_fetch_info, CronTrigger(day_of_week="mon-fri", hour=9, minute=0), id="fetch_info")
     scheduler.add_job(job_fetch_realtime, IntervalTrigger(minutes=5), id="fetch_realtime")
-    scheduler.add_job(job_fetch_nav, CronTrigger(hour=8, minute=0), id="fetch_nav")
+    # 净值每 2 小时拉一次（原来只在每天 08:00 跑一次）。
+    # 跨境/QDII 的净值要等海外市场收盘、基金公司估值后才披露，通常落在傍晚到
+    # 深夜；每天只跑一次的话，最坏要等第二天早上才入库 —— 这段窗口里页面挂的是
+    # 明明可以更新、却没更新的旧净值（#208 之后会如实标注净值日期，但数值本身
+    # 仍然落后）。名单 2080 只，单次约 40 秒，12 次/天，对 lsjz 压力可忽略。
+    scheduler.add_job(job_fetch_nav, CronTrigger(hour="*/2", minute=0), id="fetch_nav")
     scheduler.add_job(job_fetch_kline, CronTrigger(hour=20, minute=30), id="fetch_kline")
-    scheduler.add_job(job_fetch_nav_qdii, CronTrigger(hour=8, minute=0), id="fetch_nav_qdii")
+    # 原来还有一个 fetch_nav_qdii 单独再跑一遍 QDII。实测 28 只 QDII **全部**已经
+    # 在采集名单内（名单外 0 只），等于把同一批请求发两遍 —— 已并入
+    # _nav_codes() 的并集，不再单独调度。
     scheduler.add_job(job_daily_save, CronTrigger(hour=8, minute=30), id="daily_save",
                       name="日终入库", replace_existing=True, misfire_grace_time=1800)
     scheduler.add_job(job_check_partitions, CronTrigger(day=1, hour=9, minute=0), id="check_partitions")
@@ -238,12 +245,15 @@ async def job_fetch_realtime() -> None:
 
 
 async def job_fetch_nav() -> None:
-    # 每天 8:00 运行，拉取最新净值（次日早上净值已发布）
+    # 每 2 小时运行一次（2026-09-23 起；此前只在每天 08:00 跑一次）。
+    # 跨境/QDII 净值在海外收盘后才披露，傍晚到深夜居多，加密频次可让它在
+    # 公布后几小时内入库，而不是等第二天早上。
     s = time.monotonic()
     try:
         from fetchers.fundamental import fetch_fundamental
-        from cache import cache_set
-        codes = await _codes()
+        from cache import cache_get, cache_set
+        from constants import PARTIAL_DATA_THRESHOLD
+        codes = await _nav_codes()
         logger.info("[SCHEDULER] fetch_nav 开始: %d 只基金", len(codes))
         if not codes:
             logger.warning("[SCHEDULER] fetch_nav 跳过: 无 LOF/ETF 代码")
@@ -253,10 +263,19 @@ async def job_fetch_nav() -> None:
         logger.info("[SCHEDULER] fetch_nav 获取 %d 条净值数据", len(r))
 
         if r:
-            # 1. 写 Redis
+            # 1. 写 Redis（合并写入，见 processors/nav_sync.merge_nav_map）
+            from processors.nav_sync import merge_nav_map, sync_nav_to_latest_row, upsert_nav_rows
             nav_map = {item["code"]: item for item in r if item.get("code")}
-            await cache_set("nav:all", nav_map, ttl=86400)
-            logger.info("[SCHEDULER] fetch_nav Redis 更新: %d 条", len(nav_map))
+            prev = await cache_get("nav:all") or {}
+            if prev and len(nav_map) < len(prev) * PARTIAL_DATA_THRESHOLD / 100:
+                logger.warning(
+                    "[SCHEDULER] fetch_nav 数据不完整: %d/%d（阈值 %d%%），"
+                    "只并入本次拿到的条目，不覆盖既有缓存",
+                    len(nav_map), len(prev), PARTIAL_DATA_THRESHOLD)
+            merged = merge_nav_map(prev, nav_map)
+            await cache_set("nav:all", merged, ttl=86400)
+            logger.info("[SCHEDULER] fetch_nav Redis 更新: 本次 %d 条 → 缓存共 %d 条",
+                        len(nav_map), len(merged))
 
             # 2. 更新 DB (fund_daily)
             updated = 0
@@ -266,9 +285,6 @@ async def job_fetch_nav() -> None:
                     # 净值写入统一走 nav_sync.upsert_nav_rows：
                     # 除了把净值落到它自己的日期行，还会用该行的收盘价把
                     # premium_rate 一起对齐，避免同一行里 nav 与溢价率口径不一致。
-                    from processors.nav_sync import (
-                        sync_nav_to_latest_row, upsert_nav_rows,
-                    )
                     updated = await upsert_nav_rows(session, r)
 
                     # 2.1 净值归位到最新交易日行（物化视图取最新交易日数据）
@@ -317,25 +333,6 @@ async def job_fetch_kline() -> None:
         _ok("fetch_kline", (time.monotonic() - s) * 1000, len(r))
     except Exception as e:
         _fail("fetch_kline", e)
-
-
-async def job_fetch_nav_qdii() -> None:
-    # 每天 8:00 运行，拉取 QDII 最新净值
-    s = time.monotonic()
-    try:
-        from fetchers.fundamental import fetch_fundamental
-        codes = await _qdii()
-        if not codes:
-            logger.warning("[SCHEDULER] fetch_nav_qdii 跳过: 无 QDII 代码")
-            _fail("fetch_nav_qdii", ValueError("无 QDII 代码"))
-            return
-        r = await fetch_fundamental(_http_client, codes)
-        # 发布 NAV 数据到 Stream 供 consumer 处理
-        if r:
-            await publish_event("nav", {"data": r})
-        _ok("fetch_nav_qdii", (time.monotonic() - s) * 1000, len(r))
-    except Exception as e:
-        _fail("fetch_nav_qdii", e)
 
 
 async def job_daily_save() -> None:
@@ -424,6 +421,18 @@ async def _codes() -> list[str]:
     except Exception as e:
         logger.warning("[SCHEDULER] _codes() 查询失败: %s", e)
         return []
+
+
+async def _nav_codes() -> list[str]:
+    """净值采集的代码集合 = 采集名单 ∪ QDII。
+
+    为什么要并集：`fetch_nav_qdii` 原本单独再跑一遍 QDII，但实测 28 只 QDII
+    **全部**已经在采集名单里（名单外 0 只），等于同一批请求每天发两遍。
+    用并集既保留"名单外的 QDII 也要拉"的兜底语义，又去掉这份重复。
+    """
+    codes = set(await _codes())
+    codes.update(await _qdii())
+    return sorted(codes)
 
 
 async def _qdii() -> list[str]:
