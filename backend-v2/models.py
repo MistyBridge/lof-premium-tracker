@@ -31,7 +31,7 @@ class FundInfo(Base):
     code: Mapped[str] = mapped_column(VARCHAR(6), primary_key=True)
     name: Mapped[str] = mapped_column(VARCHAR(100), nullable=False)
     fund_type: Mapped[Optional[str]] = mapped_column(VARCHAR(20))
-    index_code: Mapped[Optional[str]] = mapped_column(VARCHAR(20))
+    index_code: Mapped[Optional[str]] = mapped_column(VARCHAR(200))
     market: Mapped[str] = mapped_column(CHAR(2), nullable=False)
     aum: Mapped[Optional[Decimal]] = mapped_column(NUMERIC(16, 2))
     listing_date: Mapped[Optional[date]] = mapped_column(DATE)
