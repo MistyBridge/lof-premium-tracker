@@ -34,7 +34,11 @@ FORMULA_LRU_SIZE = 256          # parse LRU 缓存大小
 
 # === API ===
 PAGE_SIZE_DEFAULT = 50          # 默认分页大小
-PAGE_SIZE_MAX = 1500            # 最大分页大小（前端一次拉全量）
+# 最大分页大小（前端"一次拉全量"架构）。
+# 必须装得下最大的板块：ETF 全集约 1700 只。原来封顶 1500 时，即使路由层
+# 放行到 3000，服务层仍会静默截到 1500 —— ETF 板块漏掉约 170 只，
+# 而且"溢价率降序"只在截断后的集合里排序，榜单是错的。
+PAGE_SIZE_MAX = 3000
 DAILY_QUERY_LIMIT_MAX = 1000    # 日线查询最大行数
 BATCH_CODES_MAX = 50            # 批量查询最大代码数
 BATCH_QUERY_CODES_MAX = 20      # 数据查询最大代码数
