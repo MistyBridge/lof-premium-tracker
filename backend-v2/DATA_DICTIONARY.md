@@ -13,7 +13,7 @@ PK: code
 | code | VARCHAR(6) | 基金代码 | 6位数字 | 否 | fund_code_list |
 | name | VARCHAR(100) | 基金名称 | -- | 否 | push2/fundf10 |
 | fund_type | VARCHAR(20) | 基金类型 | LOF/ETF/QDII | 是 | fundf10 |
-| index_code | VARCHAR(20) | 跟踪指数 | 如000300 | 是 | fundf10 |
+| index_code | VARCHAR(200) | 跟踪标的**名称**(非代码) | 如"中债-7-10年政策性金融债全价(总值)指数" | 是 | fundf10 |
 | market | CHAR(2) | 上市市场 | SH/SZ | 否 | push2delay |
 | aum | NUMERIC(16,2) | 基金规模(亿元) | >0 | 是 | fundf10 |
 | listing_date | DATE | 上市日期 | -- | 是 | fundf10 |

@@ -23,7 +23,7 @@ TABLES_SQL = [
         code               VARCHAR(6) PRIMARY KEY,
         name               VARCHAR(100) NOT NULL,
         fund_type          VARCHAR(20),
-        index_code         VARCHAR(20),
+        index_code         VARCHAR(200),
         market             CHAR(2) NOT NULL,
         aum                NUMERIC(16,2),
         listing_date       DATE,
@@ -222,6 +222,13 @@ INDEXES_SQL = [
 # 列迁移（ALTER TABLE ADD COLUMN IF NOT EXISTS，兼容已有表）
 ALTER_TABLE_SQL = [
     "ALTER TABLE user_alert ADD COLUMN IF NOT EXISTS email VARCHAR(255)",
+    # index_code 存的是"跟踪标的"名称而非指数代码（见 fetchers/info.py 的
+    # _parse_info 取 <th>跟踪标的</th>），原 VARCHAR(20) 装不下 QDII 类的
+    # 长指数名，导致这些基金整批写入失败、永远进不了 fund_info：
+    #   'S&P Oil & Gas Exploration & Production Select Industry'  (54 字符)
+    #   '中债-7-10年政策性金融债全价(总值)指数'                      (22 字符)
+    # 加宽是幂等且安全的（VARCHAR 变宽不重写数据）。
+    "ALTER TABLE fund_info ALTER COLUMN index_code TYPE VARCHAR(200)",
 ]
 
 MATERIALIZED_VIEW_SQL = """CREATE MATERIALIZED VIEW IF NOT EXISTS fund_snapshot AS
