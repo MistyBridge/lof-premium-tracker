@@ -15,7 +15,10 @@ router = APIRouter(prefix="/api/v1/funds", tags=["funds"])
 
 @router.get("")
 async def list_funds(
-    page: int = Query(1, ge=1), size: int = Query(50, ge=1, le=1500),
+    # size 上限必须装得下最大的板块：ETF 全集约 1700 只，原来封顶 1500，
+    # 前端又只拉 600 条 —— ETF 板块会静默漏掉约 2/3 的基金，
+    # 而且客户端的"溢价率降序"只在拉回来的那部分里排，榜单是错的。
+    page: int = Query(1, ge=1), size: int = Query(50, ge=1, le=3000),
     sort: str = Query("amount"), order: str = Query("desc"),
     search: Optional[str] = None, fund_type: Optional[str] = None,
     premium_min: Optional[float] = None, premium_max: Optional[float] = None,

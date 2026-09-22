@@ -8,22 +8,22 @@
     <meta name="shenma-site-verification" content="579f9369e67a467b09cb4d0c31183913_1778905831" />
     <title>金快查</title>
     <link rel="icon" href="assets/icon.jpg">
-    <meta name="description" content="金快查是全市场LOF基金实时折溢价监控工具，覆盖深沪两市全部LOF基金，提供实时溢价率、折价率、套利收益计算、日线走势图。支持PC和移动端，数据5分钟自动刷新。">
-    <meta name="keywords" content="LOF基金,溢价率,折价率,套利,基金溢价,场内基金,LOF套利,基金监控,实时净值">
+    <meta name="description" content="金快查是全市场LOF与ETF基金实时折溢价监控工具，覆盖深沪两市全部LOF、ETF基金，提供实时溢价率、折价率、跨境QDII溢价榜、套利收益计算、日线走势图。支持PC和移动端，数据5分钟自动刷新。">
+    <meta name="keywords" content="LOF基金,ETF基金,溢价率,折价率,套利,基金溢价,场内基金,LOF套利,ETF溢价,跨境ETF,QDII溢价,基金监控,实时净值">
     <meta name="author" content="MistyBridge">
     <link rel="canonical" href="https://jinkuaicha.com">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 
-    <meta property="og:title" content="金快查 - LOF基金实时折溢价监控与套利计算">
-    <meta property="og:description" content="全市场LOF基金实时溢价率、折价率、套利收益一键计算。365天日线走势图，PC和移动端均可使用。">
+    <meta property="og:title" content="金快查 - LOF/ETF基金实时折溢价监控与套利计算">
+    <meta property="og:description" content="全市场LOF、ETF基金实时溢价率、折价率、套利收益一键计算。365天日线走势图，PC和移动端均可使用。">
     <meta property="og:url" content="https://jinkuaicha.com">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="金快查">
     <meta property="og:locale" content="zh_CN">
 
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="金快查 - LOF基金实时折溢价监控">
-    <meta name="twitter:description" content="全市场LOF基金实时溢价率、折价率、套利收益计算。">
+    <meta name="twitter:title" content="金快查 - LOF/ETF基金实时折溢价监控">
+    <meta name="twitter:description" content="全市场LOF、ETF基金实时溢价率、折价率、套利收益计算。">
 
     <link rel="stylesheet" href="css/style.css?v=24">
     <link rel="stylesheet" href="css/landing.css?v=5">
@@ -88,8 +88,14 @@
             <section class="entry-list">
                 <div class="entry-item entry-active" onclick="SPA.navigate('lof')">
                     <div class="entry-left">
-                        <span class="entry-title">基金数据</span>
-                        <span class="entry-desc">全市场基金折溢价监控</span>
+                        <span class="entry-title">LOF基金</span>
+                        <span class="entry-desc">全市场 LOF 折溢价监控与套利测算</span>
+                    </div>
+                </div>
+                <div class="entry-item entry-active" onclick="SPA.navigate('etf')">
+                    <div class="entry-left">
+                        <span class="entry-title">ETF基金</span>
+                        <span class="entry-desc">全市场 ETF 实时折溢价，含跨境 QDII 溢价榜</span>
                     </div>
                 </div>
                 <div class="entry-item entry-active" onclick="SPA.navigate('favorites')">
@@ -756,7 +762,7 @@
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
                 self._loadScript('js/columns.js?v=23'),
                 self._loadScript('js/kpi-cards.js?v=2'),
-                self._loadScript('js/config.js?v=23'),
+                self._loadScript('js/config.js?v=24'),
                 self._loadScript('js/cache.js?v=1'),
                 self._loadScript('js/supabase.js?v=1'),
                 self._loadScript('js/auth.js?v=1'),
@@ -769,7 +775,7 @@
                 return self._loadScript('js/api.js?v=25');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
-                return self._loadScript('js/app.js?v=32');
+                return self._loadScript('js/app.js?v=33');
             }).then(function() {
                 self._scriptsReady = true;
             });
@@ -807,13 +813,30 @@
             }
         },
 
+        // hash → 板块。'#/etf' 以前没被识别，会静默掉进 LOF 视图（地址栏写着
+        // #/etf、列表里却是 LOF），ETF 板块上线必须给它一个真正的路由。
+        _modeOf: function(hash) {
+            if (hash === '#/etf') return 'etf';
+            if (hash === '#/favorites') return 'favorites';
+            return 'lof';
+        },
+
+        _titleOf: function(mode) {
+            if (mode === 'etf') return '金快查 - ETF基金实时折溢价监控';
+            if (mode === 'favorites') return '金快查 - 基金收藏';
+            return '金快查 - LOF基金实时折溢价监控';
+        },
+
         _route: function() {
             var hash = location.hash || '#/';
             var landingView = document.getElementById('view-landing');
             var dataView = document.getElementById('view-data');
             var accountView = document.getElementById('view-account');
 
-            this._updateTabs(hash === '#/favorites' ? 'favorites' : (hash === '#/lof' ? 'lof' : ''));
+            // ETF 与 LOF 同属"基金数据"这一个 Tab
+            var tabMode = (hash === '#/favorites') ? 'favorites'
+                        : ((hash === '#/lof' || hash === '#/etf') ? 'lof' : '');
+            this._updateTabs(tabMode);
 
             if (hash === '#/' || hash === '#') {
                 landingView.style.display = 'block';
@@ -833,8 +856,8 @@
                 return;
             }
 
-            var mode = (hash === '#/favorites') ? 'favorites' : 'lof';
-            document.title = mode === 'favorites' ? '金快查 - 基金收藏' : '金快查 - LOF基金实时折溢价监控';
+            var mode = this._modeOf(hash);
+            document.title = this._titleOf(mode);
             landingView.style.display = 'none';
             if (accountView) accountView.style.display = 'none';
             dataView.style.display = 'block';
@@ -862,13 +885,24 @@
                 return;
             }
             if (this._currentMode === mode) return;
+            var isFav = mode === 'favorites';
+            var prevFilter = this._app.filterMode || 'lof';
             this._currentMode = mode;
             window.LOF_PAGE_MODE = mode;
-            this._app.pageMode = (mode === 'favorites') ? 'favorites' : 'normal';
-            if (mode === 'favorites') {
+            this._app.pageMode = isFav ? 'favorites' : 'normal';
+            if (isFav) {
                 this._app.fundType = 'all';
+            } else {
+                // LOF ⇄ ETF 是两批完全不同的基金，必须换 filter_mode 重新拉数据。
+                // 以前这里只重排本地数组，等于拿 LOF 的数据当 ETF 显示。
+                this._app.filterMode = (mode === 'etf') ? 'etf' : 'lof';
+                this._app._syncFundTypeUI();
             }
             this._app.currentPage = 1;
+            if (!isFav && this._app.filterMode !== prevFilter) {
+                this._app.loadFunds();
+                return;
+            }
             this._app.applyFilters();
             this._app.renderTable();
             this._app.updatePaginationInfo();
