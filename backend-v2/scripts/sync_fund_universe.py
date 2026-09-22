@@ -65,6 +65,7 @@ async def run(apply: bool, prune: bool) -> int:
     print(f"  类别不一致(仅报告)     : {len(result.conflicts)} 只")
     print(f"  官方已无(疑似退市)     : {len(result.to_remove)} 只")
     print(f"  有记录但当天无成交     : {len(result.stale)} 条")
+    print(f"  非场内代码(疑似脏数据) : {len(result.non_exchange)} 条")
     print(f"  无法判定(源未覆盖)     : {len(result.uncovered)} 只")
 
     if result.to_add:
@@ -97,6 +98,17 @@ async def run(apply: bool, prune: bool) -> int:
             print(f"    {code}  [{category}]  {result.names.get(code, '')}")
         if len(result.stale) > 10:
             print(f"    ... 其余 {len(result.stale) - 10} 条省略")
+
+    if result.non_exchange:
+        print(f"\n  ── 非场内代码（脏数据，共 {len(result.non_exchange)} 条）──")
+        print("     场内基金代码只可能是沪市 5 开头或深市 1 开头。以下条目是")
+        print("     0 开头的场外基金（多为 ETF-FOF、场内货币基金场外份额），")
+        print("     任何行情源都查不到，占用采集名额并在快照里留下空行。")
+        print("     本脚本只报告，清理请用 scripts/purge_non_exchange.py。")
+        for code, category in result.non_exchange[:20]:
+            print(f"    {code}  [{category}]  {result.names.get(code, '')}")
+        if len(result.non_exchange) > 20:
+            print(f"    ... 其余 {len(result.non_exchange) - 20} 条省略")
 
     if result.uncovered:
         print(f"\n  ── 源未覆盖、无法判定（保留不删，共 {len(result.uncovered)} 条）──")
