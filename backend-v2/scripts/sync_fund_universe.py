@@ -61,6 +61,14 @@ async def run(apply: bool, prune: bool) -> int:
     if not result.sse_complete:
         print("    ! 沪市抓取不完整 —— 本轮不判定沪市退市")
     print(f"  库内现有               : {result.db_total} 只")
+    if result.money_market_filtered:
+        by_name = result.money_market_filtered - result.money_market_by_type
+        print(f"  货币基金已拦截         : {result.money_market_filtered} 只"
+              f"（名称规则 {by_name} + fund_type 口径 {result.money_market_by_type}）")
+        if result.money_market_by_type:
+            print("     场内货币基金的行情名不含\"货币\"（如\"华宝添益ETF\"），")
+            print("     只能靠 fund_info.fund_type=\"货币型-普通货币\" 识别；")
+            print("     漏掉它们会让几万 % 的假溢价率重新冲上 ETF 榜首。")
     print(f"  待新增                 : {len(result.to_add)} 只")
     print(f"  类别不一致(仅报告)     : {len(result.conflicts)} 只")
     print(f"  官方已无(疑似退市)     : {len(result.to_remove)} 只")
