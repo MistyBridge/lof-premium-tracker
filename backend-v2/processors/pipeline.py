@@ -39,6 +39,7 @@ from processors.validator import (
     validate_nav,
     validate_realtime,
 )
+from services.universe_service import COLLECT_CATEGORIES
 
 logger = logging.getLogger("consumer")
 
@@ -328,13 +329,14 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
         # 历史实现读的是 fund_code_list —— 那张表自 2026-05-30 起再无任何写入路径，
         # 导致日终入库只覆盖 673 只老基金：新补进采集名单的基金虽然实时行情已进 Redis，
         # 却永远算不出 close / premium_rate / change_pct。
+        # 类别范围统一取自 services.universe_service.COLLECT_CATEGORIES，避免两处硬编码漂移。
         rows = await session.execute(sql_text("""
             SELECT fc.code, COALESCE(fi.name, '') AS name
             FROM fund_category fc
             LEFT JOIN fund_info fi ON fi.code = fc.code
-            WHERE fc.category IN ('LOF', 'ETF')
+            WHERE fc.category = ANY(:cats)
             ORDER BY fc.code
-        """))
+        """), {"cats": list(COLLECT_CATEGORIES)})
         code_list = [dict(r._mapping) for r in rows.fetchall()]
         # 读取申购限额
         fee_rows = await session.execute(sql_text(
