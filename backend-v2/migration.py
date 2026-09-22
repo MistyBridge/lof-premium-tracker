@@ -244,7 +244,12 @@ COLUMN_WIDEN_SQL = [
 # 物化视图定义版本。任何一次改动 MATERIALIZED_VIEW_SQL 都必须递增此值，
 # 否则已有库不会重建（CREATE MATERIALIZED VIEW IF NOT EXISTS 对已存在的
 # 视图是空操作），定义改动就会静默失效。
-MV_VERSION = 1
+#
+# v2: 补回 float_share / suspension_status / is_suspended / aum /
+#     purchase_status / category 六列。v1 用的是基线定义，重建时把这六列
+#     丢了，导致 API 的 filter=lof/etf（`WHERE category = 'LOF'`）直接
+#     报 UndefinedColumn，前端基金列表整页加载失败。
+MV_VERSION = 2
 
 # fund_snapshot 的索引。原先只存在于手工执行的
 # sql/migrations/003_optimize_performance.sql 里，一旦视图被重建
@@ -288,7 +293,24 @@ SELECT
     fd.turnover_rate,
     fd.change_pct,
     fd.amount,
-    fd.volume
+    fd.volume,
+    fd.float_share,
+    fd.suspension_status,
+    COALESCE(fd.suspension_status = 'suspended', FALSE) AS is_suspended,
+    fi.aum,
+    -- purchase_status / category 用标量子查询而不是 JOIN：
+    -- 保证每个 code 恰好取到一个值，避免行数膨胀破坏 idx_snapshot_code 唯一索引。
+    (SELECT ff.purchase_status FROM fund_fee ff
+      WHERE ff.code = fi.code LIMIT 1) AS purchase_status,
+    -- 一个 code 可能同时挂在多个类别下，而 API 的 filter=lof/etf 需要单一值。
+    -- 按固定优先级取第一个，保证每次刷新的结果稳定可复现。
+    COALESCE((
+        SELECT fc.category FROM fund_category fc
+        WHERE fc.code = fi.code
+        ORDER BY CASE fc.category
+                   WHEN 'ETF' THEN 1 WHEN 'LOF' THEN 2 WHEN 'REITs' THEN 3
+                   ELSE 4 END, fc.category
+        LIMIT 1), '') AS category
 FROM fund_info fi
 LEFT JOIN LATERAL (
     SELECT * FROM fund_daily

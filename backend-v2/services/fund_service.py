@@ -940,8 +940,14 @@ def _build_fund_conditions(
         )
         params["wl_uid"] = user_id
     elif filter_mode == "etf":
-        conditions.append("category = 'ETF'")
+        # 直接查 fund_category（类别真源），不依赖物化视图里冗余的 category 列。
+        # 教训：视图重建时若漏掉该列，这里会抛 UndefinedColumn 让整页基金列表
+        # 失败（前端默认进 LOF/ETF 页签，等于首页直接打不开）；而 fund_category
+        # 一定存在，且能正确表达"一个 code 挂多个类别"的情况。
+        conditions.append(
+            "code IN (SELECT code FROM fund_category WHERE category = 'ETF')")
     elif filter_mode == "lof":
-        conditions.append("category = 'LOF'")
+        conditions.append(
+            "code IN (SELECT code FROM fund_category WHERE category = 'LOF')")
 
     return conditions, params
