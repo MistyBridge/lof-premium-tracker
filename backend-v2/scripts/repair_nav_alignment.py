@@ -54,6 +54,7 @@ os.chdir(_APP_DIR)
 
 import database  # noqa: E402
 
+from config import settings  # noqa: E402
 from sqlalchemy import text  # noqa: E402
 
 log = logging.getLogger("repair_nav_alignment")
@@ -74,6 +75,7 @@ FUTURE_SQL = text("""
 async def run(apply: bool, limit: int) -> int:
     from processors.nav_sync import list_misaligned, sync_nav_to_latest_row
 
+    database.init_engine(settings)
     try:
         async with database.async_session_factory() as session:
             codes = [r[0] for r in (await session.execute(CANDIDATE_SQL)).fetchall()]

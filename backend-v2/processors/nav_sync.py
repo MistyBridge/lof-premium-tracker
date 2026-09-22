@@ -95,7 +95,11 @@ WHERE fd.code = pick.code
 """)
 
 
-# 体检用：列出当前仍处于"净值日期 ≠ 交易日"的最新行（只读）
+# 体检用：列出"有净值、但净值日期 ≠ 交易日"的最新行（只读）
+#
+# 必须带 `fd.nav IS NOT NULL`：完全没有净值是另一种情况（例如场内货币基金
+# 已按 PR#205 主动清空净值，那不适用溢价率公式），不该混进"错位"里，
+# 否则报告的 135 条里会有 80 多条是噪声，真正要修的那 51 条反而被淹没。
 MISALIGNED_SQL = text("""
 WITH latest_close AS (
     SELECT code, MAX(trade_date) AS td
@@ -114,7 +118,8 @@ SELECT fd.code,
 FROM latest_close lc
 JOIN fund_daily fd ON fd.code = lc.code AND fd.trade_date = lc.td
 LEFT JOIN fund_info fi ON fi.code = fd.code
-WHERE fd.nav_date IS DISTINCT FROM fd.trade_date
+WHERE fd.nav IS NOT NULL
+  AND fd.nav_date IS DISTINCT FROM fd.trade_date
 ORDER BY lag_days DESC, fd.premium_rate DESC NULLS LAST
 LIMIT :limit
 """)

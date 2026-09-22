@@ -130,3 +130,9 @@ class TestListMisaligned:
         assert out[0]["name"] == ""
         assert out[0]["nav"] is None
         assert out[0]["lag_days"] is None
+
+    def test_only_counts_rows_that_actually_have_a_nav(self):
+        """完全没有净值不算"错位"（场内货币基金已按 PR#205 主动清空净值），
+        否则 135 条报告里 80 多条是噪声，把真正要修的那几十条淹没了。"""
+        sql = str(nav_sync.MISALIGNED_SQL)
+        assert "fd.nav IS NOT NULL" in sql
