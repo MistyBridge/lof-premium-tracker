@@ -386,6 +386,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 }
 .dark-mode .nav-lag { background: #33280f; color: #e8b96a; border-color: #4d3c1c; }
 
+/* ETF 套利路径说明：ETF 走一级市场申赎，与 LOF 的"申购→场内卖出"不同，
+   不写清楚会让用户把理论收益率当成可落袋收益。 */
+.profit-detail-caveat {
+    margin-top: 10px; padding: 8px 10px; border-radius: 6px;
+    background: #fff8e6; border: 1px solid #f0dfae;
+    color: #8a6100; font-size: 0.78rem; line-height: 1.6;
+}
+.profit-detail-caveat b { color: #b4610a; }
+.dark-mode .profit-detail-caveat {
+    background: #33280f; border-color: #4d3c1c; color: #e0bd72;
+}
+.dark-mode .profit-detail-caveat b { color: #ffcf7a; }
+
+
 .prem-main { font-weight: 700; }
 .prem-sub { opacity: 0.55; }
 .prem-sep { opacity: 0.35; margin: 0 1px; }
