@@ -64,7 +64,11 @@ class LofFundMonitor {
             this.darkMode = 'light';
             this.premiumBase = 'confirmed';
         }
-        this.pageMode = (typeof window.LOF_PAGE_MODE !== 'undefined') ? window.LOF_PAGE_MODE : 'normal';
+        // LOF_PAGE_MODE 由 SPA 路由注入：'lof' | 'etf' | 'favorites'
+        // pageMode 只区分"收藏夹 / 普通列表"两种；板块类别（LOF/ETF）看 initialMode。
+        // 混在一起写会让 `pageMode === 'favorites'` 这类判断在 ETF 下语义含糊。
+        this.initialMode = (typeof window.LOF_PAGE_MODE !== 'undefined') ? window.LOF_PAGE_MODE : 'lof';
+        this.pageMode = (this.initialMode === 'favorites') ? 'favorites' : 'normal';
         if (this.pageMode === 'favorites') {
             this.fundType = 'all';
         }
@@ -168,7 +172,7 @@ class LofFundMonitor {
         }
         // Phase 2: 后台拉取最新数据
         try {
-            var result = await api.getFunds(1, 600, false, false, { filter_mode: self.filterMode || 'lof' });
+            var result = await api.getFunds(1, self._pageSizeFor(self.filterMode), false, false, { filter_mode: self.filterMode || 'lof' });
             // v2 meta: data_timestamp / data_type / realtime_available
             // v1 meta: last_fetch / refresh_interval_sec (兼容)
             var ts = result.meta ? (result.meta.data_timestamp || result.meta.last_fetch) : null;
@@ -210,6 +214,17 @@ class LofFundMonitor {
     _updateToolbarTimestamp(fetchTime, interval) {
         var ts = document.getElementById('toolbarTimestamp');
         if (ts) ts.textContent = this.formatTime(fetchTime) + ' · ' + interval + '分钟刷新';
+    }
+
+    // 一次拉全量：前端是"全量拉取 + 本地排序/筛选/分页"的架构，
+    // 拉不全不只是少几只基金 —— 溢价率降序、KPI 统计、搜索都只在
+    // 拉回来的那部分里算，榜单会直接失真。
+    //   LOF 全集约 410 只 → 600 足够
+    //   ETF 全集约 1700 只 → 必须放大，否则漏掉约 2/3（后端 size 上限 3000）
+    _pageSizeFor(mode) {
+        var cfg = window.LOF_CONFIG || {};
+        if (mode === 'etf') return cfg.ETF_PAGE_SIZE || 2400;
+        return cfg.DEFAULT_PAGE_SIZE || 600;
     }
 
     // ===== 三日平均溢价率（从后端API获取，字段 avg_premium_3d）=====
@@ -1165,17 +1180,45 @@ class LofFundMonitor {
 
     _updateFundTypeCounts(total, cache) {
         const input = document.getElementById('searchInput');
-        const optLabel = document.getElementById('ftOptLofCount');
         const text = '(缓存' + cache + '只 共' + total + '只)';
         if (input) input.placeholder = text + ' 代码/名称';
-        if (optLabel) optLabel.textContent = '缓存' + cache + ' · 共' + total + '只';
+        // 两个下拉项各记各自的数量：切过去时不会显示上一类的数字
+        // （旧实现只写 LOF 那一项，ETF 的计数永远是占位的 "--"）
+        this._typeCounts = this._typeCounts || {};
+        this._typeCounts[this.filterMode || 'lof'] = { total: total, cache: cache };
+        var self = this;
+        ['lof', 'etf'].forEach(function(m) {
+            var el = document.getElementById(m === 'etf' ? 'ftOptEtfCount' : 'ftOptLofCount');
+            if (!el) return;
+            var c = self._typeCounts[m];
+            el.textContent = c ? ('缓存' + c.cache + ' · 共' + c.total + '只') : '--';
+        });
+    }
+
+    // 把下拉按钮上的文字与 .ft-option 的选中态同步到 filterMode
+    _syncFundTypeUI() {
+        var isEtf = this.filterMode === 'etf';
+        var select = document.getElementById('fundTypeSelect');
+        var dropdown = document.getElementById('fundTypeDropdown');
+        if (select) {
+            var label = select.querySelector('.ft-select-label') ||
+                        select.querySelector('.ft-current-label');
+            if (label) label.textContent = isEtf ? 'ETF基金' : 'LOF基金';
+        }
+        if (dropdown) {
+            dropdown.querySelectorAll('.ft-option').forEach(function(o) {
+                o.classList.toggle('active', (o.dataset.type || 'lof') === (isEtf ? 'etf' : 'lof'));
+            });
+        }
     }
 
     _initFundTypeDropdown() {
         const select = document.getElementById('fundTypeSelect');
         const dropdown = document.getElementById('fundTypeDropdown');
         if (!select || !dropdown) { console.warn('[LOF] fund type dropdown elements not found'); return; }
-        this.filterMode = 'lof'; // 默认 LOF
+        // 默认 LOF；从 #/etf 直接进来时用 ETF，保证 URL 与列表内容一致
+        this.filterMode = (this.initialMode === 'etf') ? 'etf' : 'lof';
+        this._syncFundTypeUI();
         var self = this;
         select.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1190,13 +1233,18 @@ class LofFundMonitor {
         dropdown.addEventListener('click', (e) => {
             const opt = e.target.closest('.ft-option');
             if (!opt || opt.classList.contains('disabled')) return;
-            dropdown.querySelectorAll('.ft-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            self.filterMode = opt.dataset.type || 'lof';
             dropdown.style.display = 'none';
-            // 更新按钮文字
-            var label = select.querySelector('.ft-select-label');
-            if (label) label.textContent = self.filterMode === 'etf' ? 'ETF基金' : 'LOF基金';
+            var next = opt.dataset.type || 'lof';
+            if (next === self.filterMode) { self._syncFundTypeUI(); return; }
+            // 只改 URL，真正的类别切换与数据加载交给 SPA._route/_setAppMode ——
+            // 既让地址栏反映当前板块（可分享、可前进后退），也避免两处各拉一次数据。
+            if (typeof SPA !== 'undefined' && SPA.navigate) {
+                SPA.navigate(next);
+                return;
+            }
+            self.filterMode = next;
+            self._syncFundTypeUI();
+            self.currentPage = 1;
             self.loadFunds();
         });
     }
