@@ -330,13 +330,26 @@ async def process_daily_save(data: dict, batch_id: str, session_factory) -> None
         # 却永远算不出 close / premium_rate / change_pct。
         # 类别范围统一取自 services.universe_service.COLLECT_CATEGORIES，避免两处硬编码漂移。
         rows = await session.execute(sql_text("""
-            SELECT fc.code, COALESCE(fi.name, '') AS name
+            SELECT fc.code, COALESCE(fi.name, '') AS name,
+                   COALESCE(fi.fund_type, '') AS fund_type
             FROM fund_category fc
             LEFT JOIN fund_info fi ON fi.code = fc.code
             WHERE fc.category = ANY(:cats)
             ORDER BY fc.code
         """), {"cats": list(COLLECT_CATEGORIES)})
         code_list = [dict(r._mapping) for r in rows.fetchall()]
+        # 兜底：场内货币基金不是溢价率标的 —— 其"收盘价"是 100 元面值，而
+        # 数据源 lsjz 给的"净值"其实是每份日收益（0.2 上下），量纲不同，
+        # 套 (close-nav)/nav 会算出几万 % 的溢价率并冲上"溢价率降序"榜首。
+        # 正常路径下它们已在 services/universe_service 被拦在名单外，
+        # 这里再加一道，防止任何分类失误把荒谬数字送到用户面前。
+        from services.universe_service import is_money_market
+        before_mm = len(code_list)
+        code_list = [f for f in code_list
+                     if not is_money_market(f.get("name"))]
+        if before_mm != len(code_list):
+            logger.warning("daily_save 跳过场内货币基金 %d 只（不适用溢价率）",
+                           before_mm - len(code_list))
         # 读取申购限额
         fee_rows = await session.execute(sql_text(
             "SELECT code, purchase_limit FROM fund_fee"

@@ -89,6 +89,7 @@ class SyncResult:
     tencent_idle: int = 0
     tencent_gone: int = 0
     tencent_exists: int = 0
+    money_market_filtered: int = 0
     db_total: int = 0
     to_add: list[tuple[str, str]] = field(default_factory=list)
     to_remove: list[tuple[str, str]] = field(default_factory=list)
@@ -119,6 +120,25 @@ def is_exchange_listed(code: str) -> bool:
     都查不到，却会占用采集名额、在快照里留下空行误导用户。
     """
     return code[:1] in ("1", "5")
+
+
+# 场内货币基金的名称特征。它们虽然是 511xxx/159xxx 的场内代码，但**不是
+# 溢价率标的**：
+#   * 行情"收盘价"是 100 元面值（每百份），不是可套利的交易价格；
+#   * 数据源在 lsjz 接口给出的"净值"其实是每份日收益（0.2 上下），
+#     与面值不在同一量纲。
+# 两者套用 (close-nav)/nav 公式会得到几万 % 的荒谬溢价率。
+# 这类基金在我们库里已有独立的受管外类别 `场内货币基金`。
+#
+# 关键词只取"货币"：货币基金的**全称**里必然带"货币市场基金"。
+# 绝对不要加"现金" —— "招商中证800自由现金流交易型开放式指数证券投资基金"
+# 这类**股票型 ETF** 的名称里含"自由现金流"，会被误判成货币基金而错踢出名单。
+MONEY_MARKET_KEYWORDS = ("货币",)
+
+
+def is_money_market(name: str) -> bool:
+    """名称是否像场内货币基金（不适用溢价率公式）。"""
+    return any(k in (name or "") for k in MONEY_MARKET_KEYWORDS)
 
 
 # ── HTTP ──────────────────────────────────────────────────────────────
@@ -551,6 +571,17 @@ async def sync_universe(*, apply: bool, prune: bool = False,
     authoritative.update(supplement)
     # 腾讯扫描放最后: 它是"有行情"的直接证据, 覆盖最完整, 名称也最新
     authoritative.update(qt_active)
+    # 兜底过滤：场内货币基金不是溢价率标的（收盘价是 100 元面值，数据源给的
+    # "净值"是每份日收益），绝不能作为 LOF/ETF 进入采集名单。各源的分类规则
+    # 都已有各自的拦截，这里再做一次统一把关，避免任何一条通路漏网。
+    mm = [c for c, i in authoritative.items()
+          if is_money_market(i.get("name", ""))]
+    for code in mm:
+        authoritative.pop(code, None)
+    result.money_market_filtered = len(mm)
+    if mm:
+        logger.info("[UNIVERSE] 过滤场内货币基金 %d 只（不适用溢价率公式）",
+                    len(mm))
     result.authoritative = len(authoritative)
     result.names = {code: info.get("name", "") for code, info in authoritative.items()}
 
