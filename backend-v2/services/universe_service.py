@@ -90,6 +90,7 @@ class SyncResult:
     tencent_gone: int = 0
     tencent_exists: int = 0
     money_market_filtered: int = 0
+    money_market_by_type: int = 0
     db_total: int = 0
     to_add: list[tuple[str, str]] = field(default_factory=list)
     to_remove: list[tuple[str, str]] = field(default_factory=list)
@@ -465,6 +466,32 @@ def load_supplement() -> dict[str, dict]:
 
 # ── 数据库 ────────────────────────────────────────────────────────────
 
+async def load_money_market_codes() -> set[str]:
+    """库里已确认为货币基金的代码（`fund_info.fund_type` 以"货币"开头）。
+
+    为什么不能只靠名称：
+      场内货币基金的**行情名**通常不含"货币"二字 —— 腾讯给的是
+      "招商快线ETF""华宝添益ETF""银华日利ETF""鹏华添利ETF"。用名称关键词
+      去拦，这 8 只会被当成"新增 ETF"写进采集名单，而它们的"收盘价"是
+      100 元面值、数据源给的"净值"是每份日收益，量纲不同 —— 套溢价率公式
+      会算出几万 % 并冲上榜首（#205 修过一轮）。而 `fund_info.fund_type`
+      是东方财富给的权威口径（"货币型-普通货币"），可以精确识别。
+
+    库不可用时返回空集合（宁可不拦，也不要让同步整体失败）。
+    """
+    engine = create_async_engine(settings.DATABASE_URL)
+    try:
+        async with engine.connect() as conn:
+            result = await conn.execute(text(
+                "SELECT code FROM fund_info WHERE fund_type LIKE '货币%'"))
+            return {r[0] for r in result.fetchall()}
+    except Exception as exc:  # noqa: BLE001 - 兜底过滤失败不阻断同步
+        logger.warning("[UNIVERSE] 读取货币基金名单失败，跳过该道过滤: %s", exc)
+        return set()
+    finally:
+        await engine.dispose()
+
+
 async def load_db_categories(categories: tuple[str, ...]) -> dict[str, set[str]]:
     """返回 {code: {category, ...}}，只含指定类别。"""
     engine = create_async_engine(settings.DATABASE_URL)
@@ -582,6 +609,26 @@ async def sync_universe(*, apply: bool, prune: bool = False,
     if mm:
         logger.info("[UNIVERSE] 过滤场内货币基金 %d 只（不适用溢价率公式）",
                     len(mm))
+
+    # 名称规则**拦不住**的那一批：场内货币基金的行情名通常不含"货币"二字。
+    # 腾讯给的名字是"招商快线ETF""华宝添益ETF""银华日利ETF""鹏华添利ETF"
+    # 这种，名称里没有关键词；但东方财富的 fund_info.fund_type 是
+    # "货币型-普通货币"，这是权威口径。必须拿它再拦一道。
+    #
+    # 实测（2026-09-22 同步 dry-run）：只看名称的话，同步会把 8 只场内货币
+    # 基金当成"新增 ETF"重新写进采集名单 —— #205 刚修掉的 5 万% 溢价率
+    # 会原样回来，并重新冲上 ETF 板块榜首。
+    db_mm = await load_money_market_codes()
+    mm_by_type = [c for c in authoritative if c in db_mm]
+    for code in mm_by_type:
+        authoritative.pop(code, None)
+    result.money_market_by_type = len(mm_by_type)
+    if mm_by_type:
+        logger.info("[UNIVERSE] 按 fund_type 过滤货币基金 %d 只（名称里无"
+                    "\"货币\"字样，只能靠库里口径识别）: %s",
+                    len(mm_by_type), ",".join(sorted(mm_by_type)[:10]))
+    result.money_market_filtered += len(mm_by_type)
+
     result.authoritative = len(authoritative)
     result.names = {code: info.get("name", "") for code, info in authoritative.items()}
 
