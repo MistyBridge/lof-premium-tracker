@@ -27,6 +27,15 @@ async def batch_upsert(
     """
     通用批量 UPSERT（ON CONFLICT DO UPDATE）。
     返回 {"total": N, "success": N, "failed_batches": [...]}
+
+    健壮性约定
+    ----------
+    1. 若 records 中提供的字段全部属于 conflict_columns（即没有可更新的列），
+       退化为 ON CONFLICT DO NOTHING。历史实现在这种情况下会构造出空的
+       ``set_={}``，asyncpg 直接抛 "set parameter dictionary must not be empty"，
+       导致整批写入失败 —— process_info 写 fund_category 就一直栽在这里。
+    2. 整批失败时自动降级为逐条写入：一条脏数据不应拖垮同批其余记录。
+       逐条仍失败的记录才计入 failed_batches，并带上具体 code 便于定位。
     """
     total = len(records)
     success = 0
@@ -37,41 +46,78 @@ async def batch_upsert(
         batch_num = i // batch_size
 
         try:
-            async with session_factory() as session:
-                async with session.begin():
-                    stmt = pg_insert(model).values(batch)
-                    # 只更新 records 中实际提供的字段，防止无意中将 NULL 覆盖到已有数据
-                    # e.g., save_kline_batch 只提供 OHLCV 字段，不应把 nav/nav_date 覆盖为 NULL
-                    provided_cols: set[str] = set()
-                    for record in batch:
-                        provided_cols.update(record.keys())
-                    update_cols = {
-                        c.name: stmt.excluded[c.name]
-                        for c in model.__table__.columns
-                        if c.name not in conflict_columns and c.name in provided_cols
-                    }
-                    stmt = stmt.on_conflict_do_update(
-                        index_elements=conflict_columns,
-                        set_=update_cols,
-                    )
-                    await session.execute(stmt)
-
+            await _upsert_batch(session_factory, model, batch, conflict_columns)
             success += len(batch)
             logger.debug("batch %d: %d rows saved", batch_num, len(batch))
 
         except Exception as e:
-            failed_batches.append({
-                "batch_num": batch_num,
-                "start": i,
-                "count": len(batch),
-                "error": str(e),
-            })
-            logger.error("batch %d failed: %s", batch_num, e)
+            # 整批失败 → 降级逐条，避免单条脏数据拖垮整批
+            logger.warning("batch %d 整批失败(%d 条): %s —— 降级为逐条写入",
+                           batch_num, len(batch), e)
+            ok, bad = await _upsert_row_by_row(
+                session_factory, model, batch, conflict_columns)
+            success += ok
+            if bad:
+                failed_batches.append({
+                    "batch_num": batch_num,
+                    "start": i,
+                    "count": len(batch),
+                    "failed": len(bad),
+                    "failed_codes": bad[:20],
+                    "error": str(e),
+                })
+                logger.error("batch %d: %d/%d 条最终失败, 代码=%s",
+                             batch_num, len(bad), len(batch), bad[:10])
 
         if i + batch_size < total:
             await asyncio.sleep(0.1)
 
     return {"total": total, "success": success, "failed_batches": failed_batches}
+
+
+async def _upsert_batch(session_factory, model, batch: list[dict],
+                        conflict_columns: list[str]) -> None:
+    """写入一个批次（单事务）。无可更新列时退化为 DO NOTHING。"""
+    async with session_factory() as session:
+        async with session.begin():
+            stmt = pg_insert(model).values(batch)
+            # 只更新 records 中实际提供的字段，防止无意中将 NULL 覆盖到已有数据
+            # e.g., save_kline_batch 只提供 OHLCV 字段，不应把 nav/nav_date 覆盖为 NULL
+            provided_cols: set[str] = set()
+            for record in batch:
+                provided_cols.update(record.keys())
+            update_cols = {
+                c.name: stmt.excluded[c.name]
+                for c in model.__table__.columns
+                if c.name not in conflict_columns and c.name in provided_cols
+            }
+            if update_cols:
+                stmt = stmt.on_conflict_do_update(
+                    index_elements=conflict_columns,
+                    set_=update_cols,
+                )
+            else:
+                # 全部列都是冲突键（如 fund_category(code, category)），
+                # 没有可更新的列 —— 用 DO NOTHING，而不是构造空 set_
+                stmt = stmt.on_conflict_do_nothing(
+                    index_elements=conflict_columns)
+            await session.execute(stmt)
+
+
+async def _upsert_row_by_row(session_factory, model, batch: list[dict],
+                             conflict_columns: list[str]) -> tuple[int, list[str]]:
+    """逐条写入，返回 (成功数, 失败代码列表)。"""
+    ok = 0
+    bad: list[str] = []
+    for record in batch:
+        try:
+            await _upsert_batch(session_factory, model, [record], conflict_columns)
+            ok += 1
+        except Exception as e:  # noqa: BLE001 - 逐条兜底，记录并继续
+            code = record.get("code") or record.get(conflict_columns[0]) or "?"
+            bad.append(str(code))
+            logger.debug("单条写入失败 code=%s: %s", code, str(e)[:120])
+    return ok, bad
 
 
 # ── 便捷函数 ────────────────────────────────────────────────

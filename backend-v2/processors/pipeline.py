@@ -265,18 +265,17 @@ async def process_info(data: dict, batch_id: str, session_factory) -> None:
     info_records = [_extract_info(r) for r in validated]
     fee_records = [_extract_fee(r) for r in validated]
     holdings_records = [h for h in (_extract_holdings(r) for r in validated) if h is not None]
-    category_records = [
-        {"code": r.get("code"), "category": r.get("fund_type", "OTHER")}
-        for r in info_records if r.get("fund_type")
-    ]
 
     await save_info_batch(session_factory, info_records)
     await save_fee_batch(session_factory, fee_records)
     if holdings_records:
         await save_holdings_batch(session_factory, holdings_records)
-    if category_records:
-        from models import FundCategory
-        await batch_upsert(session_factory, FundCategory, category_records, ["code", "category"])
+    # 注意: 这里不再写 fund_category。
+    # fund_type 是投资类型（如"指数型-股票"），与 fund_category.category 的语义
+    # （LOF/ETF/REITs 这类市场类别）完全不同，混写会污染采集名单。名单维护统一由
+    # services/universe_service + scheduler.job_scan_codes 负责。
+    # （历史实现还因 FundCategory 全部列都是冲突键而每次都报
+    #   "set parameter dictionary must not be empty"，从未真正写成功过。）
 
     for r in validated:
         code = r.get("code")
@@ -561,21 +560,13 @@ async def save_info_direct(records: list[dict], session_factory) -> dict:
     info_records = [_extract_info(r) for r in validated]
     fee_records = [_extract_fee(r) for r in validated]
     holdings_records = [h for h in (_extract_holdings(r) for r in validated) if h is not None]
-    category_records = [
-        {"code": r.get("code"), "category": r.get("fund_type", "OTHER")}
-        for r in info_records if r.get("fund_type")
-    ]
 
     result = {}
     result["info"] = await save_info_batch(session_factory, info_records)
     result["fee"] = await save_fee_batch(session_factory, fee_records)
     if holdings_records:
         result["holdings"] = await save_holdings_batch(session_factory, holdings_records)
-    if category_records:
-        from models import FundCategory
-        result["category"] = await batch_upsert(
-            session_factory, FundCategory, category_records, ["code", "category"]
-        )
+    # 同 process_info: 不再把 fund_type 当作 fund_category.category 写入（语义不同）。
 
     await save_job_log(session_factory, "info_direct", result.get("info", {}), batch_id)
     logger.info("直接入库完成: info=%s fee=%s",
