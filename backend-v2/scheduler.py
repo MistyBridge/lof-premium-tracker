@@ -127,20 +127,31 @@ async def _log(jid: str, st: str, ms: float = 0,
         logger.warning("[LOG] job_log 写入失败: %s %s - %s", jid, st, e)
 
 async def job_scan_codes() -> None:
-    """扫描基金代码列表（使用本地 all_lof_codes.json）"""
+    """每周同步基金名单：从权威源补全 fund_category
+
+    原实现只读本地 all_lof_codes.json 然后 publish_event，既不联网也不写库，
+    导致 fund_category 自静态导入后再未更新 —— 新上市/转型的基金永远进不来。
+
+    docs/plan/M7_调度层.md 原本就规定本任务应「用 push2 clist 扫描代码列表」，
+    并预留 08:30 的时间窗好让 09:00 的 fetch_info 用上新名单，本实现即该设计意图。
+
+    安全约定：只做新增，不自动删除疑似退市条目（--prune 需人工确认后执行 CLI）。
+    """
     s = time.monotonic()
     try:
-        import json
-        from pathlib import Path
-        codes_file = Path(__file__).parent / "all_lof_codes.json"
-        if not codes_file.exists():
-            raise ValueError("all_lof_codes.json 不存在")
-        with open(codes_file, "r", encoding="utf-8") as f:
-            codes_data = json.load(f)
-        await publish_event("scan_codes", {
-            "data": [{"code": x.get("code"), "name": x.get("name")} for x in codes_data]
-        })
-        _ok("scan_codes", (time.monotonic() - s) * 1000, len(codes_data))
+        from services.universe_service import collect_codes, sync_universe
+        result = await sync_universe(apply=True, prune=False)
+        _ok("scan_codes", (time.monotonic() - s) * 1000, result.inserted)
+
+        # 广播最新采集名单（保留原有事件语义，便于前端/诊断消费）
+        try:
+            codes = await collect_codes()
+            await publish_event("scan_codes", {
+                "data": [{"code": c} for c in codes],
+                "added": len(result.to_add),
+            })
+        except Exception as ev:  # noqa: BLE001 - 广播失败不影响同步结果
+            logger.warning("[SCHEDULER] scan_codes 事件广播失败: %s", ev)
     except Exception as e:
         _fail("scan_codes", e)
 
