@@ -212,43 +212,29 @@ async def job_fetch_realtime() -> None:
     except Exception as e:
         logger.warning("[SCHEDULER] 停牌更新失败: %s", e)
 
+    # 净值归位（当日新增 close 行通常还没有 NAV）
+    #
+    # 顺序很重要：必须**先归位、再刷视图**。旧实现是先刷视图、再补 NAV，视图
+    # 那一轮看到的还是"净值为空"的行，要等下一个 5 分钟周期才拿到净值；
+    # 而且补 NAV 带着 `AND fd.nav IS NULL`，一旦补过一次（哪怕补的是滞后净值）
+    # 就再也不会更新。跨境/QDII 净值滞后 1~2 个交易日，于是把两个交易日的
+    # 行情混算成了溢价率（159509 虚高 32.07%，实际 27.93%）。
+    # 完整背景见 processors/nav_sync.py 的模块说明。
+    try:
+        from database import async_session_factory
+        from processors.nav_sync import sync_nav_to_latest_row
+        async with async_session_factory() as session:
+            await sync_nav_to_latest_row(session, codes)
+            await session.commit()
+    except Exception as e:
+        logger.warning("[SCHEDULER] NAV归位失败: %s", e)
+
     # 刷新物化视图（每5分钟同步数据到快照）
     try:
         from processors.saver import refresh_materialized_view
         await refresh_materialized_view(async_session_factory)
     except Exception as e:
         logger.warning("[SCHEDULER] 物化视图刷新失败: %s", e)
-
-    # 同步最新 NAV 到最新 close-bearing 行（当日新增close行缺少NAV）
-    try:
-        from sqlalchemy import text as sql_text
-        from database import async_session_factory
-        async with async_session_factory() as session:
-            result = await session.execute(sql_text("""
-                UPDATE fund_daily fd SET
-                    nav = sub.nav,
-                    nav_date = sub.nav_date,
-                    nav_type = sub.nav_type,
-                    nav_source = sub.nav_source
-                FROM (
-                    SELECT DISTINCT ON (code)
-                        code, nav, nav_date, nav_type, nav_source
-                    FROM fund_daily
-                    WHERE nav IS NOT NULL
-                    ORDER BY code, nav_date DESC
-                ) sub
-                WHERE fd.code = sub.code
-                  AND fd.trade_date = (
-                      SELECT MAX(trade_date) FROM fund_daily
-                      WHERE code = fd.code AND close IS NOT NULL
-                  )
-                  AND fd.nav IS NULL
-            """))
-            if result.rowcount:
-                logger.info("[SCHEDULER] NAV同步: %d 行已更新", result.rowcount)
-            await session.commit()
-    except Exception as e:
-        logger.warning("[SCHEDULER] NAV同步失败: %s", e)
 
 
 async def job_fetch_nav() -> None:
@@ -303,32 +289,14 @@ async def job_fetch_nav() -> None:
                         except Exception:
                             pass
 
-                    # 2.1 同步最新 NAV 到最新交易日行（物化视图取最新交易日数据）
+                    # 2.1 净值归位到最新交易日行（物化视图取最新交易日数据）
+                    # 每次都重新归位并按新净值重算 premium_rate，不再"只补一次"。
+                    # 详见 processors/nav_sync.py 的模块说明。
                     try:
-                        sync_result = await session.execute(sql_text("""
-                            UPDATE fund_daily fd SET
-                                nav = sub.nav,
-                                nav_date = sub.nav_date,
-                                nav_type = sub.nav_type,
-                                nav_source = sub.nav_source
-                            FROM (
-                                SELECT DISTINCT ON (code)
-                                    code, nav, nav_date, nav_type, nav_source
-                                FROM fund_daily
-                                WHERE nav IS NOT NULL
-                                ORDER BY code, nav_date DESC
-                            ) sub
-                            WHERE fd.code = sub.code
-                              AND fd.trade_date = (
-                                  SELECT MAX(trade_date) FROM fund_daily
-                                  WHERE code = fd.code AND close IS NOT NULL
-                              )
-                              AND fd.nav IS NULL
-                        """))
-                        if sync_result.rowcount > 0:
-                            logger.info("[SCHEDULER] fetch_nav NAV同步: %d 行", sync_result.rowcount)
+                        from processors.nav_sync import sync_nav_to_latest_row
+                        await sync_nav_to_latest_row(session, codes)
                     except Exception as e:
-                        logger.warning("[SCHEDULER] fetch_nav NAV同步失败: %s", e)
+                        logger.warning("[SCHEDULER] fetch_nav 净值归位失败: %s", e)
 
                     await session.commit()
 
