@@ -222,14 +222,58 @@ INDEXES_SQL = [
 # 列迁移（ALTER TABLE ADD COLUMN IF NOT EXISTS，兼容已有表）
 ALTER_TABLE_SQL = [
     "ALTER TABLE user_alert ADD COLUMN IF NOT EXISTS email VARCHAR(255)",
-    # index_code 存的是"跟踪标的"名称而非指数代码（见 fetchers/info.py 的
-    # _parse_info 取 <th>跟踪标的</th>），原 VARCHAR(20) 装不下 QDII 类的
-    # 长指数名，导致这些基金整批写入失败、永远进不了 fund_info：
-    #   'S&P Oil & Gas Exploration & Production Select Industry'  (54 字符)
-    #   '中债-7-10年政策性金融债全价(总值)指数'                      (22 字符)
-    # 加宽是幂等且安全的（VARCHAR 变宽不重写数据）。
-    "ALTER TABLE fund_info ALTER COLUMN index_code TYPE VARCHAR(200)",
 ]
+
+# 列加宽迁移: (表, 列, 目标长度)。
+#
+# 为什么不能直接放进 ALTER_TABLE_SQL 无条件执行：
+# PostgreSQL 不允许 ALTER 一个被物化视图引用的列（报
+# "cannot alter type of a column used by a view or rule"），
+# 所以必须先把 fund_snapshot 摘掉、改完列、再重建视图。
+# 这里只在"当前长度确实不足"时才改动，因此可以安全地重复执行。
+#
+# index_code 存的是"跟踪标的"名称而非指数代码（见 fetchers/info.py 的
+# _parse_info 取 <th>跟踪标的</th>），原 VARCHAR(20) 装不下 QDII 类的
+# 长指数名，导致这些基金整批写入失败、永远进不了 fund_info：
+#   'S&P Oil & Gas Exploration & Production Select Industry'  (54 字符)
+#   '中债-7-10年政策性金融债全价(总值)指数'                      (22 字符)
+COLUMN_WIDEN_SQL = [
+    ("fund_info", "index_code", 200),
+]
+
+# 物化视图定义版本。任何一次改动 MATERIALIZED_VIEW_SQL 都必须递增此值，
+# 否则已有库不会重建（CREATE MATERIALIZED VIEW IF NOT EXISTS 对已存在的
+# 视图是空操作），定义改动就会静默失效。
+MV_VERSION = 1
+
+# fund_snapshot 的索引。原先只存在于手工执行的
+# sql/migrations/003_optimize_performance.sql 里，一旦视图被重建
+# （例如上面的列加宽必须先摘视图）这些索引就会全部丢失，其中
+# idx_snapshot_code 是 REFRESH ... CONCURRENTLY 的硬性前置条件，
+# 丢了会让每日刷新静默失败。因此定义必须跟着视图走。
+#
+# 这里刻意不用 CONCURRENTLY：整个重建放在一个事务里做才安全（否则
+# 中间会出现 fund_snapshot 不存在的窗口，API 直接报错）。MV 只有
+# 2000 行出头，非并发建索引的锁表时间是毫秒级。
+MV_INDEXES_SQL = [
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_snapshot_code ON fund_snapshot (code)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_amount ON fund_snapshot (amount DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_premium ON fund_snapshot (premium_rate DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_change ON fund_snapshot (change_pct DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_turnover ON fund_snapshot (turnover_rate DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_volume ON fund_snapshot (volume DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_close ON fund_snapshot (close DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_nav ON fund_snapshot (nav DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_type_amount ON fund_snapshot (fund_type, amount DESC NULLS LAST)",
+    "CREATE INDEX IF NOT EXISTS idx_snap_type_premium ON fund_snapshot (fund_type, premium_rate DESC NULLS LAST)",
+]
+
+# 迁移元数据表：记录已应用的 MV 定义版本等信息
+SCHEMA_META_SQL = """CREATE TABLE IF NOT EXISTS schema_meta (
+    key        VARCHAR(64) PRIMARY KEY,
+    value      TEXT NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+)"""
 
 MATERIALIZED_VIEW_SQL = """CREATE MATERIALIZED VIEW IF NOT EXISTS fund_snapshot AS
 SELECT
@@ -259,7 +303,7 @@ EXPECTED_TABLES = [
     "asset_master", "asset_daily", "fund_asset_map", "trade_calendar",
     "fetch_progress", "job_log", "admin_audit_log",
     "user_formula_group", "user_formula", "user_watchlist", "user_alert",
-    "fund_est_nav",
+    "fund_est_nav", "schema_meta",
 ]
 
 
@@ -293,6 +337,80 @@ async def ensure_partition(conn: asyncpg.Connection, target_date: date) -> None:
 # ── 核心迁移 ────────────────────────────────────────────────
 
 
+async def _column_length(conn: asyncpg.Connection, table: str,
+                         column: str) -> int | None:
+    """列的字符长度上限；非字符串列返回 None。"""
+    return await conn.fetchval(
+        "SELECT character_maximum_length FROM information_schema.columns "
+        "WHERE table_name = $1 AND column_name = $2", table, column)
+
+
+async def _mv_exists(conn: asyncpg.Connection) -> bool:
+    return bool(await conn.fetchval(
+        "SELECT to_regclass('public.fund_snapshot') IS NOT NULL"))
+
+
+async def _mv_version_ok(conn: asyncpg.Connection) -> bool:
+    """物化视图定义是否已是当前版本。"""
+    value = await conn.fetchval(
+        "SELECT value FROM schema_meta WHERE key = 'mv_fund_snapshot_version'")
+    return value == str(MV_VERSION)
+
+
+async def _sync_materialized_view(conn: asyncpg.Connection) -> None:
+    """按需重建 fund_snapshot 并确保索引齐备。
+
+    重建的触发条件（任一成立）：
+      * 视图不存在；
+      * schema_meta 里记录的 MV_VERSION 与代码中的不一致（定义改过）；
+      * 有列加宽待执行 —— PG 不允许 ALTER 被视图引用的列，必须先摘视图。
+
+    整个"摘视图 → 改列 → 建视图 → 建索引"放在同一个事务里，
+    避免中间出现 fund_snapshot 不存在的窗口把 API 打挂。
+    """
+    pending = []
+    for table, column, width in COLUMN_WIDEN_SQL:
+        current = await _column_length(conn, table, column)
+        if current is not None and current < width:
+            pending.append((table, column, current, width))
+
+    exists = await _mv_exists(conn)
+    version_ok = await _mv_version_ok(conn) if exists else False
+    if version_ok and not pending:
+        # 视图已是最新定义，但仍要补齐可能缺失的索引
+        for sql in MV_INDEXES_SQL:
+            await conn.execute(sql)
+        logger.info("物化视图 fund_snapshot 已是最新定义，跳过重建")
+        return
+
+    reason = []
+    if pending:
+        reason.append(f"待加宽列 {len(pending)} 个")
+    if exists and not version_ok:
+        reason.append("视图定义版本过期")
+    if not exists:
+        reason.append("视图不存在")
+
+    async with conn.transaction():
+        if exists:
+            await conn.execute("DROP MATERIALIZED VIEW fund_snapshot")
+        for table, column, current, width in pending:
+            await conn.execute(
+                f"ALTER TABLE {table} ALTER COLUMN {column} "
+                f"TYPE VARCHAR({width})")
+            logger.info("列加宽: %s.%s VARCHAR(%d) -> VARCHAR(%d)",
+                        table, column, current, width)
+        await conn.execute(MATERIALIZED_VIEW_SQL)
+        for sql in MV_INDEXES_SQL:
+            await conn.execute(sql)
+        await conn.execute(
+            "INSERT INTO schema_meta (key, value, updated_at) "
+            "VALUES ('mv_fund_snapshot_version', $1, NOW()) "
+            "ON CONFLICT (key) DO UPDATE SET value = excluded.value, "
+            "updated_at = NOW()", str(MV_VERSION))
+    logger.info("物化视图 fund_snapshot 已重建（%s）", "；".join(reason))
+
+
 async def run_migration(conn: asyncpg.Connection) -> None:
     """执行全部迁移"""
     logger.info("=== 开始数据库迁移 ===")
@@ -300,7 +418,8 @@ async def run_migration(conn: asyncpg.Connection) -> None:
     # 1. 建表
     for sql in TABLES_SQL:
         await conn.execute(sql)
-    logger.info("%d 张表创建完成", len(TABLES_SQL))
+    await conn.execute(SCHEMA_META_SQL)
+    logger.info("%d 张表创建完成", len(TABLES_SQL) + 1)
 
     # 1.1 列迁移（ALTER TABLE ADD COLUMN IF NOT EXISTS）
     for sql in ALTER_TABLE_SQL:
@@ -319,9 +438,8 @@ async def run_migration(conn: asyncpg.Connection) -> None:
     await ensure_partition(conn, next_month)
     logger.info("分区（当月+下月）就绪")
 
-    # 4. 物化视图
-    await conn.execute(MATERIALIZED_VIEW_SQL)
-    logger.info("物化视图 fund_snapshot 创建完成")
+    # 4. 物化视图（含必须在摘视图后才能执行的列加宽）
+    await _sync_materialized_view(conn)
 
     logger.info("=== 迁移完成 ===")
 

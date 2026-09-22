@@ -2,13 +2,17 @@
 -- 性能优化迁移 (003) — 金快查 backend-v2
 -- 目标: 解决 fund_snapshot 列表/详情查询慢、并发响应长的问题
 --
+-- ⚠️ 本文件为历史记录。fund_snapshot 的索引定义已归口到
+--    migration.py 的 MV_INDEXES_SQL —— 因为列加宽等迁移必须先
+--    DROP MATERIALIZED VIEW 再重建，索引若只存在于本文件会在
+--    重建时全部丢失（其中 idx_snapshot_code 是 REFRESH ...
+--    CONCURRENTLY 的硬性前置条件，丢了会导致每日刷新静默失败）。
+--    新增/修改 MV 索引请改 migration.py，不要再改本文件。
+--
 -- ⚠️ 执行说明:
 --   1. 本文件每条语句单独 autocommit 执行（不要用 BEGIN 包裹）。
 --   2. 带 CONCURRENTLY 的索引不阻塞读写，但本身不能在事务内运行。
 --   3. 生产环境建议在低峰期执行，执行前先备份。
---   4. idx_snapshot_code 是唯一索引，REFRESH MATERIALIZED VIEW
---      CONCURRENTLY 的硬性前置条件（当前 migration.py 未创建它，
---      会导致每日刷新静默失败、快照数据陈旧）。
 -- ============================================================
 
 -- ------------------------------------------------------------
