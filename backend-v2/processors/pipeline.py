@@ -189,41 +189,23 @@ async def process_nav(data: dict, batch_id: str, session_factory) -> None:
     nav_map = {r["code"]: r for r in validated if r.get("code")}
     await cache_set("nav:all", nav_map, ttl=86400)  # 24小时，确保daily_save能读到
 
-    # 同步更新 fund_daily 表的 NAV 数据
-    from datetime import date as _date
-    from sqlalchemy import text
+    # 同步更新 fund_daily 表的 NAV 数据。
+    # 写入统一走 nav_sync.upsert_nav_rows：净值落到它自己的日期行，并用该行的
+    # 收盘价把 premium_rate 一起对齐，避免同一行里 nav 与溢价率口径不一致。
     updated = 0
     async with session_factory() as session:
-        for item in validated:
-            code = item.get("code")
-            nav = item.get("nav")
-            nav_date = item.get("nav_date")
-            if not code or not nav or not nav_date:
-                continue
-            if isinstance(nav_date, str):
-                try:
-                    nav_date = _date.fromisoformat(nav_date)
-                except (ValueError, TypeError):
-                    continue
-            try:
-                result = await session.execute(text(
-                    "INSERT INTO fund_daily (code, trade_date, nav, nav_date, nav_type, nav_source) "
-                    "VALUES (:code, :nav_date, :nav, :nav_date, 'confirmed', 'lsjz') "
-                    "ON CONFLICT (code, trade_date) DO UPDATE SET "
-                    "nav = EXCLUDED.nav, nav_date = EXCLUDED.nav_date, "
-                    "nav_type = 'confirmed', nav_source = 'lsjz'"
-                ), {"code": code, "nav": float(nav), "nav_date": nav_date})
-                if result.rowcount > 0:
-                    updated += 1
-            except Exception:
-                pass
+        from processors.nav_sync import sync_nav_to_latest_row, upsert_nav_rows
+
+        try:
+            updated = await upsert_nav_rows(session, validated)
+        except Exception as e:
+            logger.warning("[NAV] 净值写入失败: %s", e)
 
         # 净值归位到最新交易日行。本次到货的很可能是滞后净值（跨境/QDII），
         # 必须把最新交易日行的净值一并修正并按新净值重算溢价率，
         # 否则页面会继续显示用更旧净值算出来的错位溢价率。
         # 详见 processors/nav_sync.py 的模块说明。
         try:
-            from processors.nav_sync import sync_nav_to_latest_row
             await sync_nav_to_latest_row(
                 session, [i["code"] for i in validated if i.get("code")])
         except Exception as e:

@@ -136,3 +136,79 @@ class TestListMisaligned:
         否则 135 条报告里 80 多条是噪声，把真正要修的那几十条淹没了。"""
         sql = str(nav_sync.MISALIGNED_SQL)
         assert "fd.nav IS NOT NULL" in sql
+
+
+class TestUpsertNavSqlInvariants:
+    """净值写入必须让同一行里的 nav 与 premium_rate 口径一致。"""
+
+    def test_nav_lands_on_its_own_date_row(self):
+        sql = str(nav_sync.UPSERT_NAV_SQL)
+        assert "trade_date" in sql
+        # 净值自身日期既做 trade_date 又做 nav_date
+        assert sql.count(":nav_date") >= 2
+
+    def test_conflict_recomputes_premium_rate(self):
+        sql = str(nav_sync.UPSERT_NAV_SQL)
+        assert "ON CONFLICT (code, trade_date) DO UPDATE" in sql
+        assert "round((fund_daily.close - EXCLUDED.nav) / EXCLUDED.nav * 100, 4)" in sql
+
+    def test_keeps_old_premium_when_close_missing(self):
+        """净值先于 K 线到货时不能凭空造溢价率。"""
+        sql = str(nav_sync.UPSERT_NAV_SQL)
+        assert "ELSE fund_daily.premium_rate" in sql
+
+    def test_has_no_op_guard_for_meaningful_rowcount(self):
+        sql = str(nav_sync.UPSERT_NAV_SQL)
+        assert "WHERE fund_daily.nav IS DISTINCT FROM EXCLUDED.nav" in sql
+
+
+class TestUpsertNavRows:
+    @pytest.mark.asyncio
+    async def test_empty_short_circuits(self):
+        session = _FakeSession()
+        assert await nav_sync.upsert_nav_rows(session, []) == 0
+        assert session.executed == []
+
+    @pytest.mark.asyncio
+    async def test_filters_invalid_rows(self):
+        session = _FakeSession(rowcount=1)
+        await nav_sync.upsert_nav_rows(session, [
+            {"code": "510300", "nav": 4.6179, "nav_date": "2026-09-22"},  # ok
+            {"code": "", "nav": 1.0, "nav_date": "2026-09-22"},           # 无代码
+            {"code": "510300", "nav": None, "nav_date": "2026-09-22"},    # 无净值
+            {"code": "510300", "nav": 1.0, "nav_date": None},             # 无净值日
+            {"code": "510300", "nav": 0, "nav_date": "2026-09-22"},       # 净值非正
+            {"code": "510300", "nav": -1, "nav_date": "2026-09-22"},      # 净值非正
+            {"code": "510300", "nav": "abc", "nav_date": "2026-09-22"},   # 非数字
+            {"code": "510300", "nav": 1.0, "nav_date": "not-a-date"},     # 坏日期
+        ])
+        _, params = session.executed[0]
+        assert len(params) == 1
+        assert params[0]["code"] == "510300"
+        assert params[0]["nav"] == 4.6179
+
+    @pytest.mark.asyncio
+    async def test_parses_iso_date_string(self):
+        from datetime import date
+
+        session = _FakeSession(rowcount=1)
+        await nav_sync.upsert_nav_rows(
+            session, [{"code": "159509", "nav": 2.3833, "nav_date": "2026-09-21"}])
+        _, params = session.executed[0]
+        assert params[0]["nav_date"] == date(2026, 9, 21)
+
+    @pytest.mark.asyncio
+    async def test_accepts_date_object(self):
+        from datetime import date
+
+        session = _FakeSession(rowcount=1)
+        await nav_sync.upsert_nav_rows(
+            session, [{"code": "159509", "nav": 2.3833, "nav_date": date(2026, 9, 21)}])
+        _, params = session.executed[0]
+        assert params[0]["nav_date"] == date(2026, 9, 21)
+
+    @pytest.mark.asyncio
+    async def test_returns_rowcount(self):
+        session = _FakeSession(rowcount=5)
+        assert await nav_sync.upsert_nav_rows(
+            session, [{"code": "510300", "nav": 1.0, "nav_date": "2026-09-22"}]) == 5
