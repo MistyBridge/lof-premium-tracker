@@ -266,9 +266,10 @@ async def _compute_fund_list(
             row["fetched_at"] = fetched_map.get(c)
 
     # 盘中注入估算净值
-    from services.est_nav_service import get_est_nav_cache
+    from services.est_nav_service import get_est_nav_cache, get_est_nav_meta
     est_nav_map = await get_est_nav_cache()
-    _normalize_frontend_fields(rows, est_nav_map)
+    _normalize_frontend_fields(rows, est_nav_map,
+                               _est_time_label(await get_est_nav_meta()))
 
     meta = {
         "page": page,
@@ -343,9 +344,10 @@ async def get_fund_detail(session_factory, code: str) -> dict:
     fund_dict["aum"] = aum_map.get(code)
     fund_dict["fetched_at"] = fetched_map.get(code)
 
-    from services.est_nav_service import get_est_nav_cache
+    from services.est_nav_service import get_est_nav_cache, get_est_nav_meta
     est_nav_map = await get_est_nav_cache()
-    _normalize_frontend_fields([fund_dict], est_nav_map)
+    _normalize_frontend_fields([fund_dict], est_nav_map,
+                               _est_time_label(await get_est_nav_meta()))
 
     return fund_dict
 
@@ -390,9 +392,10 @@ async def get_fund_batch(session_factory, codes: list[str]) -> list[dict]:
         row["aum"] = aum_map.get(c)
         row["fetched_at"] = fetched_map.get(c)
 
-    from services.est_nav_service import get_est_nav_cache
+    from services.est_nav_service import get_est_nav_cache, get_est_nav_meta
     est_nav_map = await get_est_nav_cache()
-    _normalize_frontend_fields(rows, est_nav_map)
+    _normalize_frontend_fields(rows, est_nav_map,
+                               _est_time_label(await get_est_nav_meta()))
 
     return rows
 
@@ -781,14 +784,66 @@ async def _batch_fetched_at(
     }
 
 
-def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None) -> None:
+def _est_is_meaningful(est: dict) -> bool:
+    """这份估算净值是不是"真的估了"。
+
+    反例（实测 501225 景顺长城全球半导体芯片 QDII-LOF）：
+        coverage = 0.03%, est_change_pct = 0.0000, est_nav == nav（原样拷贝）
+    我们既没有它的持仓、也拿不到可用的指数行情，估算器一个价格输入都没有 ——
+    算出来的"估算净值"就是上一日净值的副本。把它摆在「估算净值」列上，还会
+    顺着算出「估算溢价率 +23.89%」，用户完全无从分辨这是估算还是空转。
+
+    判据用"有没有价格输入"这个直接事实，而不是 coverage 阈值：
+      * coverage 低但指数行情可用时，估算依然成立（index_contrib 补足剩余仓位），
+        按阈值一刀切会误伤；
+      * 两个贡献都为 0 才是真正的"零输入"，此时 est_nav 必然等于基准净值。
+
+    判定为无意义时，上层把 est_nav / est_premium_rate 置空，页面显示 `--`，
+    符合"拿不到有依据的数据就用空值，不要误导用户"。
+    """
+    if est.get("est_nav") is None:
+        return False
+    chg = est.get("est_change_pct")
+    try:
+        zero_change = chg is None or abs(float(chg)) < 1e-9
+    except (TypeError, ValueError):
+        zero_change = True
+    if not zero_change:
+        return True
+    # 涨跌幅为 0：只有能**证明**估算值确实不同于基准净值，才算真的估了。
+    # 拿不到基准 / 值解析不了 → 无法证明 → 不展示（宁缺毋滥）。
+    try:
+        return abs(float(est["est_nav"]) - float(est.get("nav"))) > 1e-9
+    except (TypeError, ValueError):
+        return False
+
+
+def _est_time_label(meta: dict | None) -> str | None:
+    """估算净值的**真实生成时刻**，格式化为 HH:MM。
+
+    前端的 `_estNavTimeLabel()` 原来返回 `new Date()`（浏览器当前时间），
+    等于给几小时前算出来的估算值盖上"刚刚"的戳 —— 实测页面显示 22:37，
+    而那份估算其实在 19:57 就算完了，之后再没更新过。时间戳必须来自后端。
+    """
+    ts = (meta or {}).get("updated_at")
+    if not ts:
+        return None
+    try:
+        from datetime import datetime
+        return datetime.fromisoformat(str(ts)).strftime("%H:%M")
+    except (TypeError, ValueError):
+        return None
+
+
+def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None,
+                              est_time: str | None = None) -> None:
     """
     原地补齐前端需要的字段（v1 兼容）。
     - price: close 的别名
     - change_amount: 涨跌额 = change_pct / 100 * close
     - on_exchange_shares: float_share 的别名
     - can_purchase: purchase_status → bool/None
-    - 盘中注入估算净值 (est_nav_map)
+    - 盘中注入估算净值 (est_nav_map)；est_time 为估算值的真实生成时刻
     """
     STATUS_TO_CAN = {
         "open": True,
@@ -805,14 +860,16 @@ def _normalize_frontend_fields(rows: list[dict], est_nav_map: dict | None = None
         # nav 始终保留确认净值，est_nav 作为独立字段
         code = row.get("code")
         est = est_nav_map.get(code) if est_nav_map and code else None
-        if est and est.get("est_nav") is not None:
+        if est and est.get("est_nav") is not None and _est_is_meaningful(est):
             row["est_nav"] = est["est_nav"]
             row["est_change_pct"] = est.get("est_change_pct")
             row["est_coverage"] = est.get("coverage")
         else:
+            # 注意：est == None 与"估了但等于没估"都走这里 —— 见 _est_is_meaningful
             row["est_nav"] = None
             row["est_change_pct"] = None
-            row["est_coverage"] = None
+            row["est_coverage"] = est.get("coverage") if est else None
+        row["est_nav_time"] = est_time
 
         # price: 优先用实时价 → close（前端 fund.price 引用）
         rt_price = row.get("realtime_price")

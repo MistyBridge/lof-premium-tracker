@@ -448,12 +448,16 @@ async def _qdii() -> list[str]:
 
 
 async def job_est_nav() -> None:
-    """估算净值 — 交易日 9:25-20:00 每5分钟计算（Redis 缓存 + SQL 入库）"""
+    """估算净值 — 交易日 9:25-23:00 每5分钟计算（Redis 缓存 + SQL 入库）"""
     now = beijing_now()
     hour_min = now.hour * 100 + now.minute
 
-    # 非交易时段跳过计算，保留已有缓存
-    if not is_trading_day() or hour_min < 925 or hour_min >= 2000:
+    # 非交易时段跳过计算，保留已有缓存。
+    # 末端从 20:00 延到 23:00：跨境/QDII 净值在傍晚到深夜才披露，而 est_nav 的
+    # 基准净值取的是"最新已公布净值"（processors/est_nav.load_fund_meta）。净值在
+    # 20:00 之后到货时，若估算已经停止刷新，就会出现「净值列是 T-1、估算列却按
+    # T-2 算」的错位 —— 两列不同基准，用户没法横向比较。
+    if not is_trading_day() or hour_min < 925 or hour_min >= 2300:
         return
 
     s = time.monotonic()

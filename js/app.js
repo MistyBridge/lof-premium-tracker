@@ -24,13 +24,14 @@ function formatAmount(val) {
 }
 
 /**
- * 估算净值时间标签（本地时间 HH:MM）
+ * 估算净值时间标签 —— 必须是后端给出的**真实生成时刻**。
+ *
+ * 这里原来返回 `new Date()`（浏览器当前时间），等于给一份几小时前算出来的
+ * 估算值盖上"刚刚"的戳：实测页面显示 22:37，而那份估算在 19:57 就算完了，
+ * 之后没有再刷新（est_nav 只在 9:25–20:00 运行）。用户看到的"时间"是假的。
  */
-function _estNavTimeLabel() {
-    var now = new Date();
-    var hh = now.getHours().toString().padStart(2, '0');
-    var mm = now.getMinutes().toString().padStart(2, '0');
-    return hh + ':' + mm;
+function _estNavTimeLabel(fund) {
+    return (fund && fund.est_nav_time) ? fund.est_nav_time : '';
 }
 
 class LofFundMonitor {
@@ -281,15 +282,20 @@ class LofFundMonitor {
     // 跨境/QDII 的净值披露天然滞后，此时"溢价率 = (T日价格 − T-x净值)/T-x净值"，
     // 两个交易日的行情被混算，数值会偏高。后端已把 nav_date 如实记录下来，
     // 前端必须把它摆在溢价率旁边 —— 否则用户会以为这就是当日的真实溢价。
+    //
+    // 措辞注意：早期版本写的是"滞后MM-DD"，会被读成"数据没更新/出错了"。
+    // 其实这正是"目前能拿到的最新净值"，只是日期比行情早，所以改成中性的
+    // "按MM-DD净值"，把"为什么"放进 title。
     // 这里只做展示，不做任何数值修正（修正需要对齐的净值，拿不到就该留空）。
     _navLagMark(fund) {
         if (!fund || !fund.nav_date || !fund.trade_date) return '';
         if (fund.nav_date >= fund.trade_date) return '';
         var md = String(fund.nav_date).slice(5);   // YYYY-MM-DD → MM-DD
-        var tip = '该溢价率用的是 ' + fund.nav_date + ' 的净值，而行情是 '
-                  + fund.trade_date + ' 的 —— 净值为 T-x，未反映最近交易日的'
-                  + '净值变动，跨境/QDII 基金因披露时点必然如此。';
-        return '<span class="nav-lag" title="' + tip + '">滞后' + md + '</span>';
+        var tip = '该溢价率 = (' + fund.trade_date + ' 行情 − ' + fund.nav_date
+                  + ' 净值) ÷ 该净值。跨境/QDII 基金的净值要等海外市场收盘后由'
+                  + '基金公司估值披露，天然比行情晚 1~2 个交易日；此处用的已经是'
+                  + '目前可获得的最新净值（净值日期见「净值」列下方）。';
+        return '<span class="nav-lag" title="' + tip + '">按' + md + '净值</span>';
     }
 
     // ===== 三日平均溢价率（从后端API获取，字段 avg_premium_3d）=====
@@ -575,7 +581,7 @@ class LofFundMonitor {
                 return '<td class="col-nav">' + n + (nd ? '<div class="cell-sub">' + nd + '</div>' : '') + '</td>';
             case 'est_nav':
                 var en = (fund.est_nav != null) ? fund.est_nav.toFixed(4) : '--';
-                var et = fund.est_nav != null ? _estNavTimeLabel() : '';
+                var et = fund.est_nav != null ? _estNavTimeLabel(fund) : '';
                 return '<td class="col-est-nav">' + en + (et ? '<div class="cell-sub">' + et + '</div>' : '') + '</td>';
             case 'change_pct':
                 var cp = fund.change_pct;
@@ -2288,7 +2294,7 @@ class LofFundMonitor {
         if (navDateEl) navDateEl.textContent = fund.nav_date || '';
         setVal('fdEstNav', fund.est_nav != null ? fund.est_nav.toFixed(4) : null);
         var estTimeEl = document.getElementById('fdEstNavTime');
-        if (estTimeEl) estTimeEl.textContent = fund.est_nav != null ? _estNavTimeLabel() : '';
+        if (estTimeEl) estTimeEl.textContent = fund.est_nav != null ? _estNavTimeLabel(fund) : '';
         setVal('fdChangePct', cp != null ? cpSign + cp.toFixed(2) + '%' : null, cpCls);
         var prSign = _pr > 0 ? '+' : '', eprSign = (_epr != null && _epr > 0) ? '+' : '';
         var prText = _pr != null ? prSign + _pr.toFixed(2) + '%' : '--';

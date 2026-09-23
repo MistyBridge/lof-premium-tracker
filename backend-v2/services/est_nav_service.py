@@ -24,6 +24,8 @@ logger = logging.getLogger("app")
 
 # Redis Key (v2 = 包含 holding_details/index_detail/nav 完整字段)
 EST_NAV_KEY = "est_nav:v2"
+# 生成时间单独放一个键：塞进上面的 dict 会被 _est_nav_data_to_records 当成基金代码。
+EST_NAV_META_KEY = "est_nav:meta"
 EST_NAV_TTL = 259200  # 72小时 — 覆盖周末及长假，非交易时段仍可查看最近估算值
 
 
@@ -102,6 +104,13 @@ async def run_est_nav(client: httpx.AsyncClient) -> dict:
 
         # 6. 写入 Redis
         await cache_set(EST_NAV_KEY, data, EST_NAV_TTL)
+        # 单独记一份生成时间。前端原来把「估算净值」旁边的时刻写成
+        # `new Date()`（浏览器当前时间），等于给一份几小时前算出来的估算值
+        # 盖上"刚刚"的时间戳 —— 必须由后端给出真实的计算时刻。
+        from utils import beijing_now
+        await cache_set(EST_NAV_META_KEY,
+                        {"updated_at": beijing_now().isoformat()},
+                        EST_NAV_TTL)
 
         elapsed = (time.monotonic() - start) * 1000
         ok = len(data) > 0
@@ -123,6 +132,11 @@ async def run_est_nav(client: httpx.AsyncClient) -> dict:
 async def get_est_nav_cache() -> dict:
     """从 Redis 读取估算净值缓存"""
     return await cache_get(EST_NAV_KEY) or {}
+
+
+async def get_est_nav_meta() -> dict:
+    """估算净值的生成时间等元信息：{updated_at: ISO8601}"""
+    return await cache_get(EST_NAV_META_KEY) or {}
 
 
 async def save_est_nav_snapshot(client: httpx.AsyncClient) -> int:
