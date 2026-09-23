@@ -775,7 +775,7 @@
                 return self._loadScript('js/api.js?v=25');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
-                return self._loadScript('js/app.js?v=36');
+                return self._loadScript('js/app.js?v=37');
             }).then(function() {
                 self._scriptsReady = true;
             });
@@ -900,7 +900,15 @@
             }
             this._app.currentPage = 1;
             if (!isFav && this._app.filterMode !== prevFilter) {
-                this._app.loadFunds();
+                // force=true：用户主动切换必须立刻生效。旧实现走的是普通路径，
+                // 一旦自动刷新正好在途（每 90 秒一次，请求 1~3.5 秒），这次切换
+                // 会被 loadFunds 的并发保护静默丢弃 —— 界面停在旧板块，要等
+                // 下一次自动刷新才变。这正是"点了没反应"的根因。
+                var app = this._app;
+                app.loadFunds({ force: true }).catch(function(e) {
+                    console.error('[SPA] 切换板块失败:', e && e.message);
+                    app.showError(true, app._errorHelpText(e));
+                });
                 return;
             }
             this._app.applyFilters();
