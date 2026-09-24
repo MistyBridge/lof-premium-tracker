@@ -30,7 +30,12 @@
     .hero { padding-top: 100px; padding-bottom: 220px; }
     .hero-tagline { text-align: center; }
     .hl-line { padding-left: 0; }
-    .hl-line--gap { margin-top: 5px; position: relative; left: 3em; }
+    /* 错位改用 padding-left 而不是 position:relative + left。
+       .hl-line 是整宽的块，left:3em 会把**整个块**右移 3em，块右边缘
+       溢出视口 72px，落地页因此出现横向滚动条（1024/1440 实测都是 +72px）。
+       text-align:center 下改用 padding-left:6em，内容区居中后再整体右移
+       3em —— 视觉错位一模一样，但块的边界始终在视口内。 */
+    .hl-line--gap { margin-top: 5px; padding-left: 6em; }
     .hl-line .hl-text { font-size: 47px; letter-spacing: 0; }
     .hl-dim { font-size: 36px; letter-spacing: 0; }
     .hl-line--gap .hl-text { font-size: 47px; letter-spacing: 0; }
@@ -45,9 +50,15 @@
               border: 1px solid var(--border); transition: all 0.2s; min-height: 56px; }
 .entry-item.entry-active { cursor: pointer; }
 .entry-item.entry-active:hover { background: #f0f4ff; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-.entry-left { display: flex; align-items: center; gap: 16px; }
-.entry-title { font-size: 1.15rem; font-weight: 600; color: var(--text); }
-.entry-desc { font-size: 0.88rem; color: var(--text2); }
+/* 标题列不可压缩、说明列吃掉剩余宽度。
+   此前两者都可收缩：ETF 的说明文字比 LOF 长，挤掉标题的宽度后
+   "ETF基金" 被折成 "ETF基 / 金"，而 "LOF基金" 恰好不折 —— 同一组入口
+   里两个卡片高度和排版都不一样。 */
+.entry-left { display: flex; align-items: center; gap: 16px; min-width: 0; }
+.entry-title { font-size: 1.15rem; font-weight: 600; color: var(--text);
+               white-space: nowrap; flex-shrink: 0; }
+.entry-desc { font-size: 0.88rem; color: var(--text2);
+              flex: 1 1 auto; min-width: 0; }
 
 /* ── 数据页导航条 ── */
 .spa-nav { display: flex; align-items: center; justify-content: space-between;
@@ -79,12 +90,16 @@
 
 /* ── 响应式：移动端通用 ── */
 @media (max-width: 768px) {
-  .entry-list { width: calc(100vw - 48px); }
+  /* 用 100vw 在移动端会算进 —— 某些浏览器里 100vw 大于可视宽度，改用外边距 */
+  .entry-list { width: auto; margin: 0 24px; }
   .entry-item { padding: 14px 18px; }
+  .entry-title { font-size: 1.05rem; }
+  .entry-desc { font-size: 0.82rem; }
   .user-center-link { display: inline-block; }
   .market-status, .landing-timestamp, .btn-dark-mode { display: none; }
   .landing-container { padding: 0; }
-  .spa-nav { padding: 6px 12px; border-radius: 0; margin-bottom: 10px; }
-  .spa-nav-tab { padding: 5px 12px; font-size: 0.78rem; }
-  .spa-nav-back { font-size: 0.78rem; }
+  .spa-nav { padding: 8px 12px; border-radius: 0; margin-bottom: 10px; }
+  /* 导航项此前只有 30px 高，低于移动端可点下限 */
+  .spa-nav-tab { padding: 12px 14px; font-size: 0.8rem; }
+  .spa-nav-back { font-size: 0.8rem; padding: 12px 4px; display: inline-block; }
 }
