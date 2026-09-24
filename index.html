@@ -762,7 +762,7 @@
                 self._loadScript('https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js'),
                 self._loadScript('js/columns.js?v=23'),
                 self._loadScript('js/kpi-cards.js?v=2'),
-                self._loadScript('js/config.js?v=24'),
+                self._loadScript('js/config.js?v=25'),
                 self._loadScript('js/cache.js?v=1'),
                 self._loadScript('js/supabase.js?v=1'),
                 self._loadScript('js/auth.js?v=1'),
@@ -772,7 +772,7 @@
                 self._loadScript('js/admin.js?v=1')
             ]).then(function() {
                 // Phase 2: api.js 依赖 config.js
-                return self._loadScript('js/api.js?v=25');
+                return self._loadScript('js/api.js?v=26');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
                 return self._loadScript('js/app.js?v=40');
@@ -1031,8 +1031,8 @@
             // 加载轻量脚本 → 拉取数据 → 缓存
             var scripts = [
                 'js/kpi-cards.js?v=2',
-                'js/config.js?v=24',
-                'js/api.js?v=25',
+                'js/config.js?v=25',
+                'js/api.js?v=26',
                 'js/cache.js?v=1',
                 'js/supabase.js?v=1',
                 'js/auth.js?v=1',

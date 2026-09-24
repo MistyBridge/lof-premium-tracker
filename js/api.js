@@ -30,15 +30,20 @@ class LofApiService {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), this.config.REQUEST_TIMEOUT);
 
+        // Content-Type 只在**真的带 body** 时设置。
+        // GET 上带 application/json 会把请求变成"非简单请求"，浏览器必须先发一次
+        // OPTIONS 预检 —— 切板块那次请求凭空多一个往返。GET 无 body，本来就不需要它。
+        const headers = { ...options.headers };
+        if (options.body !== undefined && options.body !== null) {
+            if (!headers['Content-Type']) headers['Content-Type'] = 'application/json';
+        }
+
         try {
             const response = await fetch(url, {
                 ...options,
                 signal: controller.signal,
                 mode: 'cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...options.headers
-                }
+                headers
             });
 
             clearTimeout(timeout);

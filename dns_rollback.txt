@@ -1,0 +1,9 @@
+﻿# api.jinkuaicha.com 回滚信息（2026-09-24 直连改造前）
+record_id = 1808c8bcfbdc8fefafd261b61c7a105b
+type      = CNAME
+content   = f64127e6-a5a0-4644-bd1a-9e9d6dc8d4ca.cfargotunnel.com
+proxied   = true
+ttl       = 1
+
+回滚命令（PUT）：
+{"type":"CNAME","name":"api.jinkuaicha.com","content":"f64127e6-a5a0-4644-bd1a-9e9d6dc8d4ca.cfargotunnel.com","proxied":true,"ttl":1}

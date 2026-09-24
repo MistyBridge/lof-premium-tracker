@@ -10,16 +10,24 @@
     // 本地开发环境
     const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    // 默认配置 - 使用CF Pages同源API代理
-    // CF Pages Functions代理：浏览器 → CF Pages（同源）→ Railway后端
-    // 解决中国网络访问Railway美国节点被阻断的问题
+    // 默认配置
+    //
+    // 生产环境改为**直连源站**（api.jinkuaicha.com → 阿里云 ECS）。
+    //
+    // 不要改回 ''（同源相对路径）。那条路是"浏览器 → CF Pages → Pages Function
+    // → CF 再转一手 → 源站"，实测代价：
+    //   · 绕经 Cloudflare 美西边缘（CF-RAY 显示 LAX/SJC）两趟，而不是就近直连；
+    //   · 切换板块要 6.9~25s，直连只要 1.2~4.0s（见 scripts/perf_board_switch.mjs）；
+    //   · 而且 CF 边缘到源站的 TLS 走不通（实测 525），这条路现在已经不可用。
+    // 直连需要源站给 jinkuaicha.com 开 CORS，已在 /opt/jinkuaicha/backend-v2/.env
+    // 的 CORS_ORIGINS 里配置。
+    //
+    // 可通过URL参数临时切换：?api=https://xxx
     const DEFAULT_CONFIG = {
         // 后端API地址
-        // 生产：使用CF Pages同源代理（无需CORS，无跨域）
-        // 可通过URL参数临时切换：?api=https://xxx
         API_BASE_URL: isLocalDev
-            ? 'http://localhost:8000'   // v2 后端端口
-            : '',  // CF Pages Functions 同源代理（相对路径）
+            ? 'http://localhost:8000'          // 本地：v2 后端端口
+            : 'https://api.jinkuaicha.com',    // 生产：直连阿里云源站
         
         // 数据刷新间隔（毫秒）- 前端1.5分钟轮询
         REFRESH_INTERVAL: 90 * 1000,
@@ -65,5 +73,5 @@
     window.LOF_CONFIG = CONFIG;
     
     // 调试信息
-    console.log('[LOF配置] API地址:', CONFIG.API_BASE_URL, '| 环境:', isLocalDev ? '本地开发' : '生产部署(CF代理)');
+    console.log('[LOF配置] API地址:', CONFIG.API_BASE_URL, '| 环境:', isLocalDev ? '本地开发' : '生产部署(直连源站)');
 })();
