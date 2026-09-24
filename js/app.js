@@ -959,9 +959,15 @@ class LofFundMonitor {
         const fsBtn = document.getElementById('fdFullscreenBtn');
         if (fsBtn) fsBtn.addEventListener('click', () => this._toggleChartFullscreen());
 
-        // 深色模式按钮
-        const darkModeBtn = document.getElementById('darkModeBtn');
-        if (darkModeBtn) darkModeBtn.addEventListener('click', () => this.toggleDarkMode());
+        // 深色模式：切换由 index.html 的内联处理器统一负责（它在 document 上做
+        // 委托，同时覆盖数据页与首页两个按钮，且不依赖 app.js 是否加载）。
+        // 这里**不再**绑 click —— 曾经两边都绑，点一次各切一次互相抵消，
+        // 数据页的按钮点了没反应、点两次才生效、刷新后还丢失。
+        // 只监听切换结果，同步实例状态并把偏好推到云端设置。
+        document.addEventListener('jkc:darkmode', (e) => {
+            this.darkMode = e.detail && e.detail.mode === 'dark' ? 'dark' : 'light';
+            if (typeof SettingsSync !== 'undefined') SettingsSync.pushToCloud();
+        });
         // 十大持仓按钮
         document.querySelector('.fund-table')?.addEventListener('click', (e) => {
             const btn = e.target.closest('.btn-holdings');
@@ -1075,30 +1081,20 @@ class LofFundMonitor {
     }
 
     // ===== 深色模式 =====
-    toggleDarkMode() {
-        if (this.darkMode === 'light') {
-            this.darkMode = 'dark';
-        } else {
-            this.darkMode = 'light';
-        }
-        localStorage.setItem('lof_darkMode', this.darkMode);
-        this.applyDarkMode(true);
-        if (typeof SettingsSync !== 'undefined') SettingsSync.pushToCloud();
-    }
-
-    applyDarkMode(save) {
+    // 只负责"把当前 this.darkMode 应用到 DOM"。切换动作由 index.html 的
+    // 内联处理器完成（它对两个按钮都生效），这里仅在 init 时做一次对齐。
+    applyDarkMode() {
         const btn = document.getElementById('darkModeBtn');
+        const btnLanding = document.getElementById('darkModeBtnLanding');
         const root = document.documentElement;
 
         root.classList.remove('dark-mode', 'light-mode');
 
-        if (this.darkMode === 'dark') {
-            root.classList.add('dark-mode');
-            if (btn) { btn.textContent = '☀️'; btn.title = '当前：深色模式（点击切换浅色）'; }
-        } else {
-            root.classList.add('light-mode');
-            if (btn) { btn.textContent = '🌙'; btn.title = '当前：浅色模式（点击切换深色）'; }
-        }
+        const isDark = this.darkMode === 'dark';
+        root.classList.add(isDark ? 'dark-mode' : 'light-mode');
+        if (btn) { btn.textContent = isDark ? '☀️' : '🌙'; btn.title = isDark ? '当前：深色模式（点击切换浅色）' : '当前：浅色模式（点击切换深色）'; }
+        // 首页那个按钮此前不在这里更新，图标会和实际主题不一致
+        if (btnLanding) { btnLanding.textContent = isDark ? '☀️' : '🌙'; btnLanding.title = isDark ? '当前：深色模式（点击切换浅色）' : '当前：浅色模式（点击切换深色）'; }
     }
 
     openSettingsModal() {

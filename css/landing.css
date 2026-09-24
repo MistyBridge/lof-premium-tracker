@@ -96,7 +96,9 @@
   .entry-title { font-size: 1.05rem; }
   .entry-desc { font-size: 0.82rem; }
   .user-center-link { display: inline-block; }
-  .market-status, .landing-timestamp, .btn-dark-mode { display: none; }
+  /* 这里原来把 .btn-dark-mode 一起隐藏了，等于**移动端完全没有深色模式入口**
+     （深色渲染本身正常，只是切不过去）。市场状态与时间戳可以省，切换主题不行。 */
+  .market-status, .landing-timestamp { display: none; }
   .landing-container { padding: 0; }
   .spa-nav { padding: 8px 12px; border-radius: 0; margin-bottom: 10px; }
   /* 导航项此前只有 30px 高，低于移动端可点下限 */

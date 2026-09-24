@@ -25,8 +25,8 @@
     <meta name="twitter:title" content="金快查 - LOF/ETF基金实时折溢价监控">
     <meta name="twitter:description" content="全市场LOF、ETF基金实时溢价率、折价率、套利收益计算。">
 
-    <link rel="stylesheet" href="css/style.css?v=27">
-    <link rel="stylesheet" href="css/landing.css?v=6">
+    <link rel="stylesheet" href="css/style.css?v=28">
+    <link rel="stylesheet" href="css/landing.css?v=7">
     <link rel="stylesheet" href="css/account.css?v=1">
     <link rel="stylesheet" href="css/admin.css?v=1">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -775,7 +775,7 @@
                 return self._loadScript('js/api.js?v=25');
             }).then(function() {
                 // Phase 3: app.js 依赖以上所有
-                return self._loadScript('js/app.js?v=38');
+                return self._loadScript('js/app.js?v=39');
             }).then(function() {
                 self._scriptsReady = true;
             });
@@ -929,6 +929,11 @@
             if (btnL) { btnL.textContent = m === 'dark' ? '☀️' : '🌙'; }
         }
         applyDark(mode);
+        // 深色模式切换的**唯一**入口。这里是 document 级委托，同时覆盖数据页
+        // 的 #darkModeBtn 和首页的 #darkModeBtnLanding，且不依赖 app.js 是否加载。
+        // app.js 里曾经也给 #darkModeBtn 绑了一份 click：点一次两个处理器各切一次，
+        // 后者读到前面刚写好的 DOM 类又切回去，结果数据页的按钮点了完全没反应、
+        // 点两次才生效、刷新后还丢失。现在 app.js 只做状态同步（见 jkc:darkmode）。
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('#darkModeBtn') || e.target.closest('#darkModeBtnLanding');
             if (!btn) return;
@@ -936,6 +941,7 @@
             var next = cur === 'dark' ? 'light' : 'dark';
             applyDark(next);
             localStorage.setItem('lof_darkMode', next);
+            document.dispatchEvent(new CustomEvent('jkc:darkmode', { detail: { mode: next } }));
         });
     })();
 
