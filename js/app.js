@@ -126,6 +126,11 @@ class LofFundMonitor {
                 return '服务器错误 — 服务端处理异常\n\n' + msg + '\n\n可能原因：\n1. 数据源暂时不可用\n2. 服务器负载过高\n请稍后重试，如持续出现请联系反馈';
             case 'client':
                 return '请求异常 — 客户端错误\n\n' + msg + '\n\n如持续出现请联系反馈';
+            // 前端自己处理数据时出错（请求尚未发出）。必须与网络类错误分开报 ——
+            // 否则一个 JS 异常会显示成"无法连接到数据服务/网络不稳定"，
+            // 把用户和排查方向一起带偏。
+            case 'internal':
+                return '页面处理数据时出错\n\n' + msg + '\n\n这不是网络问题，数据服务本身可能是正常的。请刷新页面重试，如持续出现请联系反馈';
             default:
                 return '无法连接到数据服务：' + msg + '\n\n可能原因：\n1. 服务正在冷启动，请等待1分钟后刷新\n2. 网络不稳定，请稍后重试';
         }
@@ -187,42 +192,58 @@ class LofFundMonitor {
         this._loadingFunds = true;
         this.isLoading = true;
 
-        // ── Phase 0：板块切换先清场 ──
-        // 不清掉的话，切换瞬间屏幕上是**上一个板块的行**，用户会以为按钮没生效。
-        // 这是"看起来没反应"的第二个来源。
-        if (this._fundsMode !== mode) {
-            this._fundsMode = mode;
-            this.funds = [];
-            this.currentPage = 1;
-            this.applyFilters();
-            this.renderTable();
-            this.updatePaginationInfo();
-            this.updateStatus('正在加载 ' + this._fundTypeLabel(mode) + ' 数据...');
-        }
+        // 本次调用是否发生了板块切换。必须在 Phase 0 改写 _fundsMode **之前**算出来。
+        //
+        // 这个名字此前只是被引用、从未被定义：缓存命中时它抛 ReferenceError，而位置
+        // 正好在 Phase 2 之前 —— 请求永不发出、finally 永不执行。于是 `_loadingFunds`
+        // 永久卡在 true，此后所有非强制刷新（含 90 秒自动刷新）都在函数开头的并发
+        // 保护处被静默丢弃：页面挂着缓存数据、标着"5分钟刷新"，实际一次都不会再拉；
+        // 切换板块时还会弹一个把前端异常说成"网络不稳定"的错误框。
+        // 复现脚本见 scripts/probe_cache_throw.mjs。
+        var switched = (this._fundsMode !== mode);
 
-        // ── Phase 1：先渲染本板块的缓存（缓存键按板块隔离，见 _fundsCacheKey）──
-        // 上一轮把缓存按板块分开了，但这里原先只在 `funds.length === 0` 时才渲染，
-        // 切换时 funds 非空 → 永远读不到缓存，按板块隔离等于白做。
-        var cachedFunds = Cache.get(self._fundsCacheKey('funds', mode));
-        var cachedMeta = Cache.get(self._fundsCacheKey('fundsMeta', mode));
-        if (cachedFunds && cachedFunds.length > 0 && self.funds.length === 0) {
-            self.funds = cachedFunds;
-            self.applyFilters();
-            self.renderTable();
-            self.updatePaginationInfo();
-            if (cachedMeta) {
-                self._updateToolbarTimestamp(cachedMeta.last_fetch, cachedMeta.interval);
-                self._updateFundTypeCounts(cachedMeta.total, cachedFunds.length, mode);
-            }
-            // 切换板块时不提示"来自缓存"：缓存是立刻铺上去的，新数据几秒就到，
-            // 状态栏已经写着"正在加载 X 数据…"，再弹一个 toast 只是噪声。
-            // 真正的刷新路径（切回同一板块）才提示数据来源。
-            if (!switched) self._softToast('数据来自缓存');
-            self.updateStatus('');
-        }
-
-        // ── Phase 2：取最新数据 ──
+        // try 必须从置上 loading 标志之后就立刻开始：标志一旦置上，每条退出路径都得
+        // 经过 finally 把它放掉。之前 try 只包住 fetch，Phase 0/1 里任何异常都会把
+        // loading 永久留在 true —— 光把 switched 定义上，换个原因抛异常还会复现。
+        var cachedFunds = null;
+        var reachedFetch = false;
         try {
+            // ── Phase 0：板块切换先清场 ──
+            // 不清掉的话，切换瞬间屏幕上是**上一个板块的行**，用户会以为按钮没生效。
+            // 这是"看起来没反应"的第二个来源。
+            if (switched) {
+                this._fundsMode = mode;
+                this.funds = [];
+                this.currentPage = 1;
+                this.applyFilters();
+                this.renderTable();
+                this.updatePaginationInfo();
+                this.updateStatus('正在加载 ' + this._fundTypeLabel(mode) + ' 数据...');
+            }
+
+            // ── Phase 1：先渲染本板块的缓存（缓存键按板块隔离，见 _fundsCacheKey）──
+            // 上一轮把缓存按板块分开了，但这里原先只在 `funds.length === 0` 时才渲染，
+            // 切换时 funds 非空 → 永远读不到缓存，按板块隔离等于白做。
+            cachedFunds = Cache.get(self._fundsCacheKey('funds', mode));
+            var cachedMeta = Cache.get(self._fundsCacheKey('fundsMeta', mode));
+            if (cachedFunds && cachedFunds.length > 0 && self.funds.length === 0) {
+                self.funds = cachedFunds;
+                self.applyFilters();
+                self.renderTable();
+                self.updatePaginationInfo();
+                if (cachedMeta) {
+                    self._updateToolbarTimestamp(cachedMeta.last_fetch, cachedMeta.interval);
+                    self._updateFundTypeCounts(cachedMeta.total, cachedFunds.length, mode);
+                }
+                // 切换板块时不提示"来自缓存"：缓存是立刻铺上去的，新数据几秒就到，
+                // 状态栏已经写着"正在加载 X 数据…"，再弹一个 toast 只是噪声。
+                // 真正的刷新路径（切回同一板块）才提示数据来源。
+                if (!switched) self._softToast('数据来自缓存');
+                self.updateStatus('');
+            }
+
+            // ── Phase 2：取最新数据 ──
+            reachedFetch = true;
             var result = await api.getFunds(1, self._pageSizeFor(mode), false, false,
                                             { filter_mode: mode });
             if (seq !== self._loadSeq) return;   // 已被更新的请求取代，丢弃本次结果
@@ -257,6 +278,15 @@ class LofFundMonitor {
             self.updateStatus('');
         } catch (error) {
             if (seq !== self._loadSeq) return;
+            // 请求还没发出去就出错 —— 这是前端自身的问题，不是网络问题。
+            // 以前它会掉进 _errorHelpText 的 default 分支，提示"无法连接到数据服务…
+            // 网络不稳定"，把排查方向直接带偏（真实原因只是这里的一个 JS 异常）。
+            if (!reachedFetch) {
+                console.error('[LOF] loadFunds 在请求发出前失败:', error);
+                var ie = new Error('页面处理数据时出错: ' + error.message);
+                ie.errorType = 'internal';
+                throw ie;
+            }
             if (!cachedFunds || cachedFunds.length === 0) {
                 var e = new Error('基金列表加载失败: ' + error.message);
                 e.errorType = error.errorType || 'unknown';
