@@ -66,7 +66,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 
 /* Status Bar */
 /* Fund type selector (inside search bar) */
-.fund-type-select { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; padding: 8px 10px; margin: -1px; border-radius: 8px 0 0 8px; background: var(--bg); border: 1px solid var(--border); border-right: none; white-space: nowrap; flex-shrink: 0; }
+/* 分段控件：负外边距让它盖住父级内边框。右侧留 0 而不是 -1，
+   否则左/上/下会各自超出父容器 1px，在圆角处露出一块方角灰底。 */
+.fund-type-select { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; user-select: none; padding: 8px 10px; margin: -1px 0 -1px -1px; border-radius: 8px 0 0 8px; background: var(--bg); border: 1px solid var(--border); border-right: none; white-space: nowrap; flex-shrink: 0; }
 .fund-type-select:hover { background: rgba(24,144,255,0.06); }
 .ft-current-label { font-size: 0.88rem; font-weight: 600; color: var(--primary); }
 .ft-arrow { font-size: 0.6rem; color: var(--text2); }
@@ -82,7 +84,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .ft-opt-status { font-size: 0.75rem; color: var(--text2); }
 
 /* Main Content */
-.main-content { display: grid; grid-template-columns: 1fr; gap: 20px; }
+/* minmax(0, 1fr) 而不是 1fr：`1fr` 等价于 `minmax(auto, 1fr)`，那个 auto 下限
+   等于内容的 min-content 宽度。基金名称是 white-space:nowrap 的文本，其
+   min-content 就是整串文字宽度，于是网格列会被撑到内容宽度、整个页面出现
+   横向滚动（实测 390px 视口被撑到 524px）。
+   这是一个潜伏已久的脆弱点：以前名称在 JS 里被硬截成 8 个字，min-content
+   很小所以从没触发；一旦让名称用满可用宽度就立刻暴露。 */
+.main-content { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; }
 
 /* Content */
 .content { background: var(--card); border-radius: 12px; padding: 20px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: background 0.3s ease, box-shadow 0.3s ease; }
@@ -468,7 +476,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .footer .legal-links .divider { margin: 0 8px; color: var(--border); }
 
 /* Responsive */
-@media (max-width: 1200px) { .main-content { grid-template-columns: 1fr; } }
+@media (max-width: 1200px) { .main-content { grid-template-columns: minmax(0, 1fr); } }
 
 /* ========== 移动端 ========== */
 @media (max-width: 768px) {
@@ -476,30 +484,50 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
     .header { border-radius: 0; padding: 14px 16px; margin-bottom: 0; }
     .header h1 { font-size: 1.15rem; }
     .status-text { font-size: 0.75rem; }
+    /* 刷新按钮放大到 40×40，与 40px 高的页头内容区对齐 */
+    .btn-manual-refresh { width: 40px; height: 40px; }
+    .refresh-icon { width: 34px; height: 34px; }
+    /* toast 固定 top:20px、水平居中，在移动端正好压在 68px 高的页头品牌上
+       （实测盖住 x=137..253 / y=20..62），改到底部避开。 */
+    .soft-toast { top: auto; bottom: 24px; }
     .fund-type-select { padding: 6px 8px; }
     .ft-current-label { font-size: 0.78rem; }
     .search-box input::placeholder { font-size: 0.78rem; }
     .table-viewport { display: none !important; }
     .mobile-card-list { display: flex; flex-direction: column; gap: 0; }
-    .mobile-card { display: flex; flex-wrap: wrap; align-items: flex-start; padding: 14px 16px; border-bottom: 1px solid var(--border); background: var(--card); transition: background 0.15s; gap: 4px; position: relative; overflow: hidden; cursor: pointer; }
+    /* ── 移动端基金卡片：固定三行结构 ──
+       ① 代码 / 名称 / 星标   ② 溢价率   ③ 千元可赚
+       以前是 flex-wrap + "能挤下就同排、挤不下就换行"：
+       溢价字符串约 160px，320/360 上长号码被迫换行、短号码（+0.66%/--）
+       却留在同行，于是**同一屏里同时出现 92px 和 117.8px 两种卡片**，
+       星标也跟着名称长度左右浮动 17.7px。三行结构在所有宽度下完全一致。 */
+    .mobile-card { display: flex; flex-direction: column; align-items: stretch; padding: 12px 16px; border-bottom: 1px solid var(--border); background: var(--card); transition: background 0.15s; gap: 3px; position: relative; overflow: hidden; cursor: pointer; }
     .mobile-card:active { background: #f0f2f5; }
     .mobile-card::after { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; border-radius: 50%; background: rgba(74,144,217,0.15); transform: translate(-50%, -50%); transition: width 0.5s ease, height 0.5s ease, opacity 0.5s ease; pointer-events: none; }
     .mobile-card:active::after { width: 600px; height: 600px; opacity: 0; transition: 0s; }
-    .mc-top-row { flex: 1 1 auto; display: flex; align-items: baseline; gap: 6px; min-width: 0; flex-wrap: wrap; }
-    .mc-code { font-size: 0.85rem; font-weight: 700; color: var(--text); }
-    .mc-name { font-size: 0.8rem; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 4px; }
+    /* 第 1 行：名称吃掉中间空间，星标因此稳定贴在卡片右侧 */
+    .mc-top-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .mc-code { font-size: 0.85rem; font-weight: 700; color: var(--text); flex-shrink: 0; letter-spacing: 0.2px; }
+    .mc-name { font-size: 0.78rem; color: var(--text2); flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .mc-status-badge { font-size: 0.65rem; padding: 1px 5px; border-radius: 3px; }
-    .mc-right { display: flex; align-items: flex-start; justify-content: flex-end; flex-shrink: 0; }
-    .mc-premium { font-size: 1.3rem; font-weight: 700; }
+    /* 第 2 行：溢价独占整行，再长的数字也不会换行 */
+    .mc-right { display: flex; align-items: baseline; min-width: 0; }
+    .mc-premium { font-size: 1.32rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.3px; white-space: nowrap; }
     .mc-premium.mc-pos { color: var(--pos); }
     .mc-premium.mc-neg { color: var(--neg); }
     .mc-premium.mc-zero { color: var(--zero); }
-    .mc-profit-row { width: 100%; display: flex; align-items: center; gap: 6px; padding-top: 4px; }
-    .mc-profit-label { font-size: 0.75rem; color: var(--text2); }
+    /* 第 3 行：千元可赚 */
+    .mc-profit-row { display: flex; align-items: center; gap: 6px; }
+    .mc-profit-label { font-size: 0.75rem; color: var(--text2); flex-shrink: 0; }
     .mc-profit-val { font-size: 0.85rem; font-weight: 600; }
     .mc-profit-val.mc-pos { color: var(--pos); }
     .mc-profit-val.mc-neg { color: var(--neg); }
+    /* 图标按钮视觉上仍是 18px，但用伪元素把可点区域撑到 44px。
+       伪元素不参与布局，所以不会把行高顶起来；事件仍落在按钮自身，
+       app.js 里对 .mc-profit-help / .mc-fav-btn 已有 stopPropagation 与
+       "命中则不开详情" 的判断，放大后不会误触发整卡点击。 */
     .mc-profit-help {
+        position: relative;
         display: inline-flex; align-items: center; justify-content: center;
         width: 18px; height: 18px; border-radius: 50%;
         border: 1.5px solid #aaa; background: transparent;
@@ -507,24 +535,30 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
         cursor: pointer; padding: 0; line-height: 1;
         transition: all 0.15s; flex-shrink: 0;
     }
+    .mc-profit-help::after { content: ''; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
     .mc-profit-help:hover { border-color: var(--primary); color: var(--primary); background: #e8f4ff; }
     .mobile-empty { text-align: center; padding: 60px 20px; color: var(--text2); }
     .mobile-empty .icon { font-size: 2.5rem; display: block; margin-bottom: 8px; }
-    .toolbar { flex-wrap: wrap; padding: 10px 12px; gap: 8px; }
+    .toolbar { flex-wrap: wrap; padding: 8px 12px; gap: 8px; }
     .toolbar-timestamp { display: none; }
     .toolbar .market-status { display: none; }
-    .search-box { width: 100%; max-width: 100%; flex: 1 1 auto; }
-    .search-box input { padding: 8px 6px; font-size: 0.82rem; }
-    .btn-settings { padding: 4px 8px; font-size: 0.7rem; border-radius: 4px; margin: 2px 2px 2px 0; }
-    .mobile-sort-btns { display: flex; flex: 1 1 100%; flex-direction: row; }
-    .sort-btn-row { flex: 1; }
-    .btn-sort-mode { text-align: center; padding: 8px 12px; font-size: 0.82rem; width: 100%; }
-    .btn-arb-help { width: 26px; min-width: 26px; font-size: 0.78rem; }
-    .pagination-info { font-size: 0.75rem; white-space: nowrap; }
+    .search-box { width: 100%; max-width: 100%; flex: 1 1 auto; min-height: 40px; }
+    .search-box input { padding: 9px 6px; font-size: 0.82rem; }
+    /* 设置按钮此前 38.4×19.2px，在 40px 高的搜索框里像一粒小胶囊 */
+    .btn-settings { align-self: stretch; padding: 0 12px; font-size: 0.75rem; border-radius: 6px; margin: 3px 3px 3px 0; }
+    .fund-type-select { padding: 9px 10px; }
+    .mobile-sort-btns { display: flex; flex: 1 1 100%; flex-direction: row; gap: 6px; }
+    .sort-btn-row { flex: 1; min-width: 0; }
+    .btn-sort-mode { text-align: center; padding: 10px 8px; font-size: 0.82rem; width: 100%; min-height: 40px; }
+    /* 问号从 26px 放到 44px：它挨着模式按钮，太窄会误触到"切换排序" */
+    .btn-arb-help { width: 44px; min-width: 44px; min-height: 40px; font-size: 0.82rem; }
+    /* 单独占一行的计数文字：右对齐会像个孤立的尾巴，居中读起来是"标题的下标" */
+    .pagination-info { font-size: 0.72rem; white-space: nowrap; margin-left: auto; margin-right: auto; }
     .content { border-radius: 0; padding: 0; box-shadow: none; }
     .pagination-bar { padding: 10px 8px; gap: 4px; flex-wrap: nowrap; }
-    .page-btn { padding: 6px 10px; font-size: 0.78rem; white-space: nowrap; flex-shrink: 0; }
-    .page-info { font-size: 0.75rem; white-space: nowrap; flex-shrink: 0; }
+    /* 分页按钮此前 30px 高，低于移动端可点下限；加高不改宽度，不会挤爆 320px */
+    .page-btn { min-height: 44px; padding: 4px 10px; font-size: 0.78rem; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+    .page-info { font-size: 0.76rem; white-space: nowrap; flex-shrink: 0; }
     .page-size-select { display: none; }
     .footer { margin-top: 0; padding: 16px 12px; font-size: 0.75rem; }
     .footer .risk-warning { font-size: 0.72rem; }
@@ -825,9 +859,13 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 .dark-mode .row-star--active { color: #f0a500; }
 
 /* ── 移动端卡片收藏按钮（替代名称旁溢价标签）── */
-.mc-fav-btn { background: none; border: none; font-size: 0.95rem; cursor: pointer;
+/* 视觉 16.5×15.2px，但伪元素把可点区域撑到 44×44（移动端最小可点尺寸）。
+   伪元素不参与布局，因此不会顶高第一行。 */
+.mc-fav-btn { position: relative; background: none; border: none; font-size: 0.95rem; cursor: pointer;
               color: #ccc; padding: 0 2px; line-height: 1; vertical-align: middle;
+              flex-shrink: 0;
               transition: color 0.2s, transform 0.15s; }
+.mc-fav-btn::after { content: ''; position: absolute; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
 .mc-fav-btn:hover { transform: scale(1.2); }
 .mc-fav--active { color: #f0a500; }
 .mc-fav--active:hover { color: #d49500; }
@@ -989,10 +1027,19 @@ body::-webkit-scrollbar-thumb:hover { background: #909399; }
 @keyframes fd-tipin { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 @media (max-width: 600px) {
+    /* 覆盖层原本 padding: 24px 0，底部 sheet 于是停在离屏幕底 24px 处，
+       露出一条后面的列表。移动端底栏贴合屏幕才不显得"没对齐"。 */
+    .fund-detail-overlay { padding: 0; }
     .fund-detail-modal {
         max-width: 100%; width: 100%; border-radius: 20px 20px 0 0; margin-bottom: 0; align-self: flex-end;
         max-height: 92vh; overflow-x: hidden;
     }
+    /* 图标按钮放大到可点尺寸（原来关闭 20×20、收藏 14×24） */
+    .fd-close { font-size: 2rem; padding: 6px 10px; line-height: 1; }
+    .fd-star { font-size: 1.45rem; padding: 6px 8px; margin-right: 2px; }
+    .fd-kpi-config-btn { padding: 6px 12px; }
+    .btn-fd-holdings { padding: 9px 12px; }
+    .fd-fullscreen-btn { padding: 8px 10px; font-size: 1.15rem; }
     .fd-header { padding: 14px 16px; }
     .fd-header h3 { font-size: 1.05rem; }
     .fd-phase { padding: 14px 16px; }
