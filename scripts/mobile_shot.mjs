@@ -54,19 +54,21 @@ async function newPage(vp) {
     });
     const page = await ctx.newPage();
 
-    // 把 API 转发到线上，本地静态文件保持本地
-    await page.route('**/api/**', async route => {
-        const u = new URL(route.request().url());
-        try {
-            const resp = await route.fetch({ url: UPSTREAM + u.pathname + u.search, timeout: 60000 });
-            await route.fulfill({ response: resp });
-        } catch (e) {
-            if (!/has been closed/.test(e.message)) {
-                notes.push(`API 转发失败 ${u.pathname}${u.search}: ${e.message.split('\n')[0]}`);
+    // 只在跑本地静态服务时转发 API；直接测线上站点时不要多绕一跳
+    if (/127\.0\.0\.1|localhost/.test(BASE)) {
+        await page.route('**/api/**', async route => {
+            const u = new URL(route.request().url());
+            try {
+                const resp = await route.fetch({ url: UPSTREAM + u.pathname + u.search, timeout: 60000 });
+                await route.fulfill({ response: resp });
+            } catch (e) {
+                if (!/has been closed/.test(e.message)) {
+                    notes.push(`API 转发失败 ${u.pathname}${u.search}: ${e.message.split('\n')[0]}`);
+                }
+                await route.abort().catch(() => {});
             }
-            await route.abort().catch(() => {});
-        }
-    });
+        });
+    }
 
     // 跳过欢迎弹窗（本轮只关心数据页排版），并固定主题与筛选，保证每次取得同一画面
     await ctx.addInitScript(() => {
